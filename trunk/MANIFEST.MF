@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: se.sics.contiki.collect.CollectServer
+Class-Path: lib/jcommon-1.0.17.jar lib/jfreechart-1.0.14.jar
+
