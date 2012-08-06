@@ -58,4 +58,8 @@ By trial and error method we found a good value (you could also try a more advan
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal4.jpg
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal5.jpg
+
+
+Now, close adjust conversion expressions dialog and chart will be updated to the right values:
+
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal6.jpg
