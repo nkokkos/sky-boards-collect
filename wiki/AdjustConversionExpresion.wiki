@@ -41,7 +41,9 @@ To know which is the right column, we have to see *SensorInfo* java class in sou
 
 = Step 3 =
 
-Then we have CONVERSION(adc_value)=24
+Then we have CONVERSION(adc_value)=24, and this is wrong according to our reference thermometer :(
+
+https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal3.jpg
 
  * Select node 3 and go to "Tools->Adjust conversion expressions>Temperature sensor"
 
@@ -49,12 +51,11 @@ Then we have CONVERSION(adc_value)=24
 
 You should change preferably Vcc and/or Vref, if your batteries have some time or you don't know which Vref is using the firmware to configure ADC12 ref input.
 
-In this example if we change Vcc to 2.66 it gives the good conversion
 
-https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal3.jpg
 
-By trial and error method we found a good value (you could also try a more advanced method based in ecuations resolution)
+By trial and error method we found a good value (you could also try a more advanced method based in ecuations resolution). In this example if we change Vcc to 2.66 it gives the good conversion
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal4.jpg
+
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal5.jpg
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal6.jpg
