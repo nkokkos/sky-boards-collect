@@ -2,7 +2,7 @@
 
 = Introduction =
 
-An example on how to calibre sensor using the _adjust conversion expressions tool_.
+An example on how to calibre DS1000.Temperature sensor using the _adjust conversion expressions tool_.
 
 
 
