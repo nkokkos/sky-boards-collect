@@ -22,7 +22,7 @@ We need to know ADC_VALUE. This is the output from ADC12 that a node sends to ap
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal2.jpg
 
-To know which is the right column, we have to see _SensorInfo\.java_ class in source file:
+To know which is the right column, we have to see "_SensorInfo.java_" class in source file:
 
 {{{
   public static final int BATTERY_VOLTAGE = 20;
