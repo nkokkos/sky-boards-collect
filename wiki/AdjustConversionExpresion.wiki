@@ -5,23 +5,22 @@
 An example on how to calibre sensor using the _adjust conversion expressions tool_.
 
 
-= Details =
 
- # Step 1
+= Step 1 =
 
-First we must have a *reference device* that we know it shows the right temperature, for example our home thermometer. In this example real value is 30º.
+First we must have a *reference device* that we know it shows the right temperature, for example our home thermometer. In this example, *real value is 30º.*
 
 So, we start a network, and our temperature values from node 3 are not calibrated:
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal1.jpg
 
-In other words: CONVERSION(ADC_VALUE)=24
+In other words: *CONVERSION(ADC_VALUE)=24*, and it should be 30
 
- # Step 2 
+= Step 2 =
 
 We need to know ADC_VALUE. This is the output from ADC12 that a node sends to application. We can see this value in console.
 
-https://sky-boards-collect.googlecode.com/svn/wiki/captures/wiki_img_cali_exa2.jpg
+https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal2.jpg
 
 To know which is the right column, we have to see SensorInfo.java class in source files:
 
@@ -38,7 +37,7 @@ To know which is the right column, we have to see SensorInfo.java class in sourc
   public static final int RSSI = 26;
 }}}
 
- # Step 3
+= Step 3 =
 
 Then we have CONVERSION(2349)=24
 
