@@ -1,0 +1,55 @@
+#Calibration example
+
+= Introduction =
+
+An example on how to calibre sensor using the _adjust conversion expressions tool_.
+
+
+= Details =
+
+ # Step 1
+
+First we must have a *reference device* that we know it shows the right temperature, for example our home thermometer. In this example real value is 30º.
+
+So, we start a network, and our temperature values from node 3 are not calibrated:
+
+https://sky-boards-collect.googlecode.com/svn/wiki/captures/wiki_img_cali_exa1.jpg
+
+In other words: CONVERSION(ADC_VALUE)=24
+
+ # Step 2 
+
+We need to know ADC_VALUE. This is the output from ADC12 that a node sends to application. We can see this value in console.
+
+https://sky-boards-collect.googlecode.com/svn/wiki/captures/wiki_img_cali_exa2.jpg
+
+To know which is the right column, we have to see SensorInfo.java class in source files:
+
+{{{
+  public static final int BATTERY_VOLTAGE = 20;
+  public static final int BATTERY_INDICATOR = 21;
+  public static final int CO = 22;
+  public static final int CO2 = 23;
+  public static final int DUST = 24;
+  public static final int LIGHT1 = 22;
+  public static final int LIGHT2 = 23;
+  public static final int TEMPERATURE = 24;
+  public static final int HUMIDITY = 25;
+  public static final int RSSI = 26;
+}}}
+
+ # Step 3
+
+Then we have CONVERSION(2349)=24
+
+Select node 3 and go to "Tools->Adjust conversion expresions->Temperature sensor"
+
+And change values untill CONVERSION(2349)=30
+
+You should change preferably Vcc and/or Vref.
+
+In this example changin Vcc to 2.66 it gives the good conversion
+
+https://sky-boards-collect.googlecode.com/svn/wiki/captures/wiki_img_cali_exa3.jpg
+
+
