@@ -14,7 +14,7 @@ So, we start a network, and our temperature values from node 3 are not calibrate
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal1.jpg
 
-In other words: *CONVERSION(ADC_VALUE)=24*, and it should be 30
+In other words: *CONVERSION(adc_value)=24*, and it should be 30
 
 = Step 2 =
 
@@ -41,7 +41,7 @@ To know which is the right column, we have to see *SensorInfo* java class in sou
 
 = Step 3 =
 
-Then we have CONVERSION(2349)=24
+Then we have CONVERSION(adc_value)=24
 
 Select node 3 and go to "Tools->Adjust conversion expresions->Temperature sensor"
 
