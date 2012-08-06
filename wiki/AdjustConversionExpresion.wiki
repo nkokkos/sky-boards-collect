@@ -13,7 +13,7 @@ First we must have a *reference device* that we know it shows the right temperat
 
 So, we start a network, and our temperature values from node 3 are not calibrated:
 
-https://sky-boards-collect.googlecode.com/svn/wiki/captures/wiki_img_cali_exa1.jpg
+https://sky-boards-collect.googlecode.com/svn/wiki/captures/imgcal1.jpg
 
 In other words: CONVERSION(ADC_VALUE)=24
 
@@ -51,5 +51,3 @@ You should change preferably Vcc and/or Vref.
 In this example changin Vcc to 2.66 it gives the good conversion
 
 https://sky-boards-collect.googlecode.com/svn/wiki/captures/wiki_img_cali_exa3.jpg
-
-
