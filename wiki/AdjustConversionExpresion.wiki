@@ -43,11 +43,11 @@ To know which is the right column, we have to see *SensorInfo* java class in sou
 
 Then we have CONVERSION(adc_value)=24
 
-Select node 3 and go to "Tools->Adjust conversion expresions->Temperature sensor"
+ * Select node 3 and go to "Tools->Adjust conversion expressions>Temperature sensor"
 
-And change values untill CONVERSION(2349)=30
+ * Change values until *CONVERSION(2349)=30*
 
-You should change preferably Vcc and/or Vref.
+You should change preferably Vcc and/or Vref, if your batteries have some time or you don't know which Vref is using the firmware to configure ADC12 ref input.
 
 In this example if we change Vcc to 2.66 it gives the good conversion
 
