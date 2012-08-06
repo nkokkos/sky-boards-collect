@@ -22,7 +22,7 @@ We need to know ADC_VALUE. This is the output from ADC12 that a node sends to ap
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal2.jpg
 
-To know which is the right column, we have to see SensorInfo.java class in source files:
+To know which is the right column, we have to see *SensorInfo* java class in source files:
 
 {{{
   public static final int BATTERY_VOLTAGE = 20;
@@ -37,6 +37,8 @@ To know which is the right column, we have to see SensorInfo.java class in sourc
   public static final int RSSI = 26;
 }}}
 
+*NOTE: In Release 1.1b, it wont be necessary to look for adc_value in console...* 
+
 = Step 3 =
 
 Then we have CONVERSION(2349)=24
@@ -47,6 +49,9 @@ And change values untill CONVERSION(2349)=30
 
 You should change preferably Vcc and/or Vref.
 
-In this example changin Vcc to 2.66 it gives the good conversion
+In this example if we change Vcc to 2.66 it gives the good conversion
 
-https://sky-boards-collect.googlecode.com/svn/wiki/captures/wiki_img_cali_exa3.jpg
+https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal3.jpg
+https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal4.jpg
+https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal5.jpg
+https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal6.jpg
