@@ -25,16 +25,9 @@ https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal2.jpg
 To know which is the right column, we have to see "_SensorInfo.java_" class in source file:
 
 {{{
-  public static final int BATTERY_VOLTAGE = 20;
-  public static final int BATTERY_INDICATOR = 21;
-  public static final int CO = 22;
-  public static final int CO2 = 23;
-  public static final int DUST = 24;
-  public static final int LIGHT1 = 22;
-  public static final int LIGHT2 = 23;
+  
   public static final int TEMPERATURE = 24;
-  public static final int HUMIDITY = 25;
-  public static final int RSSI = 26;
+
 }}}
 
 *NOTE: In Release 1.1b, it wont be necessary to look for adc_value in console...* 
