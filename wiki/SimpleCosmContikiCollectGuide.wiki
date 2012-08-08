@@ -1,9 +1,11 @@
 A simple guide to getting started with Cosm and sky-boards-collect
 
-// TODO
 
 = Introduction =
 
+This brief guide will cover how to create feeds on Cosm and send values to them, using /contiki-collect/sky-boards-collect
 
 
 = Details =
+
+// TODO
