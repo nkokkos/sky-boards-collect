@@ -1,4 +1,4 @@
-A simple guide to getting started with Cosm and sky-boards-collect
+#summary A simple guide to getting started with Cosm and sky-boards-collect
 
 
 = Introduction =
