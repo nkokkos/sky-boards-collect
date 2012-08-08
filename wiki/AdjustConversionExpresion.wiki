@@ -1,11 +1,4 @@
-// TODO: update for version 1.1b
-
-
-
-
-
-
-#Calibration example
+#Calibration example wit "adjust conversion expressions" tool
 
 = Introduction =
 
@@ -62,3 +55,12 @@ https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal5.jpg
 Now, close adjust conversion expressions dialog and chart will be updated to the right values:
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal6.jpg
+
+
+
+
+
+
+
+
+// TODO: Update for version 1.1b
