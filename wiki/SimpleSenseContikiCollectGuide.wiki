@@ -1,4 +1,4 @@
-A simple guide to getting started with Sen.se and sky-boards-collect
+#summary A simple guide to getting started with Sen.se and sky-boards-collect
 
 = Introduction =
 
