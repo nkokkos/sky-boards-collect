@@ -1,4 +1,4 @@
-#summary Calibration example wit "adjust conversion expressions" tool
+#summary Calibration example with "adjust conversion expressions" tool
 
 = Introduction =
 
