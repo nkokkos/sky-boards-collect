@@ -6,18 +6,22 @@ How to generate AR1000 or DS1000 firmware:
 "collect-view-sky-DS1000.c" to 
 "collect-view-sky.c"
 
-2. compile any program that includes "contiki-collec.h", like
+$ mv collect-view-sky.c collect-view-sky-bk.c
+$ mv collect-view-sky-AR1000.c collect-view-sky.c
+
+2. Compile any program that includes "contiki-collec.h", like
 
 + examples/sky-shell/sky-shell.c
 + examples/ipv6/rpl-collect/udp-sender.c
 
-3. After compilation is complete firmware file should be found
+3. After compilation is complete, firmware file should be found
 in the same directory, with name "tmpimage.ihex"
 Rename and make executable
 
 $ mv tmpimage.ihex myFirmware.ihex
 $ chmod ugo+x myFirmware.ihex
 
-
-Note that this is also valid for others platforms. Just write your own collect-view-template.c and edit Makefile.collect-view as needed.
+***********************************************************************
+NOTE that this is also valid for others platforms. Just write your own collect-view-template.c and edit Makefile.collect-view as needed.
+***********************************************************************
 
