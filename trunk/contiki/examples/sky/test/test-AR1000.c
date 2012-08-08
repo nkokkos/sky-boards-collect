@@ -26,7 +26,9 @@ PROCESS_THREAD(ar1000_test, ev, data)
 	static int i=0;
 	
 	printf ("\n\nrunning SENSORS_ACTIVATE(ar1000). Values should slightly change\n");
-  SENSORS_ACTIVATE(ar1000);
+	SENSORS_ACTIVATE(ar1000);
+  	printf ("SENSORS_ACTIVATE: %d\n",ar1000.status(SENSORS_ACTIVE));
+	printf ("SENSOS_READY: %d\n",ar1000.status(SENSORS_READY));
 	while (i<20)	{
 		etimer_set(&et, CLOCK_SECOND * 1);
   	PROCESS_WAIT_UNTIL(etimer_expired(&et));

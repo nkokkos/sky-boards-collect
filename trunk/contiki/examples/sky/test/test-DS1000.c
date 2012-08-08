@@ -25,7 +25,9 @@ PROCESS_THREAD(ds1000_test, ev, data)
 	static int i=0;
 	
 	printf ("\n\nrunning SENSORS_ACTIVATE(ds1000). Values should slightly change\n");
-  SENSORS_ACTIVATE(ds1000);
+	SENSORS_ACTIVATE(ds1000);
+  	printf ("SENSORS_ACTIVATE: %d\n",ds1000.status(SENSORS_ACTIVE));
+	printf ("SENSORS_READY: %d\n",ds1000.status(SENSORS_READY));
 	while (i<20)	{
 		etimer_set(&et, CLOCK_SECOND * 1);
   	PROCESS_WAIT_UNTIL(etimer_expired(&et));
