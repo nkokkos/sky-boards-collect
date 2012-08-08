@@ -35,7 +35,7 @@ To know which is the right column, we have to open "_SensorInfo.java_" class in 
   public static final int TEMPERATURE = 24;
 }}}
 
-*NOTE: In Release 1.1b, it wont be necessary to look for adc_value in console...* 
+*NOTE: Since version 1.1b, it is not necessary to look for adc_value in console... This value is shown in the app dialog* 
 
 = Step 3 =
 
