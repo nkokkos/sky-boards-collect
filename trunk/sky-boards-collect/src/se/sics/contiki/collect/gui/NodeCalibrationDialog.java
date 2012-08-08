@@ -34,6 +34,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import se.sics.contiki.collect.Configurable;
 import se.sics.contiki.collect.Node;
 import se.sics.contiki.collect.NodeAR1000;
 import se.sics.contiki.collect.NodeCM5000;
@@ -44,26 +45,36 @@ import se.sics.contiki.collect.SensorInfo;
 import se.sics.contiki.collect.Variable;
 
 public class NodeCalibrationDialog extends JFrame 
-								   implements PropertyChangeListener{
+								   implements PropertyChangeListener,
+								   Configurable{
 
 	private static final long serialVersionUID = 1L;
-	Node node;
-    NodeSensor[] sensors;
-    SensorData data;
-
-    JTabbedPane tabbedPane;
-    JFreeChart chart;
-    ChartPanel panel;
-    Vector<JPanel> charts;
-    Vector<Function> functions;
-    Properties calibrationConfig;
-    private Hashtable<String,JPanel> fieldsTable;
-	JPanel labelPaneVars;
-	JPanel fieldPaneVars;
 	private final int DEF_MIN_X = 1;
 	private final int DEF_MAX_X = 5000;
 	private final int DEF_INC_X = 5;
-    
+	
+	Node node;
+    NodeSensor[] sensors;
+    SensorData data;
+    Vector<JPanel> charts;
+    Vector<Function> functions;
+    private Hashtable<String,JPanel> fieldsTable;
+    Properties calibrationConfig;
+
+    JTabbedPane tabbedPane; // tabbedPanel
+    JPanel mainPanel; // main Panel for each tab
+    JFreeChart chart;
+    ChartPanel chartPanel; // chartPanel in mainPanel
+
+	JPanel varsPanel; // varsPanel in mainPanel
+	JPanel labelPaneVars;
+	JPanel fieldPaneVars;
+
+	JButton buttonReset;
+	JButton buttonFormula;
+	JButton buttonAutoCal;
+
+
     /*do not use delim char in sensor/variable name */
     public static final char delim = '\n';
 
@@ -80,22 +91,27 @@ public class NodeCalibrationDialog extends JFrame
         this.node=node;
         sensors=node.getNodeSensors();
         tabbedPane = new JTabbedPane();
-
-        JPanel mainPanel = null; // Main panel for each tab
-        JPanel chartPanel = null; // chart panel
-        JPanel varsPanel = null; // vars panel
+        String sensorName;
 
         for (int i=0;i<node.getSensorsCount();i++)
         {
+        	sensorName=sensors[i].getName();
         	mainPanel=new JPanel();
         	mainPanel.setLayout(new FlowLayout());
         	tabbedPane.add(mainPanel);
-        	tabbedPane.setTitleAt(i, sensors[i].getName()+" sensor");
+        	tabbedPane.setTitleAt(i, sensorName+" sensor");
+        	
+    		varsPanel=new JPanel();
+    		varsPanel.setLayout(new BorderLayout());
         	labelPaneVars = new JPanel(new GridLayout(0,1));
         	fieldPaneVars = new JPanel(new GridLayout(0,1));
-      	
-         	fieldsTable.put(sensors[i].getName(), fieldPaneVars);
+         	fieldsTable.put(sensorName, fieldPaneVars);
         	
+         	labelPaneVars.add(new JLabel("Last adc_value: "));
+         	fieldPaneVars.add(new JLabel(getLastADCValue(sensorName)));
+
+            insertVarPaneSeparator();
+         	
         	labelPaneVars.add(new JLabel("Min. X: "));
         	labelPaneVars.add(new JLabel("Max. X: "));
         	labelPaneVars.add(new JLabel("Inc. X: "));
@@ -104,36 +120,49 @@ public class NodeCalibrationDialog extends JFrame
         	createLimitTextFields(i, "maxx",DEF_MAX_X);
         	createLimitTextFields(i, "inc", DEF_INC_X);
         	
-            labelPaneVars.add(new JLabel(""));
-            fieldPaneVars.add(new JLabel(""));
+        	insertVarPaneSeparator();
             
-            Variable[] vars=sensors[i].getVars();
+        	Variable[] vars=sensors[i].getVars();
             
-        	for (int j=0;j<vars.length;j++){
-        		varsPanel=new JPanel();
-        		varsPanel.setLayout(new BorderLayout());	
+        	for (int j=0;j<vars.length;j++){	
         		// create labels
         		labelPaneVars.add(new JLabel(vars[j].getName()+": "));
         		// create fields
         		createVarsTextFields(i, j);
         	}
             
-            createChart(sensors[i].getSensorId());
-            chartPanel=new JPanel();
-            chartPanel.add(panel);
+            chartPanel=createChart(sensors[i].getSensorId());
             charts.add(chartPanel);
             
-            JButton defValBut=new JButton("Reset values");
-            defValBut.setName(sensors[i].getName());
-            defValBut.addActionListener(new ButtonResetAction());
+            buttonReset=new JButton("Reset values");
+            buttonReset.setName(sensorName);
+            buttonReset.addActionListener(new ButtonResetAction());
+            
+            buttonFormula=new JButton("View conversion\n expressions");
+            buttonFormula.setName(sensorName);
+            buttonFormula.addActionListener(new ButtonFormulaAction());
+            
+            buttonAutoCal=new JButton("Auto Calibration");
+            buttonFormula.setName(sensorName);
+            buttonAutoCal.addActionListener(new ButtonAutoCalAction());
+            buttonAutoCal.setToolTipText("Autocalibrate (TODO)");//TODO
+            
+            insertVarPaneSeparator(); 
+            labelPaneVars.add(new JLabel(""));
+            fieldPaneVars.add(buttonReset);
+            labelPaneVars.add(new JLabel(""));
+            fieldPaneVars.add(buttonFormula);
+            labelPaneVars.add(new JLabel(""));
+            fieldPaneVars.add(buttonAutoCal);
             
             varsPanel.add(labelPaneVars, BorderLayout.CENTER); 
             varsPanel.add(fieldPaneVars, BorderLayout.LINE_END);
-            varsPanel.add(defValBut,BorderLayout.AFTER_LAST_LINE);
-           
-        	mainPanel.add(varsPanel);
+
+
+            
+            mainPanel.add(varsPanel); 
         	mainPanel.add(chartPanel);
-        	mainPanel.add(getConversionImage(sensors[i].getName()));
+        	//mainPanel.add(getConversionImage(sensors[i].getName()));
 
             //TODO Add option "compare to->(Node with same firmware)"      	
         }
@@ -141,6 +170,18 @@ public class NodeCalibrationDialog extends JFrame
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         pack();
         setVisible(true);
+    }
+    
+    private void insertVarPaneSeparator() {
+        labelPaneVars.add(new JLabel(""));
+        fieldPaneVars.add(new JLabel(""));	
+	}
+
+	String getLastADCValue(String sensor){
+    	int SENSOR=node.keyConv(sensor);
+    	SensorData sd=node.getLastSD();
+    	int lastValue=sd.getValue(SENSOR);
+    	return Integer.toString(lastValue);
     }
     
     void createLimitTextFields(int idx, String s, int value){
@@ -244,7 +285,7 @@ public class NodeCalibrationDialog extends JFrame
             true,                      // Use tooltips
             false                      // Configure chart to generate URLs?
             );
-        return (panel = new ChartPanel(chart));
+        return (chartPanel = new ChartPanel(chart));
 	}
 	
 	private Function createFunction(int sensorId)
@@ -471,6 +512,7 @@ public class NodeCalibrationDialog extends JFrame
 		
 		public void reset(Component field)
 		{
+			if (!(field instanceof JFormattedTextField)) return;
 			String fieldName=field.getName();
 			if (fieldName=="" || fieldName==null) return;
 			StringTokenizer tokens=
@@ -486,10 +528,39 @@ public class NodeCalibrationDialog extends JFrame
 			}
 		}
 	}
+	
+	public class ButtonFormulaAction implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String sensor=((Component) e.getSource()).getName();
+			JFrame imgFrame=new JFrame();
+			imgFrame.add(getConversionImage(sensor));
+			imgFrame.pack();
+			imgFrame.setVisible(true);
+		}
+
+	}
+
+	public class ButtonAutoCalAction implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+
+		}
+
+	}
 
 
 	public void updateConfig(String sensor, String var, double newVal) {
 		calibrationConfig.put("var,"+node.getID()+","+sensor+"," +
 		""+var, String.valueOf(newVal));	
+	}
+
+	@Override
+	public void updateConfig(Properties config) {
+		// TODO Instead of updateConfig(String sensor, String var, double newVal)
+		// Do the same as in DataFeederCosm
 	}
 }

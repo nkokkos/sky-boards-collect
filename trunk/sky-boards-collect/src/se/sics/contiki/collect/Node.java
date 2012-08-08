@@ -247,7 +247,7 @@ public class Node implements Comparable<Node> {
   }
   public NodeSensor getNodeSensor(String name){
 		return sensors.get(keyConv(name));
-}
+  }
   
   public int keyConv(String sensorName){
     if (sensorName.equals("Light1")) 
@@ -280,19 +280,23 @@ public class Node implements Comparable<Node> {
 	return nodeType;
   }
 
-public void setFeedID(String feedID) {
+  // -------------------------------------------------------------------
+  // Feed for Cosm
+  // -------------------------------------------------------------------
+  
+  public void setFeedID(String feedID) {
 	this.feedID = feedID;
-}
+  }
 
-public String getFeedID() {
+  public String getFeedID() {
 	return feedID;
-}
+  }
 
-public void setFeedTitle(String feedTitle) {
+  public void setFeedTitle(String feedTitle) {
 	this.feedTitle = feedTitle;
-}
+  }
 
-public String getFeedTitle() {
+  public String getFeedTitle() {
 	return feedTitle;
-}
+  }
 }
