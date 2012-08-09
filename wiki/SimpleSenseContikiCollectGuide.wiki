@@ -1,9 +1,0 @@
-#summary A simple guide to getting started with Sen.se and sky-boards-collect
-
-= Introduction =
-
-This brief guide will cover how to create feeds on open.sens.se and send values to them, using /contiki-collect/sky-boards-collect
-
-= Details =
-
-//TODO
