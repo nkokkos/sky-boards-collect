@@ -30,6 +30,8 @@ To know which is the right column, we have to open "_SensorInfo.java_" class in 
 
 *NOTE: Since version 1.1b, it is not necessary to look for adc_value in console... This value is shown in the app dialog* 
 
+https://sky-boards-collect.googlecode.com/svn/wiki/captures/2captura1-1b.png
+
 = Step 3 =
 
 Then we have CONVERSION(adc_value)=24, and this is wrong according to our reference thermometer :(
