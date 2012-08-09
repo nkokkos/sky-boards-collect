@@ -10,31 +10,22 @@ An example on how to calibre DS1000.Temperature sensor using the _adjust convers
 
 First we must have a *reference device* that we know it shows the right temperature, for example our home thermometer. In this example, *real value is 30º.*
 
-So, we start a network collect, and our temperature values from node 3 are not calibrated:
+So, we start a network collect, and our temperature values from node 3 are not the same than our reference device:
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal1.jpg
 
-In other words: *CONVERSION(adc_value)=24*, and it should be 30
 
 = Step 2 =
 
-We need to know ADC_VALUE. This is the output from ADC12 that a node sends to application. We can see this value in console.
-
-https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal2.jpg
-
-To know which is the right column, we have to open "_SensorInfo.java_" class in text editor and look for TEMPERATURE:
-
-{{{
-  public static final int TEMPERATURE = 24;
-}}}
-
-*NOTE: Since version 1.1b, it is not necessary to look for adc_value in console... This value is shown in the app dialog* 
+We need to know *ADC_VALUE*. This is the output from ADC12 (Analog-to-digital 12 bit converter) that a node sends to application, and represents Analog voltage from the sensor converted by ADC12 to a digital representation. Then within the Java application conversion formulas (that are based on sensor/ADC12 circuit properties) are applied to this value to obtain the real physical magnitude. This adc_value value is shown in the app dialog: 
 
 https://sky-boards-collect.googlecode.com/svn/wiki/captures/2captura1-1b.png
 
 = Step 3 =
 
-Then we have CONVERSION(adc_value)=24, and this is wrong according to our reference thermometer :(
+*In this example adc_value was 2349*
+
+Then we have CONVERSION(2349)=24, and this is wrong according to our reference thermometer, because it should be CONVERSION(2349)=30.
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal3.jpg
 
@@ -42,8 +33,7 @@ https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal3.jpg
 
  * Change values until *CONVERSION(2349)=30*
 
-You should change preferably Vcc and/or Vref, if your batteries have some time or you don't know which Vref is using the firmware to configure ADC12 ref input.
-
+You should change preferably Vcc and/or Vref, if your batteries have some time or you don't know which Vref is using the firmware to configure ADC12 ref input. But who knows... maybe you have a defective resistor in your mote!
 
 
 By trial and error method we found a good value (you could also try a more advanced method based in ecuations resolution). In this example if we change Vcc to 2.66 it gives the good conversion
