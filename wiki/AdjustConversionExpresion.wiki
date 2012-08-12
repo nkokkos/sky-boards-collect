@@ -35,7 +35,7 @@ https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal3.jpg
 
  * Change values until *CONVERSION(2349)=30*
 
-You should change preferably Vcc and/or Vref, if your batteries have some time or you don't know which Vref is using the firmware to configure ADC12 ref input. But who knows... maybe you have a defective resistor in your mote!
+*You should change preferably Vcc and/or Vref*, if your batteries have some time or you don't know which Vref is using the firmware to configure ADC12 ref input. But who knows... one could have a defective resistor in sensor circuit or not with the ohms it should have.
 
 
 By trial and error method we found a good value (you could also try a more advanced method based in ecuations resolution). In this example if we change Vcc to 2.66 it gives the good conversion
@@ -44,7 +44,7 @@ https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal4.jpg
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal5.jpg
 
-*NOTE:* MinX, MaxX and IncX values are only for visualization purposes, its value doesn't affect conversion!
+*NOTE:* MinX, MaxX and IncX values are only to define function resolution for visualization purposes, its value doesn't affect conversion.
 
 Now, close adjust conversion expressions dialog and chart will be updated to the right values:
 
