@@ -10,7 +10,7 @@ An example on how to calibre DS1000.Temperature sensor using the _adjust convers
 
 First we must have a *reference device* that we know it shows the right temperature, for example our home thermometer. In this example, *real value is 30º.*
 
-So, we start a network collect, and our temperature values from node 3 are not the same than our reference device:
+So, we start a network collect, and our temperature values from node 3 are not the same as our reference device:
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal1.jpg
 
