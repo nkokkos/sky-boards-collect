@@ -1,0 +1,9 @@
+#summary User-agent
+
+In PublisherCosm & PublisherSense:
+
+{{{
+urlConn.setRequestProperty("User-Agent", "Contiki collect-view");
+}}}
+
+Or whatever you want :)
