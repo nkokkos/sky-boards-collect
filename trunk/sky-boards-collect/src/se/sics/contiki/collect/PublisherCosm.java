@@ -49,7 +49,7 @@ public class PublisherCosm extends Thread{
 		char separator=',';
 		for(Object key: feedTable.keySet()) {
 			msg.append("{\"id\" : \""+key+"\", " +
-					"	  \"current_value\" :"+feedTable.get(key)+"}"+separator);
+					"\"current_value\" :\""+feedTable.get(key)+"\"}"+separator);
 		}
 		// remove last separator
 		String msgbody=msg.toString();
@@ -117,6 +117,8 @@ public class PublisherCosm extends Thread{
         
         urlConn.setRequestProperty("Content-Type","application/json");
         urlConn.setRequestProperty("X-ApiKey", APIkey);
+        urlConn.setRequestProperty("User-Agent", "Contiki collect-view");
+        
 
         try {
             urlConn.connect();

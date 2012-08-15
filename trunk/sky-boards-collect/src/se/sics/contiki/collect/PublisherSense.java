@@ -42,7 +42,7 @@ public class PublisherSense extends Thread{
 		char separator=',';
 		for(Object key: feedTable.keySet()) {
 			msg.append("{\"feed_id\" : "+key+", " +
-					"	  \"value\" : \""+feedTable.get(key)+"\"}"+separator);
+					"\"value\" : \""+feedTable.get(key)+"\"}"+separator);
 		}
 		// remove last separator
 		String msgbody=msg.toString();
@@ -94,6 +94,7 @@ public class PublisherSense extends Thread{
         
         urlConn.setRequestProperty("Content-Type","application/json");
         urlConn.setRequestProperty("sense_key", APIkey);
+        urlConn.setRequestProperty("User-Agent", "Contiki collect-view");
 
         try {
             urlConn.connect();
