@@ -150,10 +150,12 @@ public class NodeCalibrationDialog extends JFrame
             insertVarPaneSeparator(); 
             labelPaneVars.add(new JLabel(""));
             fieldPaneVars.add(buttonReset);
+            
             labelPaneVars.add(new JLabel(""));
             fieldPaneVars.add(buttonFormula);
-            labelPaneVars.add(new JLabel(""));
-            fieldPaneVars.add(buttonAutoCal);
+            
+            //labelPaneVars.add(new JLabel(""));
+            //fieldPaneVars.add(buttonAutoCal);
             
             varsPanel.add(labelPaneVars, BorderLayout.CENTER); 
             varsPanel.add(fieldPaneVars, BorderLayout.LINE_END);
@@ -536,6 +538,7 @@ public class NodeCalibrationDialog extends JFrame
 			String sensor=((Component) e.getSource()).getName();
 			JFrame imgFrame=new JFrame();
 			imgFrame.add(getConversionImage(sensor));
+			imgFrame.setTitle("Datasheet formulas");
 			imgFrame.pack();
 			imgFrame.setVisible(true);
 		}
