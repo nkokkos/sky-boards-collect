@@ -1,0 +1,8 @@
+#summary User-agent
+
+At PublisherCosm.java & PublisherSense.java:
+
+
+urlConn.setRequestProperty("User-Agent", "Contiki collect-view");
+
+Or whatever you want :)
