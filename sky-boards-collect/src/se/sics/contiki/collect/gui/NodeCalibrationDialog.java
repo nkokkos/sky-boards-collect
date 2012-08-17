@@ -50,7 +50,7 @@ public class NodeCalibrationDialog extends JFrame
 
 	private static final long serialVersionUID = 1L;
 	private final int DEF_MIN_X = 1;
-	private final int DEF_MAX_X = 5000;
+	private final int DEF_MAX_X = 4095;
 	private final int DEF_INC_X = 5;
 	
 	Node node;
@@ -437,7 +437,7 @@ public class NodeCalibrationDialog extends JFrame
 		private String xLabel="adc_value";
 		private String yLabel;
 	    private int minX=1;
-	    private int maxX=10000;
+	    private int maxX=4095;
 	    private int increment=5;
 		Function(SensorData data, int min, int max, int inc, String units)
 		{
