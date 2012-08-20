@@ -848,14 +848,12 @@ public class MapPanel extends JPanel implements Configurable, Visualizer, Action
     }
 
     public void paint(Graphics g, int x, int y, boolean paintSensorData, int format) {
-      final int od = 5;
+      final int od = 3;
       g.setColor(Color.black);
       g.drawString(node.getID(), x + od * 2 + 3, y + 4);
         
       if (paintSensorData) {
-    	  
     	  switch(format){
-    	  
     	  	case ROW_FORMAT:
     	  		paintLastDataRow(g,od);
     	  		break;

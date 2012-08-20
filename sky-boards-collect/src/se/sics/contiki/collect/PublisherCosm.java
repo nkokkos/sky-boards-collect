@@ -47,9 +47,11 @@ public class PublisherCosm extends Thread{
 	public String constructMsgCosm(Hashtable<String,String> feedTable){
 		StringBuffer msg = new StringBuffer();
 		char separator=',';
+		String value;
 		for(Object key: feedTable.keySet()) {
+			value = feedTable.get(key).replace(",",".");//Set "." as decimal mark
 			msg.append("{\"id\" : \""+key+"\", " +
-					"\"current_value\" :\""+feedTable.get(key)+"\"}"+separator);
+					"\"current_value\" :\""+value+"\"}"+separator);
 		}
 		// remove last separator
 		String msgbody=msg.toString();
@@ -58,6 +60,7 @@ public class PublisherCosm extends Thread{
 				"\"version\":\""+cosmVersion+"\",\"datastreams\":["+
 				msgbody+"]}";
 	}
+
 
 	public void setCosmTitle(String cosmTitle) {
 		this.cosmTitle = cosmTitle;
