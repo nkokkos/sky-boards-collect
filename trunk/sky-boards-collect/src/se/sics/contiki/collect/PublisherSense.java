@@ -40,9 +40,11 @@ public class PublisherSense extends Thread{
 	public String constructMsgOpenSense(Hashtable<String,String> feedTable){
 		StringBuffer msg = new StringBuffer();
 		char separator=',';
+		String value;
 		for(Object key: feedTable.keySet()) {
+			value = feedTable.get(key).replace(",",".");//Set "." as decimal mark
 			msg.append("{\"feed_id\" : "+key+", " +
-					"\"value\" : \""+feedTable.get(key)+"\"}"+separator);
+					"\"value\" : \""+value+"\"}"+separator);
 		}
 		// remove last separator
 		String msgbody=msg.toString();
