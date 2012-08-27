@@ -37,6 +37,7 @@
  */
 
 package se.sics.contiki.collect;
+
 import java.awt.BorderLayout;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
@@ -125,12 +126,12 @@ public class CollectServer implements SerialConnectionListener {
   private PrintWriter sensorDataOutput;
   private boolean isSensorLogUsed;
 
-  private Hashtable<String,Node> nodeTable = new Hashtable<String,Node>();
+  private Hashtable<String, Node> nodeTable = new Hashtable<String, Node>();
   private Node[] nodeCache;
 
   private JFrame window;
   private JTabbedPane mainPanel;
-  private HashMap<String,JTabbedPane> categoryTable = new HashMap<String,JTabbedPane>();
+  private HashMap<String, JTabbedPane> categoryTable = new HashMap<String, JTabbedPane>();
   private JMenuItem runInitScriptItem;
 
   private final Visualizer[] visualizers;
@@ -168,8 +169,8 @@ public class CollectServer implements SerialConnectionListener {
     this.initScript = config.getProperty("init.script", INIT_SCRIPT);
 
     /* Make sure we have nice window decorations */
-//    JFrame.setDefaultLookAndFeelDecorated(true);
-//    JDialog.setDefaultLookAndFeelDecorated(true);
+    // JFrame.setDefaultLookAndFeelDecorated(true);
+    // JDialog.setDefaultLookAndFeelDecorated(true);
     Rectangle maxSize = GraphicsEnvironment.getLocalGraphicsEnvironment()
         .getMaximumWindowBounds();
 
@@ -216,7 +217,7 @@ public class CollectServer implements SerialConnectionListener {
             if (iMin < 1) {
               iMin = 1;
             }
-            for(int i = iMin; i <= iMax; i++) {
+            for (int i = iMin; i <= iMax; i++) {
               if (nodeList.isSelectedIndex(i)) {
                 tmp[n++] = (Node) nodeModel.getElementAt(i);
               }
@@ -231,11 +232,12 @@ public class CollectServer implements SerialConnectionListener {
           selectNodes(selected, false);
         }
 
-      }});
+      }
+    });
     nodeList.setBorder(BorderFactory.createTitledBorder("Nodes"));
     ListCellRenderer renderer = nodeList.getCellRenderer();
     if (renderer instanceof JLabel) {
-      ((JLabel)renderer).setHorizontalAlignment(JLabel.CENTER);
+      ((JLabel) renderer).setHorizontalAlignment(JLabel.CENTER);
     }
     window.getContentPane().add(new JScrollPane(nodeList), BorderLayout.WEST);
 
@@ -255,187 +257,234 @@ public class CollectServer implements SerialConnectionListener {
     visualizers = new Visualizer[] {
         nodeControl,
         mapPanel,
-        new DataFeederSense(MAIN,configTable),
-        new DataFeederCosm(MAIN,configTable),
+        new DataFeederSense(MAIN, configTable),
+        new DataFeederCosm(MAIN, configTable),
         new MapPanel(this, "Network Graph", MAIN, false),
-        new BarChartPanel(this, SENSORS, "Average Temperature", "Temperature", "Nodes", "Celsius",
+        new BarChartPanel(this, SENSORS, "Average Temperature",
+            "Average Temperature", "Nodes", "Celsius",
             new String[] { "Celsius" }) {
           {
-            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(
+                NumberAxis.createIntegerTickUnits());
           }
+
           protected void addSensorData(SensorData data) {
             Node node = data.getNode();
             String nodeName = node.getName();
             SensorDataAggregator aggregator = node.getSensorDataAggregator();
-            dataset.addValue(aggregator.getAverageTemperature(), categories[0], nodeName);
+            dataset.addValue(aggregator.getAverageTemperature(), categories[0],
+                nodeName);
           }
         },
-        new TimeChartPanel(this, SENSORS, "Temperature", "Temperature", "Time", "Celsius") {
+        new TimeChartPanel(this, SENSORS, "Temperature", "Temperature", "Time",
+            "Celsius") {
           {
-            chart.getXYPlot().getRangeAxis().setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+            chart.getXYPlot().getRangeAxis().setStandardTickUnits(
+                NumberAxis.createIntegerTickUnits());
             setRangeTick(5);
             setRangeMinimumSize(10.0);
             setGlobalRange(true);
           }
+
           protected double getSensorDataValue(SensorData data) {
-        	switch(data.getType()){
-        	case SensorInfo.CM5000: return data.getTemperatureCM5000();
-        	case SensorInfo.DS1000: return data.getTemperatureDS1000();
-        	}
-        	return 0;
+            switch (data.getType()) {
+              case SensorInfo.TmoteSky:
+                return data.getTemperatureTmoteSky();
+              case SensorInfo.DS1000:
+                return data.getTemperatureDS1000();
+            }
+            return Double.NaN;
           }
         },
         new TimeChartPanel(this, SENSORS, "Battery Voltage", "Battery Voltage",
-			   "Time", "Volt") {
+            "Time", "Volt") {
           {
             setRangeTick(1);
-	    setRangeMinimumSize(4.0);
-	    setGlobalRange(true);
+            setRangeMinimumSize(4.0);
+            setGlobalRange(true);
           }
+
           protected double getSensorDataValue(SensorData data) {
             return data.getBatteryVoltage();
           }
         },
-        new TimeChartPanel(this, SENSORS, "Battery Indicator", "Battery Indicator",
-			   "Time", "Indicator") {
+        new TimeChartPanel(this, SENSORS, "Battery Indicator",
+            "Battery Indicator", "Time", "Indicator") {
           {
-            chart.getXYPlot().getRangeAxis().setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+            chart.getXYPlot().getRangeAxis().setStandardTickUnits(
+                NumberAxis.createIntegerTickUnits());
             setRangeTick(5);
             setRangeMinimumSize(10.0);
             setGlobalRange(true);
           }
+
           protected double getSensorDataValue(SensorData data) {
             return data.getBatteryIndicator();
           }
         },
-        new TimeChartPanel(this, SENSORS, "Relative Humidity", "Humidity", "Time", "%") {
+        new TimeChartPanel(this, SENSORS, "Humidity", "Relative Humidity",
+            "Time", "%") {
           {
             chart.getXYPlot().getRangeAxis().setRange(0.0, 100.0);
           }
+
           protected double getSensorDataValue(SensorData data) {
-        	  if (data.getType()!=SensorInfo.CM5000) return 0;
-        	  return data.getHumidity();
+            if (data.getType() != SensorInfo.TmoteSky)
+              return Double.NaN;
+
+            return data.getHumidity();
           }
         },
-        new TimeChartPanel(this, SENSORS, "Light 1", "Light 1", "Time", "Lx") {
+        new TimeChartPanel(this, SENSORS, "Light 1",
+            "Photosynthetically Active Radiation", "Time", "Lx") {
           protected double getSensorDataValue(SensorData data) {
-        	  if (data.getType()!=SensorInfo.CM5000) return 0;
-        	  return data.getLight1();
+            if (data.getType() != SensorInfo.TmoteSky)
+              return Double.NaN;
+
+            return data.getLight1();
           }
         },
-        new TimeChartPanel(this, SENSORS, "Light 2", "Light 2", "Time", "Lx") {
+        new TimeChartPanel(this, SENSORS, "Light 2", "Total Solar Radiation",
+            "Time", "Lx") {
           protected double getSensorDataValue(SensorData data) {
-        	  if (data.getType()!=SensorInfo.CM5000) return 0;
-        	  return data.getLight2();
+            if (data.getType() != SensorInfo.TmoteSky)
+              return Double.NaN;
+
+            return data.getLight2();
           }
         },
-        new TimeChartPanel(this, SENSORS, "CO", "CO", "Time", "ppm") {
-            protected double getSensorDataValue(SensorData data) {
-            	switch(data.getType()){
-            	case SensorInfo.AR1000: 
-            		return data.getCO();
-            	case SensorInfo.DS1000: 
-            		return data.getCO();
-            	}   
-            	return 0;
+        new TimeChartPanel(this, SENSORS, "CO", "Carbon monoxide", "Time",
+            "ppm") {
+          protected double getSensorDataValue(SensorData data) {
+            switch (data.getType()) {
+              case SensorInfo.AR1000:
+                return data.getCO();
+              case SensorInfo.DS1000:
+                return data.getCO();
             }
+            return Double.NaN;
+          }
         },
-        new TimeChartPanel(this, SENSORS, "CO2", "CO2", "Time", "ppm") {
-            protected double getSensorDataValue(SensorData data) {
-                switch(data.getType()){
-                case SensorInfo.AR1000: 
-                	return data.getCO2();
-                case SensorInfo.DS1000: 
-                	return data.getCO2();
-                }
-                return 0;
+        new TimeChartPanel(this, SENSORS, "CO2", "Carbon dioxide", "Time",
+            "ppm") {
+          protected double getSensorDataValue(SensorData data) {
+            switch (data.getType()) {
+              case SensorInfo.AR1000:
+                return data.getCO2();
+              case SensorInfo.DS1000:
+                return data.getCO2();
             }
+            return Double.NaN;
+          }
         },
-        new TimeChartPanel(this, SENSORS, "Dust", "Dust", "Time", "mg/m^3") {
-            protected double getSensorDataValue(SensorData data) {
-            	if (data.getType()!=SensorInfo.AR1000) return 0;
-            	return data.getDust();
-            }
+        new TimeChartPanel(this, SENSORS, "Dust", "Particle concentration",
+            "Time", "mg/m^3") {
+          protected double getSensorDataValue(SensorData data) {
+            if (data.getType() != SensorInfo.AR1000)
+              return Double.NaN;
+
+            return data.getDust();
+          }
         },
-        new TimeChartPanel(this, NETWORK, "Neighbors", "Neighbor Count", "Time", "Neighbors") {
+        new TimeChartPanel(this, NETWORK, "Neighbors", "Neighbor Count",
+            "Time", "Neighbors") {
           {
             ValueAxis axis = chart.getXYPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
             axis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
+
           protected double getSensorDataValue(SensorData data) {
             return data.getValue(SensorData.NUM_NEIGHBORS);
           }
         },
-        new TimeChartPanel(this, NETWORK, "Beacon Interval", "Beacon interval", "Time", "Interval (s)") {
+        new TimeChartPanel(this, NETWORK, "Beacon Interval", "Beacon interval",
+            "Time", "Interval (s)") {
           {
             ValueAxis axis = chart.getXYPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
             axis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
+
           protected double getSensorDataValue(SensorData data) {
             return data.getValue(SensorData.BEACON_INTERVAL);
           }
         },
-        new TimeChartPanel(this, NETWORK, "Network Hops (Over Time)", "Network Hops", "Time", "Hops") {
+        new TimeChartPanel(this, NETWORK, "Network Hops (Over Time)",
+            "Network Hops", "Time", "Hops") {
           {
             ValueAxis axis = chart.getXYPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
             axis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
+
           protected double getSensorDataValue(SensorData data) {
             return data.getValue(SensorData.HOPS);
           }
         },
-        new BarChartPanel(this, NETWORK, "Network Hops (Per Node)", "Network Hops", "Nodes", "Hops",
-            new String[] { "Last Hop", "Average Hops" }, false) {
+        new BarChartPanel(this, NETWORK, "Network Hops (Per Node)",
+            "Network Hops", "Nodes", "Hops", new String[] { "Last Hop",
+                "Average Hops" }, false) {
           {
-            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(
+                NumberAxis.createIntegerTickUnits());
           }
+
           protected void addSensorData(SensorData data) {
-            dataset.addValue(data.getValue(SensorData.HOPS), categories[0], data.getNode().getName());
-            dataset.addValue(data.getNode().getSensorDataAggregator().getAverageValue(SensorData.HOPS), categories[1], data.getNode().getName());
+            dataset.addValue(data.getValue(SensorData.HOPS), categories[0],
+                data.getNode().getName());
+            dataset.addValue(data.getNode().getSensorDataAggregator()
+                .getAverageValue(SensorData.HOPS), categories[1], data
+                .getNode().getName());
           }
         },
-        new TimeChartPanel(this, NETWORK, "Routing Metric (Over Time)", "Routing Metric", "Time", "Routing Metric") {
+        new TimeChartPanel(this, NETWORK, "Routing Metric (Over Time)",
+            "Routing Metric", "Time", "Routing Metric") {
           {
             ValueAxis axis = chart.getXYPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
             axis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
+
           protected double getSensorDataValue(SensorData data) {
             return data.getValue(SensorData.RTMETRIC);
           }
         },
-        new AggregatedTimeChartPanel<boolean[]>(this, NETWORK, "Avg Routing Metric (Over Time)", "Time",
-                "Average Routing Metric") {
-            private int nodeCount;
+        new AggregatedTimeChartPanel<boolean[]>(this, NETWORK,
+            "Avg Routing Metric (Over Time)", "Time", "Average Routing Metric") {
+          private int nodeCount;
           {
             ValueAxis axis = chart.getXYPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
             axis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
+
           @Override
           protected boolean[] createState(Node node) {
             return new boolean[1];
           }
+
           @Override
-          protected void clearState(Map<Node,boolean[]> map) {
+          protected void clearState(Map<Node, boolean[]> map) {
             nodeCount = 0;
-            for(boolean[] value : map.values()) {
+            for (boolean[] value : map.values()) {
               value[0] = false;
             }
           }
+
           @Override
-          protected String getTitle(int selectedCount, int dataCount, int duplicateCount) {
-            return "Average Routing Metric (" + dataCount + " packets from " + nodeCount + " node"
-                + (nodeCount > 1 ? "s" : "") + ')';
+          protected String getTitle(int selectedCount, int dataCount,
+              int duplicateCount) {
+            return "Average Routing Metric (" + dataCount + " packets from "
+                + nodeCount + " node" + (nodeCount > 1 ? "s" : "") + ')';
           }
+
           @Override
           protected int getTotalDataValue(int value) {
             // Return average value
             return nodeCount > 0 ? (value / nodeCount) : value;
           }
+
           @Override
           protected int getSensorDataValue(SensorData data, boolean[] nodeState) {
             if (!nodeState[0]) {
@@ -445,12 +494,14 @@ public class CollectServer implements SerialConnectionListener {
             return data.getValue(SensorData.RTMETRIC);
           }
         },
-        new TimeChartPanel(this, NETWORK, "ETX (Over Time)", "ETX to Next Hop", "Time", "ETX") {
+        new TimeChartPanel(this, NETWORK, "ETX (Over Time)", "ETX to Next Hop",
+            "Time", "ETX") {
           {
             ValueAxis axis = chart.getXYPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
             axis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
+
           protected double getSensorDataValue(SensorData data) {
             return data.getBestNeighborETX();
           }
@@ -459,19 +510,22 @@ public class CollectServer implements SerialConnectionListener {
             "Next Hop (Over Time)", "Time", "Next Hop Changes") {
           {
             ValueAxis axis = chart.getXYPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
             axis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
+
           @Override
           protected int[] createState(Node node) {
             return new int[1];
           }
+
           @Override
-          protected void clearState(Map<Node,int[]> map) {
-            for(int[] value : map.values()) {
+          protected void clearState(Map<Node, int[]> map) {
+            for (int[] value : map.values()) {
               value[0] = 0;
             }
           }
+
           @Override
           protected int getSensorDataValue(SensorData sd, int[] nodeState) {
             boolean hasBest = nodeState[0] != 0;
@@ -483,7 +537,8 @@ public class CollectServer implements SerialConnectionListener {
             return 0;
           }
         },
-        new TimeChartPanel(this, NETWORK, "Latency", "Latency", "Time", "Seconds") {
+        new TimeChartPanel(this, NETWORK, "Latency", "Latency", "Time",
+            "Seconds") {
           protected double getSensorDataValue(SensorData data) {
             return data.getLatency();
           }
@@ -492,50 +547,64 @@ public class CollectServer implements SerialConnectionListener {
             "Received (Over Time)", "Time", "Received Packets") {
           {
             ValueAxis axis = chart.getXYPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
             axis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
+
           @Override
-          protected String getTitle(int nodeCount, int dataCount, int duplicateCount) {
-            return "Received " + dataCount + " packets from " + nodeCount + " node"
+          protected String getTitle(int nodeCount, int dataCount,
+              int duplicateCount) {
+            return "Received "
+                + dataCount
+                + " packets from "
+                + nodeCount
+                + " node"
                 + (nodeCount > 1 ? "s" : "")
-                + (duplicateCount > 0 ? (" (" + duplicateCount + " duplicates)") : "");
+                + (duplicateCount > 0 ? (" (" + duplicateCount + " duplicates)")
+                    : "");
           }
+
           @Override
           protected Node createState(Node node) {
             return node;
           }
+
           @Override
           protected int getSensorDataValue(SensorData sd, Node node) {
             return 1;
           }
         },
-        new AggregatedTimeChartPanel<int[]>(this, NETWORK,
-            "Lost (Over Time)", "Time", "Estimated Lost Packets") {
+        new AggregatedTimeChartPanel<int[]>(this, NETWORK, "Lost (Over Time)",
+            "Time", "Estimated Lost Packets") {
           private int totalLost;
           {
             ValueAxis axis = chart.getXYPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
             axis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
+
           @Override
-          protected String getTitle(int nodeCount, int dataCount, int duplicateCount) {
+          protected String getTitle(int nodeCount, int dataCount,
+              int duplicateCount) {
             return "Received " + dataCount + " packets from " + nodeCount
                 + " node" + (nodeCount > 1 ? "s" : "") + ". Estimated "
                 + totalLost + " lost packet" + (totalLost == 1 ? "" : "s")
                 + '.';
           }
+
           @Override
           protected int[] createState(Node node) {
             return new int[1];
           }
+
           @Override
-          protected void clearState(Map<Node,int[]> map) {
+          protected void clearState(Map<Node, int[]> map) {
             totalLost = 0;
-            for(int[] v : map.values()) {
+            for (int[] v : map.values()) {
               v[0] = 0;
             }
           }
+
           @Override
           protected int getSensorDataValue(SensorData sd, int[] nodeState) {
             int lastSeqno = nodeState[0];
@@ -549,29 +618,36 @@ public class CollectServer implements SerialConnectionListener {
             return 0;
           }
         },
-        new BarChartPanel(this, NETWORK, "Received (Per Node)", "Received Packets Per Node", "Nodes", "Packets",
-            new String[] { "Packets", "Duplicates" }) {
+        new BarChartPanel(this, NETWORK, "Received (Per Node)",
+            "Received Packets Per Node", "Nodes", "Packets", new String[] {
+                "Packets", "Duplicates" }) {
           {
-            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(
+                NumberAxis.createIntegerTickUnits());
           }
+
           protected void addSensorData(SensorData data) {
             Node node = data.getNode();
             SensorDataAggregator sda = node.getSensorDataAggregator();
             dataset.addValue(sda.getDataCount(), categories[0], node.getName());
-            dataset.addValue(sda.getDuplicateCount(), categories[1], node.getName());
+            dataset.addValue(sda.getDuplicateCount(), categories[1], node
+                .getName());
           }
         },
-        new BarChartPanel(this, NETWORK, "Received (5 min)", "Received Packets (last 5 min)", "Nodes", "Packets",
-            new String[] { "Packets", "Duplicates" }) {
+        new BarChartPanel(this, NETWORK, "Received (5 min)",
+            "Received Packets (last 5 min)", "Nodes", "Packets", new String[] {
+                "Packets", "Duplicates" }) {
           {
-            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(
+                NumberAxis.createIntegerTickUnits());
           }
+
           protected void addSensorData(SensorData data) {
             Node node = data.getNode();
             int packetCount = 0;
             int duplicateCount = 0;
             long earliestData = System.currentTimeMillis() - (5 * 60 * 1000);
-            for(int index = node.getSensorDataCount() - 1; index >= 0; index--) {
+            for (int index = node.getSensorDataCount() - 1; index >= 0; index--) {
               SensorData sd = node.getSensorData(index);
               if (sd.getNodeTime() < earliestData) {
                 break;
@@ -586,38 +662,44 @@ public class CollectServer implements SerialConnectionListener {
             dataset.addValue(duplicateCount, categories[1], node.getName());
           }
         },
-        new BarChartPanel(this, POWER, "Average Power", "Average Power Consumption",
-            "Nodes", "Power (mW)",
-            new String[] { "LPM", "CPU", "Radio listen", "Radio transmit" }) {
+        new BarChartPanel(this, POWER, "Average Power",
+            "Average Power Consumption", "Nodes", "Power (mW)", new String[] {
+                "LPM", "CPU", "Radio listen", "Radio transmit" }) {
           {
             ValueAxis axis = chart.getCategoryPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
           }
+
           protected void addSensorData(SensorData data) {
             Node node = data.getNode();
             String nodeName = node.getName();
             SensorDataAggregator aggregator = node.getSensorDataAggregator();
             dataset.addValue(aggregator.getLPMPower(), categories[0], nodeName);
             dataset.addValue(aggregator.getCPUPower(), categories[1], nodeName);
-            dataset.addValue(aggregator.getListenPower(), categories[2], nodeName);
-            dataset.addValue(aggregator.getTransmitPower(), categories[3], nodeName);
+            dataset.addValue(aggregator.getListenPower(), categories[2],
+                nodeName);
+            dataset.addValue(aggregator.getTransmitPower(), categories[3],
+                nodeName);
           }
         },
-        new BarChartPanel(this, POWER, "Radio Duty Cycle", "Average Radio Duty Cycle",
-            "Nodes", "Duty Cycle (%)",
+        new BarChartPanel(this, POWER, "Radio Duty Cycle",
+            "Average Radio Duty Cycle", "Nodes", "Duty Cycle (%)",
             new String[] { "Radio listen", "Radio transmit" }) {
           {
             ValueAxis axis = chart.getCategoryPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
           }
+
           protected void addSensorData(SensorData data) {
             Node node = data.getNode();
             String nodeName = node.getName();
             SensorDataAggregator aggregator = node.getSensorDataAggregator();
-            dataset.addValue(100 * aggregator.getAverageDutyCycle(SensorInfo.TIME_LISTEN),
-                             categories[0], nodeName);
-            dataset.addValue(100 * aggregator.getAverageDutyCycle(SensorInfo.TIME_TRANSMIT),
-                             categories[1], nodeName);
+            dataset.addValue(100 * aggregator
+                .getAverageDutyCycle(SensorInfo.TIME_LISTEN), categories[0],
+                nodeName);
+            dataset.addValue(100 * aggregator
+                .getAverageDutyCycle(SensorInfo.TIME_TRANSMIT), categories[1],
+                nodeName);
           }
         },
         new BarChartPanel(this, POWER, "Instantaneous Power",
@@ -625,8 +707,9 @@ public class CollectServer implements SerialConnectionListener {
             new String[] { "LPM", "CPU", "Radio listen", "Radio transmit" }) {
           {
             ValueAxis axis = chart.getCategoryPlot().getRangeAxis();
-            ((NumberAxis)axis).setAutoRangeIncludesZero(true);
+            ((NumberAxis) axis).setAutoRangeIncludesZero(true);
           }
+
           protected void addSensorData(SensorData data) {
             Node node = data.getNode();
             String nodeName = node.getName();
@@ -636,14 +719,12 @@ public class CollectServer implements SerialConnectionListener {
             dataset.addValue(data.getTransmitPower(), categories[3], nodeName);
           }
         },
-        new TimeChartPanel(this, POWER, "Power History", "Historical Power Consumption", "Time", "mW") {
+        new TimeChartPanel(this, POWER, "Power History",
+            "Historical Power Consumption", "Time", "mW") {
           protected double getSensorDataValue(SensorData data) {
             return data.getAveragePower();
           }
-        },
-        new NodeInfoPanel(this, MAIN),
-        serialConsole
-    };
+        }, new NodeInfoPanel(this, MAIN), serialConsole };
     for (int i = 0, n = visualizers.length; i < n; i++) {
       String category = visualizers[i].getCategory();
       JTabbedPane pane = categoryTable.get(category);
@@ -696,7 +777,9 @@ public class CollectServer implements SerialConnectionListener {
           File file = fileChooser.getSelectedFile();
           String name = file.getAbsolutePath();
           if (!mapPanel.setMapBackground(file.getAbsolutePath())) {
-            JOptionPane.showMessageDialog(window, "Failed to set background image", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(window,
+                "Failed to set background image", "Error",
+                JOptionPane.ERROR_MESSAGE);
           } else {
             configTable.put("collect.mapimage", name);
             save();
@@ -725,9 +808,8 @@ public class CollectServer implements SerialConnectionListener {
     item.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
-        int reply = isSensorLogUsed
-          ? JOptionPane.showConfirmDialog(window, "Also clear the sensor data log file?")
-          : JOptionPane.NO_OPTION;
+        int reply = isSensorLogUsed ? JOptionPane.showConfirmDialog(window,
+            "Also clear the sensor data log file?") : JOptionPane.NO_OPTION;
         if (reply == JOptionPane.YES_OPTION) {
           // Clear data from both memory and sensor log file
           clearSensorDataLog();
@@ -764,7 +846,8 @@ public class CollectServer implements SerialConnectionListener {
         if (serialConnection != null && serialConnection.isOpen()) {
           runInitScript();
         } else {
-          JOptionPane.showMessageDialog(mainPanel, "No serial port connection", "No connected node", JOptionPane.ERROR_MESSAGE);
+          JOptionPane.showMessageDialog(mainPanel, "No serial port connection",
+              "No connected node", JOptionPane.ERROR_MESSAGE);
         }
       }
 
@@ -777,16 +860,17 @@ public class CollectServer implements SerialConnectionListener {
     item.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
-        int value = getUserInputAsInteger("Specify Max Item Count",
-            "Please specify max item count for the time charts.\n" +
-            "Charts with more values will aggregate the values into fewer items.",
+        int value = getUserInputAsInteger(
+            "Specify Max Item Count",
+            "Please specify max item count for the time charts.\n"
+                + "Charts with more values will aggregate the values into fewer items.",
             defaultMaxItemCount);
         if (value > 0) {
           defaultMaxItemCount = value;
           if (visualizers != null) {
-            for(Visualizer v : visualizers) {
+            for (Visualizer v : visualizers) {
               if (v instanceof TimeChartPanel) {
-                ((TimeChartPanel)v).setMaxItemCount(defaultMaxItemCount);
+                ((TimeChartPanel) v).setMaxItemCount(defaultMaxItemCount);
               }
             }
           }
@@ -795,27 +879,27 @@ public class CollectServer implements SerialConnectionListener {
 
     });
     toolsMenu.add(item);
-    
+
     item = new JMenuItem("Adjust conversion expresions...");
     item.addActionListener(new ActionListener() {
-    	
-        public void actionPerformed(ActionEvent e) {
-        	adjustConversions();
-        }
+
+      public void actionPerformed(ActionEvent e) {
+        adjustConversions();
+      }
     });
     toolsMenu.add(item);
-   
 
-    final JCheckBoxMenuItem baseShapeItem = new JCheckBoxMenuItem("Base Shape Visible");
+    final JCheckBoxMenuItem baseShapeItem = new JCheckBoxMenuItem(
+        "Base Shape Visible");
     baseShapeItem.setSelected(true);
     baseShapeItem.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
         boolean visible = baseShapeItem.getState();
         if (visualizers != null) {
-          for(Visualizer v : visualizers) {
+          for (Visualizer v : visualizers) {
             if (v instanceof TimeChartPanel) {
-              ((TimeChartPanel)v).setBaseShapeVisible(visible);
+              ((TimeChartPanel) v).setBaseShapeVisible(visible);
             }
           }
         }
@@ -828,87 +912,89 @@ public class CollectServer implements SerialConnectionListener {
     window.pack();
 
     parseConfigFile();
-    
-  }
-  
-  private void parseConfigFile(){
-	    String bounds = configTable.getProperty("collect.bounds");
-	    if (bounds != null) {
-	      String[] b = bounds.split(",");
-	      if (b.length == 4) {
-	        window.setBounds(Integer.parseInt(b[0]), Integer.parseInt(b[1]),
-	            Integer.parseInt(b[2]), Integer.parseInt(b[3]));
-	      }
-	    }
 
-	    Vector<String> vars = new Vector<String>();
-	    Vector<String> feeds = new Vector<String>();
-	    Vector<String> values = new Vector <String>();
-	    
-	    // Add nodes stored in config file
-	    for(Object key: configTable.keySet()) {
-	      String property = key.toString();
-	      String nodetype;
-	      if (property.startsWith("var")){
-	    	  vars.add(property);
-	    	  values.add(getConfig(property));
-	      }
-	      else if (property.startsWith("feed")){
-	    	  feeds.add(property);
-	      }
-	      else if (!property.startsWith("collect") &&
-	    	       !property.startsWith("firm")) {
-	    	  // Add node
-	    	  if ((nodetype=getConfig("firm,"+property))!=null){
-	    		  Node node=getNode(property, true,Integer.parseInt(nodetype));
-	    		  node.setNodeType(Integer.parseInt(nodetype));
-	    	  }
-	      }
-	    }
-	    
-	    // Add variable values for sensor calibration stored in config file
-	    for (int j=0;j<vars.size();j++){
-		    String[] varKey = ((String) vars.get(j)).split(",");
-		    String nodeID=varKey[1];
-		    String sensorName=varKey[2];
-		    String varName=varKey[3];
-		    NodeSensor sensor=nodeTable.get(nodeID).getNodeSensor(sensorName);
-		    if (sensor!=null){
-		    	sensor.setVar(varName, Double.parseDouble(values.get(j)));
-		    }
-	    }
-	    // Add feed IDs
-	    for (int j=0;j<feeds.size();j++){
-	    	String property=feeds.get(j);
-		    String[] varKey = property.split(",");
-		    String service=varKey[0];
-		    String nodeID=varKey[1];
-		    Node n=nodeTable.get(nodeID);
-		    if (n==null) return;
-			
-			if (service.equals("feedcosm")){
-				String title=varKey[2];
-				n.setFeedID(getConfig(property));
-				n.setFeedTitle(title);
-			}
-			
-			else if (service.equals("feedsense")){
-			    String sensorName=varKey[2];
-				NodeSensor sensor=n.getNodeSensor(sensorName);
-				if (sensor==null) return;
-				sensor.setFeedID(getConfig(property));
-			}		    	
-		}    
   }
 
-  private int getUserInputAsInteger(String title, String message, int defaultValue) {
-    String s = (String)JOptionPane.showInputDialog(
-      window, message, title, JOptionPane.PLAIN_MESSAGE, null, null, Integer.toString(defaultValue));
+  private void parseConfigFile() {
+    String bounds = configTable.getProperty("collect.bounds");
+    if (bounds != null) {
+      String[] b = bounds.split(",");
+      if (b.length == 4) {
+        window.setBounds(Integer.parseInt(b[0]), Integer.parseInt(b[1]),
+            Integer.parseInt(b[2]), Integer.parseInt(b[3]));
+      }
+    }
+
+    Vector<String> vars = new Vector<String>();
+    Vector<String> feeds = new Vector<String>();
+    Vector<String> values = new Vector<String>();
+
+    // Add nodes stored in config file
+    for (Object key : configTable.keySet()) {
+      String property = key.toString();
+      String nodetype;
+      if (property.startsWith("var")) {
+        vars.add(property);
+        values.add(getConfig(property));
+      } else if (property.startsWith("feed")) {
+        feeds.add(property);
+      } else if (!property.startsWith("collect")
+          && !property.startsWith("firm")) {
+        // Add node
+        if ((nodetype = getConfig("firm," + property)) != null) {
+          Node node = getNode(property, true, Integer.parseInt(nodetype));
+          node.setNodeType(Integer.parseInt(nodetype));
+        }
+      }
+    }
+
+    // Add variable values for sensor calibration stored in config file
+    for (int j = 0; j < vars.size(); j++) {
+      String[] varKey = ((String) vars.get(j)).split(",");
+      String nodeID = varKey[1];
+      String sensorName = varKey[2];
+      String varName = varKey[3];
+      NodeSensor sensor = nodeTable.get(nodeID).getNodeSensor(sensorName);
+      if (sensor != null) {
+        sensor.setVar(varName, Double.parseDouble(values.get(j)));
+      }
+    }
+    // Add feed IDs
+    for (int j = 0; j < feeds.size(); j++) {
+      String property = feeds.get(j);
+      String[] varKey = property.split(",");
+      String service = varKey[0];
+      String nodeID = varKey[1];
+      Node n = nodeTable.get(nodeID);
+      if (n == null)
+        return;
+
+      if (service.equals("feedcosm")) {
+        String title = varKey[2];
+        n.setFeedID(getConfig(property));
+        n.setFeedTitle(title);
+      }
+
+      else if (service.equals("feedsense")) {
+        String sensorName = varKey[2];
+        NodeSensor sensor = n.getNodeSensor(sensorName);
+        if (sensor == null)
+          return;
+        sensor.setFeedID(getConfig(property));
+      }
+    }
+  }
+
+  private int getUserInputAsInteger(String title, String message,
+      int defaultValue) {
+    String s = (String) JOptionPane.showInputDialog(window, message, title,
+        JOptionPane.PLAIN_MESSAGE, null, null, Integer.toString(defaultValue));
     if (s != null) {
       try {
         return Integer.parseInt(s);
       } catch (Exception e) {
-        JOptionPane.showMessageDialog(window, "Illegal value", "Error", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(window, "Illegal value", "Error",
+            JOptionPane.ERROR_MESSAGE);
       }
     }
     return -1;
@@ -1009,7 +1095,8 @@ public class CollectServer implements SerialConnectionListener {
             } else if (line.startsWith("echo ")) {
               line = line.substring(5).trim();
               if (line.indexOf('%') >= 0) {
-                line = line.replace("%TIME%", "" + (System.currentTimeMillis() / 1000));
+                line = line.replace("%TIME%", ""
+                    + (System.currentTimeMillis() / 1000));
               }
               sendToNode(line);
             } else if (line.startsWith("sleep ")) {
@@ -1034,7 +1121,8 @@ public class CollectServer implements SerialConnectionListener {
   }
 
   public String getConfig(String property, String defaultValue) {
-    return configTable.getProperty(property, config.getProperty(property, defaultValue));
+    return configTable.getProperty(property, config.getProperty(property,
+        defaultValue));
   }
 
   public void setConfig(String property, String value) {
@@ -1092,80 +1180,27 @@ public class CollectServer implements SerialConnectionListener {
   public Node addNode(String nodeID, int nodeType) {
     return getNode(nodeID, true, nodeType);
   }
+
   private Node getNode(final String nodeID, boolean notify, int nodeType) {
-	    Node node = nodeTable.get(nodeID);
-	    if (node == null) {
-	      switch(nodeType)
-	      {
-		      case SensorInfo.CM5000:
-		    	  node = new NodeCM5000(nodeID);
-		    	  break;
-		      case SensorInfo.AR1000:
-		    	  node = new NodeAR1000(nodeID);
-		    	  break;
-		      case SensorInfo.DS1000:
-		    	  node = new NodeDS1000(nodeID);
-		    	  break;
-		      case SensorInfo.EM1000:
-		    	  //node = new NodeEM1000(nodeID);
-		    	  break;
-		      case SensorInfo.SE1000:
-		    	  //node = new NodeSE1000(nodeID);
-		    	  break;
-		      case SensorInfo.CO1000:
-		    	  //node = new NodeCO1000(nodeID);
-		    	  break;
-		      case SensorInfo.EX1000:
-		    	  //node = new NodeEX1000(nodeID);
-		    	  break;
-	      } 
-	      setConfig("firm,"+nodeID, String.valueOf(nodeType));
-	      nodeTable.put(nodeID, node);
-
-	      synchronized (this) {
-	        nodeCache = null;
-	      }
-
-	      if (notify) {
-	        final Node newNode = node;
-	        SwingUtilities.invokeLater(new Runnable() {
-	            public void run() {
-	              boolean added = false;
-	              for (int i = 1, n = nodeModel.size(); i < n; i++) {
-	                int cmp = newNode.compareTo((Node) nodeModel.get(i));
-	                if (cmp < 0) {
-	                  nodeModel.insertElementAt(newNode, i);
-	                  added = true;
-	                  break;
-	                } else if (cmp == 0) {
-	                  // node already added
-	                  added = true;
-	                  break;
-	                }
-	              }
-	              if (!added) {
-	                nodeModel.addElement(newNode);
-	              }
-	              if (visualizers != null) {
-	                for (int i = 0, n = visualizers.length; i < n; i++) {
-	                  visualizers[i].nodeAdded(newNode);
-	                }
-	              }
-	            }
-	          });
-	      }
-	    }
-	    return node;
-	  }
- 
-  public Node addNode(String nodeID) {
-	    return getNode(nodeID, true);
-	  }
-	  
-  private Node getNode(final String nodeID, boolean notify) {
     Node node = nodeTable.get(nodeID);
     if (node == null) {
-      node = new Node(nodeID);
+      switch (nodeType) {
+        case SensorInfo.TmoteSky:
+          node = new NodeTmoteSky(nodeID);
+          setConfig("firm," + nodeID, String.valueOf(nodeType));
+          break;
+        case SensorInfo.AR1000:
+          node = new NodeAR1000(nodeID);
+          setConfig("firm," + nodeID, String.valueOf(nodeType));
+          break;
+        case SensorInfo.DS1000:
+          node = new NodeDS1000(nodeID);
+          setConfig("firm," + nodeID, String.valueOf(nodeType));
+          break;
+        default: // sink node likely
+          node = new Node(nodeID);
+      }
+
       nodeTable.put(nodeID, node);
 
       synchronized (this) {
@@ -1175,40 +1210,40 @@ public class CollectServer implements SerialConnectionListener {
       if (notify) {
         final Node newNode = node;
         SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-              boolean added = false;
-              for (int i = 1, n = nodeModel.size(); i < n; i++) {
-                int cmp = newNode.compareTo((Node) nodeModel.get(i));
-                if (cmp < 0) {
-                  nodeModel.insertElementAt(newNode, i);
-                  added = true;
-                  break;
-                } else if (cmp == 0) {
-                  // node already added
-                  added = true;
-                  break;
-                }
-              }
-              if (!added) {
-                nodeModel.addElement(newNode);
-              }
-              if (visualizers != null) {
-                for (int i = 0, n = visualizers.length; i < n; i++) {
-                  visualizers[i].nodeAdded(newNode);
-                }
+          public void run() {
+            boolean added = false;
+            for (int i = 1, n = nodeModel.size(); i < n; i++) {
+              int cmp = newNode.compareTo((Node) nodeModel.get(i));
+              if (cmp < 0) {
+                nodeModel.insertElementAt(newNode, i);
+                added = true;
+                break;
+              } else if (cmp == 0) {
+                // node already added
+                added = true;
+                break;
               }
             }
-          });
+            if (!added) {
+              nodeModel.addElement(newNode);
+            }
+            if (visualizers != null) {
+              for (int i = 0, n = visualizers.length; i < n; i++) {
+                visualizers[i].nodeAdded(newNode);
+              }
+            }
+          }
+        });
       }
     }
     return node;
   }
 
-   public void selectNodes(Node[] nodes) {
-     selectNodes(nodes, true);
-   }
+  public void selectNodes(Node[] nodes) {
+    selectNodes(nodes, true);
+  }
 
-   private void selectNodes(Node[] nodes, boolean updateList) {
+  private void selectNodes(Node[] nodes, boolean updateList) {
     if (nodes != selectedNodes) {
       selectedNodes = nodes;
       if (updateList) {
@@ -1230,20 +1265,19 @@ public class CollectServer implements SerialConnectionListener {
     }
   }
 
-   public Node[] getSelectedNodes() {
-     return selectedNodes;
-   }
+  public Node[] getSelectedNodes() {
+    return selectedNodes;
+  }
 
-private void adjustConversions()
-{
-	Node[] selected=getSelectedNodes();
-	if (selected==null || selected.length!=1)
-		return;
-	
-	new NodeCalibrationDialog("Node "+selected[0].getID() , selected[0],
-		                          configTable);
-	
-}
+  private void adjustConversions() {
+    Node[] selected = getSelectedNodes();
+    if (selected == null || selected.length != 1)
+      return;
+
+    new NodeCalibrationDialog("Node " + selected[0].getID(), selected[0],
+        configTable);
+
+  }
 
   // -------------------------------------------------------------------
   // Node location handling
@@ -1251,8 +1285,8 @@ private void adjustConversions()
 
   private boolean loadConfig(Properties properties, String configFile) {
     try {
-      BufferedInputStream input =
-        new BufferedInputStream(new FileInputStream(configFile));
+      BufferedInputStream input = new BufferedInputStream(new FileInputStream(
+          configFile));
       try {
         properties.load(input);
       } finally {
@@ -1270,11 +1304,12 @@ private void adjustConversions()
 
   private void save() {
     if (configFile != null) {
-      configTable.setProperty("collect.bounds", "" + window.getX() + ',' + window.getY() + ',' + window.getWidth() + ',' + window.getHeight());
+      configTable.setProperty("collect.bounds", "" + window.getX() + ','
+          + window.getY() + ',' + window.getWidth() + ',' + window.getHeight());
       if (visualizers != null) {
-        for(Visualizer v : visualizers) {
+        for (Visualizer v : visualizers) {
           if (v instanceof Configurable) {
-            ((Configurable)v).updateConfig(configTable);
+            ((Configurable) v).updateConfig(configTable);
           }
         }
       }
@@ -1304,13 +1339,13 @@ private void adjustConversions()
     }
   }
 
-
   // -------------------------------------------------------------------
   // Serial communication
   // -------------------------------------------------------------------
 
   public boolean sendToNode(String data) {
-    if (serialConnection != null && serialConnection.isOpen() && serialConnection.isSerialOutputSupported()) {
+    if (serialConnection != null && serialConnection.isOpen()
+        && serialConnection.isSerialOutputSupported()) {
       serialConsole.addSerialData("SEND: " + data);
       serialConnection.writeSerialData(data);
       return true;
@@ -1345,7 +1380,6 @@ private void adjustConversions()
     this.nodeTimeDelta = sensorData.getNodeTime() - System.currentTimeMillis();
   }
 
-
   // -------------------------------------------------------------------
   // SensorData handling
   // -------------------------------------------------------------------
@@ -1369,6 +1403,7 @@ private void adjustConversions()
         SwingUtilities.invokeLater(new Runnable() {
           public void run() {
             for (int i = 0, n = visualizers.length; i < n; i++) {
+              // filterVisualizers(i,sensorData);
               visualizers[i].nodeDataReceived(sensorData);
             }
           }
@@ -1379,8 +1414,11 @@ private void adjustConversions()
 
   private void handleLinks(SensorData sensorData) {
     String nodeID = sensorData.getBestNeighborID();
+
     if (nodeID != null) {
-      Node neighbor = addNode(nodeID);
+      Node neighbor = nodeTable.get(nodeID);
+      if (neighbor == null)
+        neighbor = addNode(nodeID, -1);// -1 = sink or unknown
       Node source = sensorData.getNode();
       Link link = source.getLink(neighbor);
       link.setETX(sensorData.getBestNeighborETX());
@@ -1414,13 +1452,15 @@ private void adjustConversions()
               }
             } else if (isStrict) {
               // TODO exit here?
-              System.err.println("Failed to parse sensor data from log line " + no + ": " + line);
+              System.err.println("Failed to parse sensor data from log line "
+                  + no + ": " + line);
             }
           }
         }
         in.close();
       } catch (IOException e) {
-        System.err.println("Failed to read sensor data log from " + fp.getAbsolutePath());
+        System.err.println("Failed to read sensor data log from "
+            + fp.getAbsolutePath());
         e.printStackTrace();
         return false;
       }
@@ -1432,9 +1472,11 @@ private void adjustConversions()
     PrintWriter output = this.sensorDataOutput;
     if (output == null && isSensorLogUsed) {
       try {
-        output = sensorDataOutput = new PrintWriter(new FileWriter(SENSORDATA_FILE, true));
+        output = sensorDataOutput = new PrintWriter(new FileWriter(
+            SENSORDATA_FILE, true));
       } catch (IOException e) {
-        System.err.println("Failed to add sensor data to log '" + SENSORDATA_FILE + '\'');
+        System.err.println("Failed to add sensor data to log '"
+            + SENSORDATA_FILE + '\'');
         e.printStackTrace();
       }
     }
@@ -1457,18 +1499,18 @@ private void adjustConversions()
       this.nodeCache = null;
     }
     if (nodes != null) {
-      for(Node node : nodes) {
+      for (Node node : nodes) {
         node.removeAllSensorData();
       }
     }
     if (visualizers != null) {
-      for(Visualizer v : visualizers) {
+      for (Visualizer v : visualizers) {
         v.nodesSelected(null);
         v.clearNodeData();
       }
     }
     // Remove any saved node positions
-    for(String key: configTable.keySet().toArray(new String[0])) {
+    for (String key : configTable.keySet().toArray(new String[0])) {
       String property = key.toString();
       if (!property.startsWith("collect")) {
         configTable.remove(property);
@@ -1486,7 +1528,8 @@ private void adjustConversions()
     this.sensorDataOutput = null;
   }
 
-  protected class ConnectSerialAction extends AbstractAction implements Runnable {
+  protected class ConnectSerialAction extends AbstractAction implements
+      Runnable {
 
     private static final long serialVersionUID = 1L;
 
@@ -1512,7 +1555,9 @@ private void adjustConversions()
             connectToSerial();
           }
         } else {
-          JOptionPane.showMessageDialog(window, "No serial connection configured", "Error", JOptionPane.ERROR_MESSAGE);
+          JOptionPane.showMessageDialog(window,
+              "No serial connection configured", "Error",
+              JOptionPane.ERROR_MESSAGE);
         }
       } finally {
         isRunning = false;
@@ -1537,15 +1582,14 @@ private void adjustConversions()
         new Thread(this, "program thread").start();
       }
     }
-    
-    public String[] getAvailableFirmware() throws IOException
-    {
-    	File dir = new File("./firmware");
-    	String [] files = dir.list();
-    	if (files == null){
-    		throw new IllegalStateException("no files in firmware directory");
-    	}
-    	return files;
+
+    public String[] getAvailableFirmware() throws IOException {
+      File dir = new File("./firmware");
+      String[] files = dir.list();
+      if (files == null) {
+        throw new IllegalStateException("no files in firmware directory");
+      }
+      return files;
     }
 
     @Override
@@ -1553,24 +1597,29 @@ private void adjustConversions()
       try {
         MoteProgrammer mp = new MoteProgrammer();
         mp.setParentComponent(window);
-        
+
         mp.searchForMotes();
         String[] motes = mp.getMotes();
         if (motes == null || motes.length == 0) {
-          JOptionPane.showMessageDialog(window, "Could not find any connected nodes", "Error", JOptionPane.ERROR_MESSAGE);
+          JOptionPane.showMessageDialog(window,
+              "Could not find any connected nodes", "Error",
+              JOptionPane.ERROR_MESSAGE);
           return;
         }
-		
-		    FirmwareDialog fwDlg = new FirmwareDialog(new JFrame(), "Select firmware",mp.getMoteInfoList(), getAvailableFirmware());
-		    mp.setFirmwareFiles(fwDlg.getChoosenFirmware());
-		    if (mp.getFirmwareFiles().length==0) return;
-		    fwDlg.dispose();
-			
-        
-        int reply = JOptionPane.showConfirmDialog(window, "Found " + motes.length + " connected nodes.\n"
+
+        FirmwareDialog fwDlg = new FirmwareDialog(new JFrame(),
+            "Select firmware", mp.getMoteInfoList(), getAvailableFirmware());
+        mp.setFirmwareFiles(fwDlg.getChoosenFirmware());
+        if (mp.getFirmwareFiles().length == 0)
+          return;
+        fwDlg.dispose();
+
+        int reply = JOptionPane.showConfirmDialog(window, "Found "
+            + motes.length + " connected nodes.\n"
             + "Do you want to upload the selected firmware?");
         if (reply == JFileChooser.APPROVE_OPTION) {
-          boolean wasOpen = serialConnection != null && serialConnection.isOpen();
+          boolean wasOpen = serialConnection != null
+              && serialConnection.isOpen();
           if (serialConnection != null) {
             serialConnection.close();
           }
@@ -1585,14 +1634,14 @@ private void adjustConversions()
         }
       } catch (Exception e) {
         e.printStackTrace();
-        JOptionPane.showMessageDialog(window, "Programming failed: " + e, "Error", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(window, "Programming failed: " + e,
+            "Error", JOptionPane.ERROR_MESSAGE);
       } finally {
         isRunning = false;
       }
     }
 
   }
-
 
   // -------------------------------------------------------------------
   // SerialConnection Listener
@@ -1606,7 +1655,8 @@ private void adjustConversions()
   @Override
   public void serialOpened(SerialConnection connection) {
     String connectionName = connection.getConnectionName();
-    serialConsole.addSerialData("*** Serial console listening on " + connectionName + " ***");
+    serialConsole.addSerialData("*** Serial console listening on "
+        + connectionName + " ***");
     hasSerialOpened = true;
     if (connection.isMultiplePortsSupported()) {
       String comPort = connection.getComPort();
@@ -1643,21 +1693,20 @@ private void adjustConversions()
     }
     if (!connection.isClosed()) {
       if (connection.isMultiplePortsSupported()) {
-        String options[] = {"Retry", "Search for connected nodes", "Cancel"};
-        int value = JOptionPane.showOptionDialog(window,
-            prefix + "Do you want to retry or search for connected nodes?",
-            "Reconnect to serial port?",
-            JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE,
-            null, options, options[0]);
+        String options[] = { "Retry", "Search for connected nodes", "Cancel" };
+        int value = JOptionPane.showOptionDialog(window, prefix
+            + "Do you want to retry or search for connected nodes?",
+            "Reconnect to serial port?", JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE, null, options, options[0]);
         if (value == JOptionPane.CLOSED_OPTION || value == 2) {
-//          exit();
+          // exit();
         } else {
           String comPort = connection.getComPort();
           if (value == 1) {
             // Select new serial port
             comPort = MoteFinder.selectComPort(window);
             if (comPort == null) {
-//              exit();
+              // exit();
             }
           }
           // Try to open com port again
@@ -1666,12 +1715,11 @@ private void adjustConversions()
           }
         }
       } else {
-//        JOptionPane.showMessageDialog(window,
-//            prefix, "Serial Connection Closed", JOptionPane.ERROR_MESSAGE);
+        // JOptionPane.showMessageDialog(window,
+        // prefix, "Serial Connection Closed", JOptionPane.ERROR_MESSAGE);
       }
     }
   }
-
 
   // -------------------------------------------------------------------
   // Main
@@ -1686,57 +1734,57 @@ private void adjustConversions()
     String logFileToLoad = null;
     String comPort = null;
     int port = -1;
-    for(int i = 0, n = args.length; i < n; i++) {
+    for (int i = 0, n = args.length; i < n; i++) {
       String arg = args[i];
       if (arg.length() == 2 && arg.charAt(0) == '-') {
         switch (arg.charAt(1)) {
-        case 'a':
+          case 'a':
             if (i + 1 < n) {
-                host = args[++i];
-                int pIndex = host.indexOf(':');
-                if (pIndex > 0) {
-                    port = Integer.parseInt(host.substring(pIndex + 1));
-                    host = host.substring(0, pIndex);
-                }
-              } else {
-                usage(arg);
+              host = args[++i];
+              int pIndex = host.indexOf(':');
+              if (pIndex > 0) {
+                port = Integer.parseInt(host.substring(pIndex + 1));
+                host = host.substring(0, pIndex);
               }
-              break;
-        case 'c':
-          if (i + 1 < n) {
-            command = args[++i];
-          } else {
-            usage(arg);
-          }
-          break;
-        case 'p':
+            } else {
+              usage(arg);
+            }
+            break;
+          case 'c':
+            if (i + 1 < n) {
+              command = args[++i];
+            } else {
+              usage(arg);
+            }
+            break;
+          case 'p':
             if (i + 1 < n) {
               port = Integer.parseInt(args[++i]);
             } else {
               usage(arg);
             }
             break;
-        case 'r':
-          resetSensorLog = true;
-          break;
-        case 'n':
-          useSensorLog = false;
-          break;
-        case 'i':
-          useSerialOutput = false;
-          break;
-        case 'f':
-          command = STDIN_COMMAND;
-          if (i + 1 < n && !args[i + 1].startsWith("-")) {
-            logFileToLoad = args[++i];
-          }
-          break;
-        case 'h':
-          usage(null);
-          break;
-        default:
-          usage(arg);
-          break;
+          case 'r':
+            resetSensorLog = true;
+            break;
+          case 'n':
+            useSensorLog = false;
+            break;
+          case 'i':
+            useSerialOutput = false;
+            break;
+          case 'f':
+            command = STDIN_COMMAND;
+            if (i + 1 < n && !args[i + 1].startsWith("-")) {
+              logFileToLoad = args[++i];
+            }
+            break;
+          case 'h':
+            usage(null);
+            break;
+          default:
+            usage(arg);
+            break;
         }
       } else if (comPort == null) {
         comPort = arg;
@@ -1748,10 +1796,10 @@ private void adjustConversions()
     CollectServer server = new CollectServer();
     SerialConnection serialConnection;
     if (host != null) {
-        if (port <= 0) {
-            port = 60001;
-        }
-        serialConnection = new TCPClientConnection(server, host, port);
+      if (port <= 0) {
+        port = 60001;
+      }
+      serialConnection = new TCPClientConnection(server, host, port);
     } else if (port > 0) {
       serialConnection = new UDPConnection(server, port);
     } else if (command == null) {
@@ -1785,14 +1833,17 @@ private void adjustConversions()
     if (arg != null) {
       System.err.println("Unknown argument '" + arg + '\'');
     }
-    System.err.println("Usage: java CollectServer [-n] [-i] [-r] [-f [file]] [-a host:port] [-p port] [-c command] [COMPORT]");
+    System.err
+        .println("Usage: java CollectServer [-n] [-i] [-r] [-f [file]] [-a host:port] [-p port] [-c command] [COMPORT]");
     System.err.println("       -n : Do not read or save sensor data log");
-    System.err.println("       -r : Clear any existing sensor data log at startup");
+    System.err
+        .println("       -r : Clear any existing sensor data log at startup");
     System.err.println("       -i : Do not allow serial output");
     System.err.println("       -f : Read serial data from standard in");
     System.err.println("       -a : Connect to specified host:port");
     System.err.println("       -p : Read data from specified UDP port");
-    System.err.println("       -c : Use specified command for serial data input/output");
+    System.err
+        .println("       -c : Use specified command for serial data input/output");
     System.err.println("   COMPORT: The serial port to connect to");
     System.exit(arg != null ? 1 : 0);
   }

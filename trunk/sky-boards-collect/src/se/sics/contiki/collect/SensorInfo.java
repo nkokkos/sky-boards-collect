@@ -86,7 +86,7 @@ public interface SensorInfo {
 
   // sensor boards
   public static final int SENSOR_BOARD = 29;
-  public static final int CM5000 = 0; // Temp, hum, light1, light2
+  public static final int TmoteSky = 0; // Temp, hum, light1, light2
   public static final int AR1000 = 1; // CO, CO2, Dust
   public static final int DS1000 = 2; // CO, CO2, Temp
   public static final int EM1000 = 3; // Temp, hum, acceleration, light1, light2

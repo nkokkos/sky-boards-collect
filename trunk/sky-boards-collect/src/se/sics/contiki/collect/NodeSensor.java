@@ -14,12 +14,16 @@ public class NodeSensor {
 	private Vector<Variable> vars;
 	private int id;
 	private String feedID;
+	private String units;
+	private boolean hasVoltage;
 	
-	public NodeSensor(String name, int id, String nodeID){
+	public NodeSensor(String name, int id, String nodeID, String units, boolean hasVoltage){
 		 sensorName=name;
 		 vars = new Vector<Variable>();
 		 this.id=id;
 		 feedID=null;
+		 this.setUnits(units);
+		 this.setHasVoltage(hasVoltage);
 	}
 	
 	public String getFeedID(){
@@ -52,7 +56,6 @@ public class NodeSensor {
 		vars.add(var1);
 	}
 	
-	
 	public Variable[] getVars(){		
 		Variable[] vars_array = new Variable[vars.size()];
 		for (int i = 0; i<vars.size();i++){
@@ -72,4 +75,20 @@ public class NodeSensor {
 		}
 		return null;
 	}
+
+	public void setUnits(String units) {
+	  this.units = units;
+  }
+
+	public String getUnits() {
+	  return units;
+  }
+
+	public void setHasVoltage(boolean hasVoltage) {
+	  this.hasVoltage = hasVoltage;
+  }
+
+	public boolean hasVoltage() {
+	  return hasVoltage;
+  }
 }

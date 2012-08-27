@@ -239,8 +239,8 @@ public class SensorDataAggregator implements SensorInfo {
   public double getAverageTemperature() {
 	  SensorData sd=node.getLastSD();
 	  switch(sd.getType()){   
-	  case CM5000:
-	    return dataCount > 0 ? (sd.getTemperatureCM5000(
+	  case TmoteSky:
+	    return dataCount > 0 ? (sd.getTemperatureTmoteSky(
 	    						(int)values[TEMPERATURE] / 
     		  					dataCount)) : 0.0;
 	  case DS1000:
