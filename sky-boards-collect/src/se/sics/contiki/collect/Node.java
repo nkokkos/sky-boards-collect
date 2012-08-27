@@ -38,6 +38,7 @@
  */
 
 package se.sics.contiki.collect;
+
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -46,257 +47,256 @@ import java.util.Hashtable;
  */
 public class Node implements Comparable<Node> {
 
-  private static final boolean SINGLE_LINK = true;
+	private static final boolean SINGLE_LINK = true;
 
-  private SensorDataAggregator sensorDataAggregator;
-  private ArrayList<SensorData> sensorDataList = new ArrayList<SensorData>();
-  private ArrayList<Link> links = new ArrayList<Link>();
+	private SensorDataAggregator sensorDataAggregator;
+	private ArrayList<SensorData> sensorDataList = new ArrayList<SensorData>();
+	private ArrayList<Link> links = new ArrayList<Link>();
 
-  private final String id;
-  private final String name;
+	private final String id;
+	private final String name;
 
-  private Hashtable<String,Object> objectTable;
+	private Hashtable<String, Object> objectTable;
 
-  private long lastActive;
-  protected Hashtable<Integer,NodeSensor> sensors = new Hashtable<Integer,NodeSensor>();
-  private int nodeType;
-  private String feedID;
-  private String feedTitle;
+	private long lastActive;
+	protected Hashtable<Integer, NodeSensor> sensors = new Hashtable<Integer, NodeSensor>();
+	private int nodeType;
+	private String feedID;
+	private String feedTitle;
 
-  public Node(String nodeID) {
-    this(nodeID, nodeID);
-  }
+	public Node(String nodeID) {
+		this(nodeID, nodeID);
+	}
 
-  public Node(String nodeID, String nodeName) {
-    this.id = nodeID;
-    this.name = nodeName;
-	feedID=null;
-    sensorDataAggregator = new SensorDataAggregator(this);
-    sensors = new Hashtable<Integer,NodeSensor>();
-  }
+	public Node(String nodeID, String nodeName) {
+		this.id = nodeID;
+		this.name = nodeName;
+		feedID = null;
+		sensorDataAggregator = new SensorDataAggregator(this);
+		sensors = new Hashtable<Integer, NodeSensor>();
+	}
 
-  public final String getID() {
-    return id;
-  }
+	public final String getID() {
+		return id;
+	}
 
-  public final String getName() {
-    return name;
-  }
+	public final String getName() {
+		return name;
+	}
 
-  public long getLastActive() {
-    return lastActive;
-  }
+	public long getLastActive() {
+		return lastActive;
+	}
 
-  public void setLastActive(long lastActive) {
-    this.lastActive = lastActive;
-  }
+	public void setLastActive(long lastActive) {
+		this.lastActive = lastActive;
+	}
 
-  @Override
-  public int compareTo(Node o) {
-    String i1 = id;
-    String i2 = o.getID();
-    // Shorter id first (4.0 before 10.0)
-    if (i1.length() == i2.length()) {
-      return i1.compareTo(i2);
-    }
-    return i1.length() - i2.length();
-  }
+	@Override
+	public int compareTo(Node o) {
+		String i1 = id;
+		String i2 = o.getID();
+		// Shorter id first (4.0 before 10.0)
+		if (i1.length() == i2.length()) {
+			return i1.compareTo(i2);
+		}
+		return i1.length() - i2.length();
+	}
 
-  public String toString() {
-    return name;
-  }
+	public String toString() {
+		return name;
+	}
 
+	// -------------------------------------------------------------------
+	// Attributes
+	// -------------------------------------------------------------------
 
-  // -------------------------------------------------------------------
-  // Attributes
-  // -------------------------------------------------------------------
+	public Object getAttribute(String key) {
+		return getAttribute(key, null);
+	}
 
-  public Object getAttribute(String key) {
-    return getAttribute(key, null);
-  }
+	public Object getAttribute(String key, Object defaultValue) {
+		if (objectTable == null) {
+			return null;
+		}
+		Object val = objectTable.get(key);
+		return val == null ? defaultValue : val;
+	}
 
-  public Object getAttribute(String key, Object defaultValue) {
-    if (objectTable == null) {
-      return null;
-    }
-    Object val = objectTable.get(key);
-    return val == null ? defaultValue : val;
-  }
+	public void setAttribute(String key, Object value) {
+		if (objectTable == null) {
+			objectTable = new Hashtable<String, Object>();
+		}
+		objectTable.put(key, value);
+	}
 
-  public void setAttribute(String key, Object value) {
-    if (objectTable == null) {
-      objectTable = new Hashtable<String,Object>();
-    }
-    objectTable.put(key, value);
-  }
+	public void clearAttributes() {
+		if (objectTable != null) {
+			objectTable.clear();
+		}
+	}
 
-  public void clearAttributes() {
-    if (objectTable != null) {
-      objectTable.clear();
-    }
-  }
+	// -------------------------------------------------------------------
+	// SensorData
+	// -------------------------------------------------------------------
 
+	public SensorDataAggregator getSensorDataAggregator() {
+		return sensorDataAggregator;
+	}
 
-  // -------------------------------------------------------------------
-  // SensorData
-  // -------------------------------------------------------------------
+	public SensorData getLastSD() {
+		int lastData = getSensorDataCount() - 1;
+		if (lastData == -1)
+			return null;
 
-  public SensorDataAggregator getSensorDataAggregator() {
-    return sensorDataAggregator;
-  }
+		return getSensorData(lastData);
+	}
 
-  public SensorData getLastSD(){
-  	int lastData=getSensorDataCount()-1;
-	if (lastData==-1) 
-		return null;
-	
-	return getSensorData(lastData);
-  }
+	public SensorData[] getAllSensorData() {
+		return sensorDataList.toArray(new SensorData[sensorDataList.size()]);
+	}
 
-  public SensorData[] getAllSensorData() {
-    return sensorDataList.toArray(new SensorData[sensorDataList.size()]);
-  }
+	public void removeAllSensorData() {
+		sensorDataList.clear();
+		sensorDataAggregator.clear();
+	}
 
-  public void removeAllSensorData() {
-    sensorDataList.clear();
-    sensorDataAggregator.clear();
-  }
+	public SensorData getSensorData(int index) {
+		return sensorDataList.get(index);
+	}
 
-  public SensorData getSensorData(int index) {
-    return sensorDataList.get(index);
-  }
+	public int getSensorDataCount() {
+		return sensorDataList.size();
+	}
 
-  public int getSensorDataCount() {
-    return sensorDataList.size();
-  }
+	public boolean addSensorData(SensorData data) {
+		if (sensorDataList.size() > 0) {
+			SensorData last = sensorDataList.get(sensorDataList.size() - 1);
+			if (data.getNodeTime() < last.getNodeTime()) {
+				// Sensor data already added
+				System.out.println("SensorData: ignoring (time "
+				    + (data.getNodeTime() - last.getNodeTime()) + "msec): " + data);
+				return false;
+			}
+		}
+		sensorDataList.add(data);
+		sensorDataAggregator.addSensorData(data);
+		return true;
+	}
 
-  public boolean addSensorData(SensorData data) {
-    if (sensorDataList.size() > 0) {
-      SensorData last = sensorDataList.get(sensorDataList.size() - 1);
-      if (data.getNodeTime() < last.getNodeTime()) {
-        // Sensor data already added
-        System.out.println("SensorData: ignoring (time " + (data.getNodeTime() - last.getNodeTime())
-            + "msec): " + data);
-        return false;
-      }
-    }
-    sensorDataList.add(data);
-    sensorDataAggregator.addSensorData(data);
-    return true;
-  }
+	// -------------------------------------------------------------------
+	// Links
+	// -------------------------------------------------------------------
 
+	public Link getLink(Node node) {
+		for (Link l : links) {
+			if (l.node == node) {
+				return l;
+			}
+		}
 
-  // -------------------------------------------------------------------
-  // Links
-  // -------------------------------------------------------------------
+		// Add new link
+		Link l = new Link(node);
+		if (SINGLE_LINK) {
+			links.clear();
+		}
+		links.add(l);
+		return l;
+	}
 
-  public Link getLink(Node node) {
-    for(Link l: links) {
-      if (l.node == node) {
-        return l;
-      }
-    }
+	public Link getLink(int index) {
+		return links.get(index);
+	}
 
-    // Add new link
-    Link l = new Link(node);
-    if (SINGLE_LINK) {
-      links.clear();
-    }
-    links.add(l);
-    return l;
-  }
+	public int getLinkCount() {
+		return links.size();
+	}
 
-  public Link getLink(int index) {
-    return links.get(index);
-  }
+	public void removeLink(Node node) {
+		for (int i = 0, n = links.size(); i < n; i++) {
+			Link l = links.get(i);
+			if (l.node == node) {
+				links.remove(i);
+				break;
+			}
+		}
+	}
 
-  public int getLinkCount() {
-    return links.size();
-  }
+	public void clearLinks() {
+		links.clear();
+	}
 
-  public void removeLink(Node node) {
-    for (int i = 0, n = links.size(); i < n; i++) {
-      Link l = links.get(i);
-      if (l.node == node) {
-        links.remove(i);
-        break;
-      }
-    }
-  }
+	// -------------------------------------------------------------------
+	// node sensors getters
+	// -------------------------------------------------------------------
 
-  public void clearLinks() {
-    links.clear();
-  }
-  
-  // -------------------------------------------------------------------
-  // node sensors getters
-  // -------------------------------------------------------------------
-  
-  public NodeSensor[] getNodeSensors(){
-	  	NodeSensor[] sensors_array = new NodeSensor[sensors.size()];
-	  	int i=sensors.size()-1;
-	    for(Object key: sensors.keySet()) {
-	    	sensors_array[i]=sensors.get(key);
-	    	i--;
-	    }
+	public NodeSensor[] getNodeSensors() {
+		NodeSensor[] sensors_array = new NodeSensor[sensors.size()];
+		int i = sensors.size() - 1;
+		for (Object key : sensors.keySet()) {
+			sensors_array[i] = sensors.get(key);
+			i--;
+		}
 
 		return sensors_array;
-  }
-  public NodeSensor getNodeSensor(int key){
+	}
+
+	public NodeSensor getNodeSensor(int key) {
 		return sensors.get(key);
-  }
-  public NodeSensor getNodeSensor(String name){
+	}
+
+	public NodeSensor getNodeSensor(String name) {
 		return sensors.get(keyConv(name));
-  }
-  
-  public int keyConv(String sensorName){
-    if (sensorName.equals("Light1")) 
-    	return SensorInfo.LIGHT1;
-	if (sensorName.equals("Light2")) 
-		return SensorInfo.LIGHT2;
-	if (sensorName.equals("Temperature")) 
-		return SensorInfo.TEMPERATURE;
-	if (sensorName.equals("Humidity"))
-		return SensorInfo.HUMIDITY;
-	if (sensorName.equals("CO")) 
-		return SensorInfo.CO;
-	if (sensorName.equals("CO2")) 
-		return SensorInfo.CO2;
-	if (sensorName.equals("Dust")) 
-		return SensorInfo.DUST;
-	
-	return -1;
-  }
-  
-  public int getSensorsCount(){
-	  return sensors.size();
-  }
+	}
 
-  public void setNodeType(int nodeType) {
-	this.nodeType = nodeType;
-  }
+	static public int keyConv(String sensorName) {
+		if (sensorName.equals("Light1"))
+			return SensorInfo.LIGHT1;
+		if (sensorName.equals("Light2"))
+			return SensorInfo.LIGHT2;
+		if (sensorName.equals("Temperature"))
+			return SensorInfo.TEMPERATURE;
+		if (sensorName.equals("Humidity"))
+			return SensorInfo.HUMIDITY;
+		if (sensorName.equals("CO"))
+			return SensorInfo.CO;
+		if (sensorName.equals("CO2"))
+			return SensorInfo.CO2;
+		if (sensorName.equals("Dust"))
+			return SensorInfo.DUST;
 
-  public int getNodeType() {
-	return nodeType;
-  }
+		return -1;
+	}
 
-  // -------------------------------------------------------------------
-  // Feed for Cosm
-  // -------------------------------------------------------------------
-  
-  public void setFeedID(String feedID) {
-	this.feedID = feedID;
-  }
+	public int getSensorsCount() {
+		return sensors.size();
+	}
 
-  public String getFeedID() {
-	return feedID;
-  }
+	public void setNodeType(int nodeType) {
+		this.nodeType = nodeType;
+	}
 
-  public void setFeedTitle(String feedTitle) {
-	this.feedTitle = feedTitle;
-  }
+	public int getNodeType() {
+		return nodeType;
+	}
 
-  public String getFeedTitle() {
-	return feedTitle;
-  }
+	// -------------------------------------------------------------------
+	// Feed for Cosm
+	// -------------------------------------------------------------------
+
+	public void setFeedID(String feedID) {
+		this.feedID = feedID;
+	}
+
+	public String getFeedID() {
+		return feedID;
+	}
+
+	public void setFeedTitle(String feedTitle) {
+		this.feedTitle = feedTitle;
+	}
+
+	public String getFeedTitle() {
+		return feedTitle;
+	}
 }
