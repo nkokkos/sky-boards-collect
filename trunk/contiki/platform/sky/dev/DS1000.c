@@ -31,13 +31,13 @@
 
 
  /**
- *		\file
- *						Contiki driver for the attachable sky sensor board DS1000.
- * 						Check ~/contiki/platform/sky/dev/sky-sensors.c to see how the 
- *						ADC12 is configured.
+ *   \file
+ *        Contiki driver for the attachable sky sensor board DS1000.
+ *        Check ~/contiki/platform/sky/dev/sky-sensors.c to see how the 
+ *        ADC12 is configured.
  *
- *		\author	 
- *						Eloy Díaz 	  
+ *   \author	 
+ *        Eloy Díaz 	  
  */
 
 #include "contiki.h"
@@ -52,18 +52,18 @@
 * PSX-01E   ---> ADC4  (Temperature)
 * GS-02A    ---> ADC5  (CO)
 */
-#define INPUT_CHANNEL      ((1 << INCH_3) | (1 << INCH_4) | (1 << INCH_5))
+#define INPUT_CHANNEL  ((1 << INCH_3) | (1 << INCH_4) | (1 << INCH_5))
 
 /**
 * Voltage reference ~ 2.5
 * See MSP420 User's guide and sky-sensors.c
 * for more details.
 */
-#define INPUT_REFERENCE     SREF_1
+#define INPUT_REFERENCE  SREF_1
 
-#define CO2_MEM		    ADC12MEM3
-#define TEMP_MEM  	  ADC12MEM4
-#define CO_MEM		    ADC12MEM5
+#define CO2_MEM   ADC12MEM3
+#define TEMP_MEM  ADC12MEM4
+#define CO_MEM    ADC12MEM5
 
 const struct sensors_sensor ds1000;
 /*---------------------------------------------------------------------------*/
@@ -71,12 +71,12 @@ static int
 value(int type)
 {
   switch(type) {
-	  case SENSOR_CO2:
-	    return CO2_MEM;
-	  case SENSOR_TEMP:
-	    return TEMP_MEM;
-	  case SENSOR_CO:
-	    return CO_MEM;
+   case SENSOR_CO2:
+     return CO2_MEM;
+   case SENSOR_TEMP:
+     return TEMP_MEM;
+   case SENSOR_CO:
+     return CO_MEM;
   }
   return 0;
 }
@@ -89,8 +89,8 @@ status(int type)
 /*---------------------------------------------------------------------------*/
 static int
 configure(int type, int c)
-{
-	return sky_sensors_configure(INPUT_CHANNEL, INPUT_REFERENCE, type, c);
+{ 
+  return sky_sensors_configure(INPUT_CHANNEL, INPUT_REFERENCE, type, c);
 }
 /*---------------------------------------------------------------------------*/
 SENSORS_SENSOR(ds1000, "ds1000", value, configure, status);
