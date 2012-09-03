@@ -39,6 +39,7 @@
  */
 
 package se.sics.contiki.collect.gui;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -82,10 +83,14 @@ public class NodeControl implements Visualizer {
     this.category = category;
     this.panel = new JPanel(new BorderLayout());
 
-    final JFormattedTextField intervalField = new JFormattedTextField(new Integer(60));
-    final JFormattedTextField randomField = new JFormattedTextField(new Integer(60));
-    final JFormattedTextField reportsField = new JFormattedTextField(new Integer(0));
-    final JFormattedTextField rexmitsField = new JFormattedTextField(new Integer(31));
+    final JFormattedTextField intervalField = new JFormattedTextField(
+        new Integer(60));
+    final JFormattedTextField randomField = new JFormattedTextField(
+        new Integer(60));
+    final JFormattedTextField reportsField = new JFormattedTextField(
+        new Integer(0));
+    final JFormattedTextField rexmitsField = new JFormattedTextField(
+        new Integer(31));
     statusLabel = new JLabel("", JLabel.CENTER);
     statusLabel.setOpaque(true);
     statusLabel.setBackground(Color.white);
@@ -94,28 +99,30 @@ public class NodeControl implements Visualizer {
     statusSeparator = new JSeparator();
     statusSeparator.setVisible(false);
 
-    JButton stopButton = createCommandButton("Send stop to nodes", "netcmd killall");
+    JButton stopButton = createCommandButton("Send stop to nodes",
+        "netcmd killall");
 
     JButton sendButton = new JButton("Send command to nodes");
     sendButton.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
-        int interval = (Integer)intervalField.getValue();
-        int random = (Integer)randomField.getValue();
-        int reports = (Integer)reportsField.getValue();
-        int rexmits = (Integer)rexmitsField.getValue();
+        int interval = (Integer) intervalField.getValue();
+        int random = (Integer) randomField.getValue();
+        int reports = (Integer) reportsField.getValue();
+        int rexmits = (Integer) rexmitsField.getValue();
 
         sendCommand("netcmd { repeat " + reports + " " + interval
-            + " { randwait " + random + " collect-view-data | send " + rexmits + " } }");
+            + " { randwait " + random + " collect-view-data | send " + rexmits
+            + " } }");
       }
 
     });
 
-    JButton collectButton = createCommandButton("Start Collect",
-                                                "~K", "killall",
-                                                "mac 0", SET_TIME_COMMAND,
-                                                "collect | timestamp | binprint &");
-    JButton stopCollectButton = createCommandButton("Stop Collect", "~K", "killall");
+    JButton collectButton = createCommandButton("Start Collect", "~K",
+        "killall", "mac 0", SET_TIME_COMMAND,
+        "collect | timestamp | binprint &");
+    JButton stopCollectButton = createCommandButton("Stop Collect", "~K",
+        "killall");
 
     JPanel controlPanel = new JPanel(new GridBagLayout());
 
@@ -185,7 +192,8 @@ public class NodeControl implements Visualizer {
     controlPanel.add(new JLabel("seconds"), c);
 
     c.gridy++;
-    controlPanel.add(label = new JLabel("Hop-by-hop retransmissions", JLabel.RIGHT), c);
+    controlPanel.add(label = new JLabel("Hop-by-hop retransmissions",
+        JLabel.RIGHT), c);
     label.setLabelFor(rexmitsField);
     controlPanel.add(rexmitsField, c);
     controlPanel.add(new JLabel("retransmissions (0 - 31)"), c);
@@ -211,16 +219,16 @@ public class NodeControl implements Visualizer {
     JTextPane helpPane = new JTextPane();
     helpPane.setContentType("text/html");
     helpPane.setEditable(false);
-    helpPane.setText("<html>" +
- "<h3>Quick Startup Instructions</h3>" +
- "<lu>" +
- "<li> Connect nodes to USB. Press the <strong>Program Nodes...</strong> button." +
- "<li> Disconnect all except one node. " +
- "Press the <strong>Connect to Serial</strong> button." +
- "<li> Press the <strong>Start Collect</strong> button." +
- "<li> Press the <strong>Send command to nodes</strong> button." +
- "</lu>" + 
- "</html>");
+    helpPane
+        .setText("<html>"
+            + "<h3>Quick Startup Instructions</h3>"
+            + "<lu>"
+            + "<li> Connect nodes to USB. Press the <strong>Program Nodes...</strong> button."
+            + "<li> Disconnect all except one node. "
+            + "Press the <strong>Connect to Serial</strong> button."
+            + "<li> Press the <strong>Start Collect</strong> button."
+            + "<li> Press the <strong>Send command to nodes</strong> button."
+            + "</lu>" + "</html>");
     helpPane.setBackground(panel.getBackground());
     JScrollPane helpScroll = new JScrollPane(helpPane,
         JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -237,7 +245,7 @@ public class NodeControl implements Visualizer {
         try {
           // TODO Should use separate thread to send commands
           panel.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-          for(int i = 0, n = command.length; i < n; i++) {
+          for (int i = 0, n = command.length; i < n; i++) {
             if (i > 0) {
               try {
                 // Do not send multiple commands too fast

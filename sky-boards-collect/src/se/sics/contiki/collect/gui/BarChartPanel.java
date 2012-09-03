@@ -39,6 +39,7 @@
  */
 
 package se.sics.contiki.collect.gui;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -80,7 +81,8 @@ public abstract class BarChartPanel extends JPanel implements Visualizer {
   protected BarChartPanel(CollectServer server, String category, String title,
       String chartTitle, String domainAxisLabel, String valueAxisLabel,
       String[] categories) {
-    this(server, category, title, chartTitle, domainAxisLabel, valueAxisLabel, categories, true);
+    this(server, category, title, chartTitle, domainAxisLabel, valueAxisLabel,
+        categories, true);
   }
 
   protected BarChartPanel(CollectServer server, String category, String title,
@@ -99,8 +101,8 @@ public abstract class BarChartPanel extends JPanel implements Visualizer {
           domainAxisLabel, valueAxisLabel, dataset, PlotOrientation.VERTICAL,
           categories.length > 1, true, false);
     } else {
-      this.chart = ChartFactory.createBarChart(chartTitle,
-          domainAxisLabel, valueAxisLabel, dataset, PlotOrientation.VERTICAL,
+      this.chart = ChartFactory.createBarChart(chartTitle, domainAxisLabel,
+          valueAxisLabel, dataset, PlotOrientation.VERTICAL,
           categories.length > 1, true, false);
       if (categories.length > 1) {
         CategoryPlot plot = chart.getCategoryPlot();
@@ -124,12 +126,12 @@ public abstract class BarChartPanel extends JPanel implements Visualizer {
     if (categories.length < 3) {
       renderer.setDrawBarOutline(false);
 
-      GradientPaint gp = new GradientPaint(0.0f, 0.0f, Color.RED,
-          0.0f, 0.0f, new Color(128, 0, 0));
+      GradientPaint gp = new GradientPaint(0.0f, 0.0f, Color.RED, 0.0f, 0.0f,
+          new Color(128, 0, 0));
       renderer.setSeriesPaint(0, gp);
       if (categories.length > 1) {
-        gp = new GradientPaint(0.0f, 0.0f, Color.BLUE,
-            0.0f, 0.0f, new Color(0, 0, 128));
+        gp = new GradientPaint(0.0f, 0.0f, Color.BLUE, 0.0f, 0.0f, new Color(0,
+            0, 128));
         renderer.setSeriesPaint(1, gp);
       }
     } else {
@@ -143,7 +145,7 @@ public abstract class BarChartPanel extends JPanel implements Visualizer {
   public String getCategory() {
     return category;
   }
-  
+
   @Override
   public String getTitle() {
     return title;
@@ -157,7 +159,7 @@ public abstract class BarChartPanel extends JPanel implements Visualizer {
   public boolean isShowingAllNodes() {
     return isShowingAllNodes;
   }
-  
+
   public void setShowingAllNodes(boolean isShowingAllNodes) {
     if (this.isShowingAllNodes != isShowingAllNodes) {
       this.isShowingAllNodes = isShowingAllNodes;
@@ -166,7 +168,7 @@ public abstract class BarChartPanel extends JPanel implements Visualizer {
       }
     }
   }
-  
+
   @Override
   public void nodeAdded(Node node) {
     if (isVisible()) {
@@ -217,7 +219,8 @@ public abstract class BarChartPanel extends JPanel implements Visualizer {
   private void addNode(Node node) {
     String name = node.getName();
     for (int j = 0, m = categories.length; j < m; j++) {
-      dataset.addValue(0, categories[(j + categoryOrder) % categories.length], name);
+      dataset.addValue(0, categories[(j + categoryOrder) % categories.length],
+          name);
     }
   }
 

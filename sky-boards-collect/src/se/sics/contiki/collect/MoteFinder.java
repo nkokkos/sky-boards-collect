@@ -38,6 +38,7 @@
  */
 
 package se.sics.contiki.collect;
+
 import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -58,7 +59,7 @@ public class MoteFinder {
   private final Pattern motePattern;
   private final boolean isWindows;
   private Process moteListProcess;
-//  private boolean hasVerifiedProcess;
+  // private boolean hasVerifiedProcess;
   private ArrayList<String> comList = new ArrayList<String>();
   private ArrayList<String> moteList = new ArrayList<String>();
   private ArrayList<String> moteInfoList = new ArrayList<String>();
@@ -82,7 +83,7 @@ public class MoteFinder {
   private void searchForMotes() throws IOException {
     comList.clear();
     moteList.clear();
-//    hasVerifiedProcess = false;
+    // hasVerifiedProcess = false;
 
     /* Connect to COM using external serialdump application */
     String fullCommand;
@@ -95,8 +96,10 @@ public class MoteFinder {
     try {
       String[] cmd = new String[] { fullCommand };
       moteListProcess = Runtime.getRuntime().exec(cmd);
-      final BufferedReader input = new BufferedReader(new InputStreamReader(moteListProcess.getInputStream()));
-      final BufferedReader err = new BufferedReader(new InputStreamReader(moteListProcess.getErrorStream()));
+      final BufferedReader input = new BufferedReader(new InputStreamReader(
+          moteListProcess.getInputStream()));
+      final BufferedReader err = new BufferedReader(new InputStreamReader(
+          moteListProcess.getErrorStream()));
 
       /* Start thread listening on stdout */
       Thread readInput = new Thread(new Runnable() {
@@ -124,7 +127,9 @@ public class MoteFinder {
             }
             err.close();
           } catch (IOException e) {
-            System.err.println("Exception when reading from motelist error stream: " + e);
+            System.err
+                .println("Exception when reading from motelist error stream: "
+                    + e);
           }
         }
       }, "read motelist error stream thread");
@@ -135,7 +140,8 @@ public class MoteFinder {
       // Wait for the motelist program to finish executing
       readInput.join();
     } catch (Exception e) {
-      throw (IOException) new IOException("Failed to execute '" + fullCommand + "'").initCause(e);
+      throw (IOException) new IOException("Failed to execute '" + fullCommand
+          + "'").initCause(e);
     }
   }
 
@@ -146,11 +152,10 @@ public class MoteFinder {
   private String[] getMoteList() {
     return moteList.toArray(new String[moteList.size()]);
   }
-	  
-	  public String[] getMoteInfoList(){
-	    return moteInfoList.toArray(new String[moteInfoList.size()]);
-	  }
-	  
+
+  public String[] getMoteInfoList() {
+    return moteInfoList.toArray(new String[moteInfoList.size()]);
+  }
 
   public void close() {
     if (moteListProcess != null) {
@@ -162,7 +167,7 @@ public class MoteFinder {
   protected void parseIncomingLine(String line) {
     if (line.contains("No devices found") || line.startsWith("Reference")) {
       // No Sky connected or title before connected motes
-//      hasVerifiedProcess = true;
+      // hasVerifiedProcess = true;
     } else if (line.startsWith("-------")) {
       // Separator
     } else {
@@ -191,20 +196,25 @@ public class MoteFinder {
     try {
       String[] motes = finder.getComPorts();
       if (motes == null || motes.length == 0) {
-        JOptionPane.showMessageDialog(parent, "Could not find any connected motes.", "No mote found", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(parent,
+            "Could not find any connected motes.", "No mote found",
+            JOptionPane.ERROR_MESSAGE);
         return null;
       } else if (motes.length == 1) {
         // Only one node found
         return motes[0];
       } else {
         // Several motes found
-        return (String) JOptionPane.showInputDialog(
-            parent, "Found multiple connected motes. Please select serial port:",
-            "Select serial port", JOptionPane.QUESTION_MESSAGE, null, motes, motes[0]);
+        return (String) JOptionPane.showInputDialog(parent,
+            "Found multiple connected motes. Please select serial port:",
+            "Select serial port", JOptionPane.QUESTION_MESSAGE, null, motes,
+            motes[0]);
       }
     } catch (IOException e) {
       e.printStackTrace();
-      JOptionPane.showMessageDialog(parent, "Failed to search for connected motes:\n" + e, "Error", JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(parent,
+          "Failed to search for connected motes:\n" + e, "Error",
+          JOptionPane.ERROR_MESSAGE);
       return null;
     } finally {
       finder.close();
@@ -213,13 +223,13 @@ public class MoteFinder {
 
   public static void main(String[] args) throws IOException {
     MoteFinder finder = new MoteFinder();
-    String[] comPorts = args.length > 0 && "-v".equals(args[0]) ?
-        finder.getMotes() : finder.getComPorts();
+    String[] comPorts = args.length > 0 && "-v".equals(args[0]) ? finder
+        .getMotes() : finder.getComPorts();
     finder.close();
     if (comPorts == null || comPorts.length == 0) {
       System.out.println("No motes connected");
     } else {
-      for(String port: comPorts) {
+      for (String port : comPorts) {
         System.out.println("Found Sky at " + port);
       }
     }
