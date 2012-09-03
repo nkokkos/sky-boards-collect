@@ -31,13 +31,13 @@
 
 
  /**
- *		\file
- *						Contiki driver for the attachable sky sensor board CO1000.
- * 						Check ~/contiki/platform/sky/dev/sky-sensors.c to see how the 
- *						ADC12 is configured.
+ *   \file
+ *        Contiki driver for the attachable sky sensor board CO1000.
+ *        Check ~/contiki/platform/sky/dev/sky-sensors.c to see how the 
+ *        ADC12 is configured.
  *
- *		\author	 
- *						Eloy Díaz 	  
+ *   \author	 
+ *        Eloy Díaz 	  
  */
 
 #include "contiki.h"
@@ -54,20 +54,20 @@
 * SA1 Y-axis      ---> ADC2  (Tilt Y)
 * SA1 X-axis      ---> ADC1  (Tilt X)
 */
-#define INPUT_CHANNEL      ((1 << INCH_1) | (1 << INCH_2) | (1 << INCH_3) | (1 << INCH_4) | (1 << INCH_5))
+#define INPUT_CHANNEL ((1 << INCH_1) | (1 << INCH_2) | (1 << INCH_3) | (1 << INCH_4) | (1 << INCH_5))
 
 /**
 * Voltage reference ~ 2.5
 * See MSP420 User's guide and sky-sensors.c
 * for more details.
 */
-#define INPUT_REFERENCE     SREF_1
+#define INPUT_REFERENCE SREF_1
 
-#define ACCY_MEM		ADC12MEM5
-#define ACCX_MEM  		ADC12MEM4
-#define FORCE_MEM		ADC12MEM3
-#define TILTY_MEM		ADC12MEM2
-#define TILTX_MEM  		ADC12MEM1
+#define ACCY_MEM   ADC12MEM5
+#define ACCX_MEM   ADC12MEM4
+#define FORCE_MEM  ADC12MEM3
+#define TILTY_MEM  ADC12MEM2
+#define TILTX_MEM  ADC12MEM1
 
 
 
@@ -77,16 +77,16 @@ static int
 value(int type)
 {
   switch(type) {
-	  case SENSOR_ACCY:
-	    return ACCY_MEM;
-	  case SENSOR_ACCX:
-	    return ACCX_MEM;
-	  case SENSOR_FORCE:
-	    return FORCE_MEM;
-	  case SENSOR_TILTY:
-		return TILTY_MEM;
-	  case SENSOR_TILTX:
-		return TILTX_MEM;
+    case SENSOR_ACCY:
+      return ACCY_MEM;
+    case SENSOR_ACCX:
+      return ACCX_MEM;
+    case SENSOR_FORCE:
+      return FORCE_MEM;
+    case SENSOR_TILTY:
+		  return TILTY_MEM;
+    case SENSOR_TILTX:
+      return TILTX_MEM;
   }
   return 0;
 }

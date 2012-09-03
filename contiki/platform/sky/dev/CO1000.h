@@ -31,13 +31,13 @@
 
 
  /**
- *		\file
- *						Contiki driver for the attachable sky sensor board AR1000.
- * 						Check ~/contiki/platform/sky/dev/sky-sensors.c to see how the 
- *						ADC12 is configured.
+ *   \file
+ *        Contiki driver for the attachable sky sensor board CO1000.
+ *        Check ~/contiki/platform/sky/dev/sky-sensors.c to see how the 
+ *        ADC12 is configured.
  *
- *		\author	 
- *						Eloy Díaz 	  
+ *   \author	 
+ *        Eloy Díaz 	  
  */
 #ifndef __CO1000_SENSOR_H__
 #define __CO1000_SENSOR_H__
@@ -47,7 +47,7 @@
 extern const struct sensors_sensor co1000;
 #define SENSOR_ACCY   11
 #define SENSOR_ACCX   22
-#define SENSOR_FORCE	33
+#define SENSOR_FORCE  33
 #define SENSOR_TILTY  44
 #define SENSOR_TILTX  55
 
