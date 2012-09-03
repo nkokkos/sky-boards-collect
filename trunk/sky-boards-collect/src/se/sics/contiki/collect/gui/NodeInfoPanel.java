@@ -39,6 +39,7 @@
  */
 
 package se.sics.contiki.collect.gui;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -122,7 +123,8 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
         },
         new TableData("Hops", "Average Hops to Sink", Double.class) {
           public Object getValue(Node node) {
-            return node.getSensorDataAggregator().getAverageValue(SensorData.HOPS);
+            return node.getSensorDataAggregator().getAverageValue(
+                SensorData.HOPS);
           }
         },
         new TableData("Rtmetric", "Average Routing Metric", Double.class) {
@@ -142,7 +144,8 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
         },
         new TableData("Beacon Interval", "Average Beacon Interval", Long.class) {
           public Object getValue(Node node) {
-            return (long)(node.getSensorDataAggregator().getAverageValue(SensorData.BEACON_INTERVAL) * 1000);
+            return (long) (node.getSensorDataAggregator().getAverageValue(
+                SensorData.BEACON_INTERVAL) * 1000);
           }
         },
 
@@ -153,22 +156,26 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
         },
 
         // Power
-        new TableData("CPU Power", "Average CPU Power Consumption", Double.class) {
+        new TableData("CPU Power", "Average CPU Power Consumption",
+            Double.class) {
           public Object getValue(Node node) {
             return node.getSensorDataAggregator().getCPUPower();
           }
         },
-        new TableData("LPM Power", "Average LPM Power Consumption", Double.class) {
+        new TableData("LPM Power", "Average LPM Power Consumption",
+            Double.class) {
           public Object getValue(Node node) {
             return node.getSensorDataAggregator().getLPMPower();
           }
         },
-        new TableData("Listen Power", "Average Radio Listen Power Consumption", Double.class) {
+        new TableData("Listen Power", "Average Radio Listen Power Consumption",
+            Double.class) {
           public Object getValue(Node node) {
             return node.getSensorDataAggregator().getListenPower();
           }
         },
-        new TableData("Transmit Power", "Average Radio Transmit Power Consumption", Double.class) {
+        new TableData("Transmit Power",
+            "Average Radio Transmit Power Consumption", Double.class) {
           public Object getValue(Node node) {
             return node.getSensorDataAggregator().getTransmitPower();
           }
@@ -184,14 +191,18 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
           }
         },
 
-        new TableData("Listen Duty Cycle", "Average Radio Listen Duty Cycle (%)", Double.class) {
+        new TableData("Listen Duty Cycle",
+            "Average Radio Listen Duty Cycle (%)", Double.class) {
           public Object getValue(Node node) {
-            return 100 * node.getSensorDataAggregator().getAverageDutyCycle(SensorInfo.TIME_LISTEN);
+            return 100 * node.getSensorDataAggregator().getAverageDutyCycle(
+                SensorInfo.TIME_LISTEN);
           }
         },
-        new TableData("Transmit Duty Cycle", "Average Radio Transmit Duty Cycle (%)", Double.class) {
+        new TableData("Transmit Duty Cycle",
+            "Average Radio Transmit Duty Cycle (%)", Double.class) {
           public Object getValue(Node node) {
-            return 100 * node.getSensorDataAggregator().getAverageDutyCycle(SensorInfo.TIME_TRANSMIT);
+            return 100 * node.getSensorDataAggregator().getAverageDutyCycle(
+                SensorInfo.TIME_TRANSMIT);
           }
         },
 
@@ -200,46 +211,46 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
           public Object getValue(Node node) {
             return node.getSensorDataAggregator().getAveragePeriod();
           }
-        },
-        new TableData("Min Inter-packet Time", Long.class) {
+        }, new TableData("Min Inter-packet Time", Long.class) {
           public Object getValue(Node node) {
             return node.getSensorDataAggregator().getShortestPeriod();
           }
-        },
-        new TableData("Max Inter-packet Time", Long.class) {
+        }, new TableData("Max Inter-packet Time", Long.class) {
           public Object getValue(Node node) {
             return node.getSensorDataAggregator().getLongestPeriod();
           }
-        }
-    };
+        } };
     nodeModel = new NodeModel(columns);
     table = new JTable(nodeModel) {
       private static final long serialVersionUID = 1L;
       private Font fontForAverage;
 
       protected JTableHeader createDefaultTableHeader() {
-          return new JTableHeader(columnModel) {
-            private static final long serialVersionUID = 1L;
+        return new JTableHeader(columnModel) {
+          private static final long serialVersionUID = 1L;
 
-            public String getToolTipText(MouseEvent e) {
-              int index = columnModel.getColumnIndexAtX(e.getX());
-              int modelIndex = index < 0 ? index : columnModel.getColumn(index).getModelIndex();
-              return modelIndex < 0 ? null : nodeModel.getColumnToolTip(modelIndex);
-            }
-          };
+          public String getToolTipText(MouseEvent e) {
+            int index = columnModel.getColumnIndexAtX(e.getX());
+            int modelIndex = index < 0 ? index : columnModel.getColumn(index)
+                .getModelIndex();
+            return modelIndex < 0 ? null : nodeModel
+                .getColumnToolTip(modelIndex);
+          }
+        };
       }
 
-      public Component prepareRenderer(TableCellRenderer renderer, int rowIndex, int vColIndex) {
-       Component c = super.prepareRenderer(renderer, rowIndex, vColIndex);
-       int row = convertRowIndexToModel(rowIndex);
-       if (row == nodeModel.getRowCount() - 1) {
-         if (fontForAverage == null) {
-           fontForAverage = c.getFont().deriveFont(Font.BOLD);
-         }
-         // Last line is average
-         c.setFont(fontForAverage);
-       }
-       return c;
+      public Component prepareRenderer(TableCellRenderer renderer,
+          int rowIndex, int vColIndex) {
+        Component c = super.prepareRenderer(renderer, rowIndex, vColIndex);
+        int row = convertRowIndexToModel(rowIndex);
+        if (row == nodeModel.getRowCount() - 1) {
+          if (fontForAverage == null) {
+            fontForAverage = c.getFont().deriveFont(Font.BOLD);
+          }
+          // Last line is average
+          c.setFont(fontForAverage);
+        }
+        return c;
       }
 
     };
@@ -247,12 +258,12 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
     // Do not sort column when clicking between the columns (resizing)
     TableRowSorter<NodeModel> sorter = new TableRowSorter<NodeModel>(nodeModel) {
       public void toggleSortOrder(int column) {
-        if(table.getTableHeader().getCursor().getType() != Cursor.E_RESIZE_CURSOR) {
+        if (table.getTableHeader().getCursor().getType() != Cursor.E_RESIZE_CURSOR) {
           super.toggleSortOrder(column);
         }
       }
     };
-    for(int c = 0; c < columns.length; c++) {
+    for (int c = 0; c < columns.length; c++) {
       if (columns[c].dataClass == Number.class) {
         sorter.setComparator(c, NUMBER_COMPARATOR);
       }
@@ -261,8 +272,9 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
     // Pack the column when double clicking between columns (resizing)
     table.getTableHeader().addMouseListener(new MouseAdapter() {
       public void mouseClicked(MouseEvent e) {
-        if(e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e) &&
-            table.getTableHeader().getCursor().getType() == Cursor.E_RESIZE_CURSOR) {
+        if (e.getClickCount() == 2
+            && SwingUtilities.isLeftMouseButton(e)
+            && table.getTableHeader().getCursor().getType() == Cursor.E_RESIZE_CURSOR) {
           int index = table.getColumnModel().getColumnIndexAtX(e.getX() - 3);
           if (index >= 0) {
             packColumn(table, index);
@@ -297,8 +309,9 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
           setText(null);
         } else {
           double v = ((Number) value).doubleValue() + 0.0005;
-          int dec = ((int)(v * 1000)) % 1000;
-          setText((long)v + "." + (dec > 99 ? "" : "0") + (dec > 9 ? "" : "0") + dec);
+          int dec = ((int) (v * 1000)) % 1000;
+          setText((long) v + "." + (dec > 99 ? "" : "0") + (dec > 9 ? "" : "0")
+              + dec);
         }
       }
     };
@@ -316,8 +329,9 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
           setText(value.toString());
         } else {
           double v = ((Number) value).doubleValue() + 0.0005;
-          int dec = ((int)(v * 1000)) % 1000;
-          setText((long)v + "." + (dec > 99 ? "" : "0") + (dec > 9 ? "" : "0") + dec);
+          int dec = ((int) (v * 1000)) % 1000;
+          setText((long) v + "." + (dec > 99 ? "" : "0") + (dec > 9 ? "" : "0")
+              + dec);
         }
       }
     };
@@ -333,10 +347,10 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
     String savedColumnData = server.getConfig("collect.nodeinfo.table");
     if (savedColumnData != null) {
       String[] columnList = savedColumnData.split("[ ,]");
-      for(int i = 1; i < columns.length; i++) {
+      for (int i = 1; i < columns.length; i++) {
         columns[i].setVisible(false);
       }
-      for(int i = 0; i < columnList.length; i++) {
+      for (int i = 0; i < columnList.length; i++) {
         int c = Integer.parseInt(columnList[i]);
         int index = table.convertColumnIndexToView(c);
         if (index >= 0) {
@@ -347,7 +361,7 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
     }
     JPopupMenu popupMenu = new JPopupMenu();
     // The first column (the node name) should always be visible.
-    for(int i = 1; i < columns.length; i++) {
+    for (int i = 1; i < columns.length; i++) {
       popupMenu.add(new JCheckBoxMenuItem(columns[i].init(table, i)));
     }
     table.setComponentPopupMenu(popupMenu);
@@ -356,7 +370,7 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
 
   public void updateConfig(Properties config) {
     StringBuilder sb = new StringBuilder();
-    for(int i = 0, n = table.getColumnCount(); i < n; i++) {
+    for (int i = 0, n = table.getColumnCount(); i < n; i++) {
       int index = table.convertColumnIndexToModel(i);
       if (index >= 0) {
         if (sb.length() > 0) {
@@ -438,13 +452,15 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
     if (columnRenderer == null) {
       columnRenderer = table.getTableHeader().getDefaultRenderer();
     }
-    Component c = columnRenderer.getTableCellRendererComponent(table, value, false, false, -1, columnIndex);
+    Component c = columnRenderer.getTableCellRendererComponent(table, value,
+        false, false, -1, columnIndex);
     int width = c.getPreferredSize().width + 6;
     int intercellSpacing = table.getIntercellSpacing().width;
-    for(int i = 0, n = table.getRowCount(); i < n; i++) {
+    for (int i = 0, n = table.getRowCount(); i < n; i++) {
       TableCellRenderer cellRenderer = table.getCellRenderer(i, columnIndex);
       value = table.getValueAt(i, columnIndex);
-      c = cellRenderer.getTableCellRendererComponent(table, value, false, false, i, columnIndex);
+      c = cellRenderer.getTableCellRendererComponent(table, value, false,
+          false, i, columnIndex);
       int w = c.getPreferredSize().width + intercellSpacing + 2;
       if (w > width) {
         width = w;
@@ -467,7 +483,7 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
     }
 
     public void recalculateAverage() {
-      for(TableData td : columns) {
+      for (TableData td : columns) {
         td.clearAverageCache();
       }
       int row = getRowCount() - 1;
@@ -516,7 +532,7 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
 
     public void updateNode(Node node) {
       if (this.nodes != null) {
-        for(int row = 0; row < this.nodes.length; row++) {
+        for (int row = 0; row < this.nodes.length; row++) {
           if (this.nodes[row] == node) {
             fireTableRowsUpdated(row, row);
             recalculateAverage();
@@ -588,7 +604,7 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
           packColumn(table, count);
 
           int newIndex = 0;
-          for(int i = 0; i < modelIndex; i++) {
+          for (int i = 0; i < modelIndex; i++) {
             if (table.convertColumnIndexToView(i) >= 0) {
               // The new column should be after this visible column
               newIndex++;
@@ -600,7 +616,7 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
         }
       } else {
         int columnIndex = table.convertColumnIndexToView(modelIndex);
-        if (columnIndex >= 0 ) {
+        if (columnIndex >= 0) {
           tableColumn = table.getColumnModel().getColumn(columnIndex);
           table.removeColumn(tableColumn);
         }
@@ -618,7 +634,7 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
         double average = 0.0;
         if (nodes != null && nodes.length > 0) {
           int count = 0;
-          for(Node node : nodes) {
+          for (Node node : nodes) {
             if (node.getSensorDataAggregator().getDataCount() > 0) {
               average += ((Number) getValue(node)).doubleValue();
               count++;

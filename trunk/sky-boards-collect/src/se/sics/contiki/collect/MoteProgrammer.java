@@ -38,6 +38,7 @@
  */
 
 package se.sics.contiki.collect;
+
 import java.awt.BorderLayout;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
@@ -86,13 +87,12 @@ public class MoteProgrammer {
   public String[] getMotes() {
     return motes;
   }
-  
-  public String[] getMoteInfoList() throws IOException{
-	    MoteFinder finder = new MoteFinder();
-	    finder.getMotes();
-	    return finder.getMoteInfoList();
-  }
 
+  public String[] getMoteInfoList() throws IOException {
+    MoteFinder finder = new MoteFinder();
+    finder.getMotes();
+    return finder.getMoteInfoList();
+  }
 
   public void setMotes(String[] motes) {
     this.motes = motes;
@@ -104,11 +104,9 @@ public class MoteProgrammer {
     finder.close();
   }
 
-
   public String[] getFirmwareFiles() {
     return firmwareFiles;
   }
-
 
   public void setFirmwareFiles(String[] firmwareFiles) {
     this.firmwareFiles = firmwareFiles;
@@ -121,14 +119,15 @@ public class MoteProgrammer {
     if (!hasMotes()) {
       throw new IllegalStateException("no motes");
     }
-    
-    for (int i=0; i<firmwareFiles.length;i++){
-    	firmwareFiles[i]="./firmware/"+firmwareFiles[i];
-	    File fp = new File(firmwareFiles[i]);
-	    if (!fp.canRead()) {
-	      throw new IllegalStateException("can not read firmware file '" + fp.getAbsolutePath() + '\'');
-	    }
-    }   
+
+    for (int i = 0; i < firmwareFiles.length; i++) {
+      firmwareFiles[i] = "./firmware/" + firmwareFiles[i];
+      File fp = new File(firmwareFiles[i]);
+      if (!fp.canRead()) {
+        throw new IllegalStateException("can not read firmware file '"
+            + fp.getAbsolutePath() + '\'');
+      }
+    }
     if (parent != null) {
       // Use GUI
       dialog = new JDialog(parent, "Mote Programmer");
@@ -142,7 +141,8 @@ public class MoteProgrammer {
       logTextArea = new JTextArea(28, 80);
       logTextArea.setEditable(false);
       logTextArea.setLineWrap(true);
-      dialog.getContentPane().add(new JScrollPane(logTextArea), BorderLayout.CENTER);
+      dialog.getContentPane().add(new JScrollPane(logTextArea),
+          BorderLayout.CENTER);
       JPanel panel = new JPanel();
       closeButton = new JButton("Cancel");
       closeButton.addActionListener(new ActionListener() {
@@ -161,10 +161,9 @@ public class MoteProgrammer {
     processes = new MoteProgrammerProcess[motes.length];
     isDone = false;
     try {
-      log("Programming " + motes.length + " motes",null); 
-      /*with '" + firmwareFile + '\'', null);*/
-      
-      
+      log("Programming " + motes.length + " motes", null);
+      /* with '" + firmwareFile + '\'', null); */
+
       for (int i = 0, n = processes.length; i < n; i++) {
         processes[i] = new MoteProgrammerProcess(motes[i], firmwareFiles[i]) {
           protected void logLine(String line, boolean stderr, Throwable e) {
@@ -172,6 +171,7 @@ public class MoteProgrammer {
               super.logLine(line, stderr, e);
             }
           }
+
           protected void processEnded() {
             handleProcessEnded(this);
           }
@@ -179,7 +179,8 @@ public class MoteProgrammer {
         processes[i].start();
       }
     } catch (Exception e) {
-      throw (IOException) new IOException("Failed to program motes").initCause(e);
+      throw (IOException) new IOException("Failed to program motes")
+          .initCause(e);
     }
   }
 
@@ -214,12 +215,13 @@ public class MoteProgrammer {
 
   protected void handleProcessEnded(MoteProgrammerProcess process) {
     // Another process has finished
-    log("Mote@" + process.getMoteID() + "> finished" + (process.hasError() ? " with errors": ""), null);
+    log("Mote@" + process.getMoteID() + "> finished"
+        + (process.hasError() ? " with errors" : ""), null);
     MoteProgrammerProcess[] processes = this.processes;
     if (processes != null) {
       int running = 0;
       int errors = 0;
-      for(MoteProgrammerProcess p: processes) {
+      for (MoteProgrammerProcess p : processes) {
         if (p.isRunning()) {
           running++;
         } else if (p.hasError()) {
@@ -229,7 +231,8 @@ public class MoteProgrammer {
       if (running == 0) {
         // All processes has finished
         isDone = true;
-        final String doneMessage = "Programming finished with " + errors + " errors."; 
+        final String doneMessage = "Programming finished with " + errors
+            + " errors.";
         log(doneMessage, null);
         if (closeButton != null) {
           SwingUtilities.invokeLater(new Runnable() {
@@ -238,7 +241,8 @@ public class MoteProgrammer {
               progressBar.setIndeterminate(false);
               progressBar.setString(doneMessage);
               closeButton.setText("Close");
-            }});
+            }
+          });
         }
         synchronized (this) {
           notifyAll();

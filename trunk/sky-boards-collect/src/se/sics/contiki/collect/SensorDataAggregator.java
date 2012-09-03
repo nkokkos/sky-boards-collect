@@ -76,7 +76,7 @@ public class SensorDataAggregator implements SensorInfo {
   }
 
   public double getAverageValue(int index) {
-      return dataCount > 0 ? (double)values[index] / (double)dataCount : 0;
+    return dataCount > 0 ? (double) values[index] / (double) dataCount : 0;
   }
 
   public int getValueCount() {
@@ -99,36 +99,37 @@ public class SensorDataAggregator implements SensorInfo {
 
     if (s <= maxSeqno) {
       // Check for duplicates among the last 5 packets
-      for(int n = node.getSensorDataCount() - 1, i = n > 5 ? n - 5 : 0; i < n; i++) {
+      for (int n = node.getSensorDataCount() - 1, i = n > 5 ? n - 5 : 0; i < n; i++) {
         SensorData sd = node.getSensorData(i);
-        if (sd.getValue(SEQNO) != seqn || sd == data || sd.getValueCount() != data.getValueCount()) {
+        if (sd.getValue(SEQNO) != seqn || sd == data
+            || sd.getValueCount() != data.getValueCount()) {
           // Not a duplicate
         } else if (Math.abs(data.getNodeTime() - sd.getNodeTime()) > 180000) {
           // Too long time between packets. Not a duplicate.
-//          System.err.println("Too long time between packets with same seqno from "
-//                  + data.getNode() + ": "
-//                  + (Math.abs(data.getNodeTime() - sd.getNodeTime()) / 1000)
-//                  + " sec, " + (n - i) + " packets ago");
+          // System.err.println("Too long time between packets with same seqno from "
+          // + data.getNode() + ": "
+          // + (Math.abs(data.getNodeTime() - sd.getNodeTime()) / 1000)
+          // + " sec, " + (n - i) + " packets ago");
         } else {
           data.setDuplicate(true);
 
           // Verify that the packet is a duplicate
-          for(int j = DATA_LEN2, m = data.getValueCount(); j < m; j++) {
+          for (int j = DATA_LEN2, m = data.getValueCount(); j < m; j++) {
             if (sd.getValue(j) != data.getValue(j)) {
               data.setDuplicate(false);
-//              System.out.println("NOT Duplicate: " + data.getNode() + " ("
-//                  + (n - i) + ": "
-//                  + ((data.getNodeTime() - sd.getNodeTime()) / 1000) + "sek): "
-//                  + seqn + " value[" + j + "]: " + sd.getValue(j) + " != "
-//                  + data.getValue(j));
+              // System.out.println("NOT Duplicate: " + data.getNode() + " ("
+              // + (n - i) + ": "
+              // + ((data.getNodeTime() - sd.getNodeTime()) / 1000) + "sek): "
+              // + seqn + " value[" + j + "]: " + sd.getValue(j) + " != "
+              // + data.getValue(j));
               break;
             }
           }
           if (data.isDuplicate()) {
-//            System.out.println("Duplicate: " + data.getNode() + ": " + seqn
-//                + ": "
-//                + (Math.abs(data.getNodeTime() - sd.getNodeTime()) / 1000)
-//                + " sec, " + (n - i) + " packets ago");
+            // System.out.println("Duplicate: " + data.getNode() + ": " + seqn
+            // + ": "
+            // + (Math.abs(data.getNodeTime() - sd.getNodeTime()) / 1000)
+            // + " sec, " + (n - i) + " packets ago");
             duplicates++;
             break;
           }
@@ -142,7 +143,8 @@ public class SensorDataAggregator implements SensorInfo {
       }
 
       if (node.getSensorDataCount() > 1) {
-        long timeDiff = data.getNodeTime() - node.getSensorData(node.getSensorDataCount() - 2).getNodeTime();
+        long timeDiff = data.getNodeTime()
+            - node.getSensorData(node.getSensorDataCount() - 2).getNodeTime();
         if (timeDiff > longestPeriod) {
           longestPeriod = timeDiff;
         }
@@ -170,11 +172,13 @@ public class SensorDataAggregator implements SensorInfo {
         if (seqn > 0) {
           lost += seqn;
         }
-      } else if (s > maxSeqno + 1){
+      } else if (s > maxSeqno + 1) {
         lost += s - (maxSeqno + 1);
       }
-      if (s < minSeqno) minSeqno = s;
-      if (s > maxSeqno) maxSeqno = s;
+      if (s < minSeqno)
+        minSeqno = s;
+      if (s > maxSeqno)
+        maxSeqno = s;
       dataCount++;
     }
     data.setSeqno(s);
@@ -200,36 +204,43 @@ public class SensorDataAggregator implements SensorInfo {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     for (int i = 0, n = values.length; i < n; i++) {
-      if (i > 0) sb.append(' ');
+      if (i > 0)
+        sb.append(' ');
       sb.append(values[i]);
     }
     return sb.toString();
   }
 
   public double getCPUPower() {
-    return (values[TIME_CPU] * POWER_CPU) / (values[TIME_CPU] + values[TIME_LPM]);
+    return (values[TIME_CPU] * POWER_CPU)
+        / (values[TIME_CPU] + values[TIME_LPM]);
   }
 
   public double getLPMPower() {
-    return (values[TIME_LPM] * POWER_LPM) / (values[TIME_CPU] + values[TIME_LPM]);
+    return (values[TIME_LPM] * POWER_LPM)
+        / (values[TIME_CPU] + values[TIME_LPM]);
   }
 
   public double getListenPower() {
-    return (values[TIME_LISTEN] * POWER_LISTEN) / (values[TIME_CPU] + values[TIME_LPM]);
+    return (values[TIME_LISTEN] * POWER_LISTEN)
+        / (values[TIME_CPU] + values[TIME_LPM]);
   }
 
   public double getTransmitPower() {
-    return (values[TIME_TRANSMIT] * POWER_TRANSMIT) / (values[TIME_CPU] + values[TIME_LPM]);
+    return (values[TIME_TRANSMIT] * POWER_TRANSMIT)
+        / (values[TIME_CPU] + values[TIME_LPM]);
   }
 
   public double getAveragePower() {
     return (values[TIME_CPU] * POWER_CPU + values[TIME_LPM] * POWER_LPM
-    + values[TIME_LISTEN] * POWER_LISTEN + values[TIME_TRANSMIT] * POWER_TRANSMIT)
-    / (values[TIME_CPU] + values[TIME_LPM]);
+        + values[TIME_LISTEN] * POWER_LISTEN + values[TIME_TRANSMIT]
+        * POWER_TRANSMIT)
+        / (values[TIME_CPU] + values[TIME_LPM]);
   }
 
   public double getAverageDutyCycle(int index) {
-      return (double)(values[index]) / (double)(values[TIME_CPU] + values[TIME_LPM]);
+    return (double) (values[index])
+        / (double) (values[TIME_CPU] + values[TIME_LPM]);
   }
 
   public long getPowerMeasureTime() {
@@ -237,18 +248,17 @@ public class SensorDataAggregator implements SensorInfo {
   }
 
   public double getAverageTemperature() {
-	  SensorData sd=node.getLastSD();
-	  switch(sd.getType()){   
-	  case TmoteSky:
-	    return dataCount > 0 ? (sd.getTemperatureTmoteSky(
-	    						(int)values[TEMPERATURE] / 
-    		  					dataCount)) : 0.0;
-	  case DS1000:
-        return dataCount > 0 ? (sd.getTemperatureDS1000(
-        						(int)values[TEMPERATURE] / 
-        						 dataCount)) : 0.0; 
+    SensorData sd = node.getLastSD();
+    switch (sd.getType()) {
+      case TmoteSky:
+        return dataCount > 0 ? (sd
+            .getTemperatureTmoteSky((int) values[TEMPERATURE] / dataCount))
+            : 0.0;
+      case DS1000:
+        return dataCount > 0 ? (sd
+            .getTemperatureDS1000((int) values[TEMPERATURE] / dataCount)) : 0.0;
     }
-	return 0.0;
+    return 0.0;
   }
 
   public double getAverageRtmetric() {
@@ -304,17 +314,18 @@ public class SensorDataAggregator implements SensorInfo {
   }
 
   public int getMinSeqno() {
-      return minSeqno;
+    return minSeqno;
   }
 
   public int getMaxSeqno() {
-      return maxSeqno;
+    return maxSeqno;
   }
 
   public long getAveragePeriod() {
     if (dataCount > 1) {
       long first = node.getSensorData(0).getNodeTime();
-      long last = node.getSensorData(node.getSensorDataCount() - 1).getNodeTime();
+      long last = node.getSensorData(node.getSensorDataCount() - 1)
+          .getNodeTime();
       return (last - first) / dataCount;
     }
     return 0;
