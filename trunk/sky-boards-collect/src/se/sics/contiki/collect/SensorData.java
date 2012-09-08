@@ -307,7 +307,7 @@ public class SensorData implements SensorInfo {
   }
 
   public double getCO() {
-    return getCO(values[CO2]);
+    return getCO(values[CO]);
   }
 
   public double getCO(int value) {
@@ -324,7 +324,6 @@ public class SensorData implements SensorInfo {
 
     double Vs = ((double) value / (double) 4096) * vRef;
     double sensitivity = ((Vcc / Vs) - 1) * RL / R0;
-    ;
 
     if (sensitivity > 0.8)
       return 10.0;
