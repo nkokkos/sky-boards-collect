@@ -1,10 +1,10 @@
 #summary How to use cooja collect-view plugin with other collect-view version
 
-In {{{~/contiki/tools/cooja/apps/collect-view/java/se/sics/se/cooja/plugins/collect-view.java}}}
+Open {{{~/contiki/tools/cooja/apps/collect-view/java/se/sics/se/cooja/plugins/collect-view.java}}}
 
 Edit this line.
 
 {{{String jarFile = contikiPath + "/tools/collect-view/dist/collect-view.jar";}}}
 
 
-Then open e.g. example-collect-view.csc
+Then restart Cooja and open e.g. example-collect-view.csc
