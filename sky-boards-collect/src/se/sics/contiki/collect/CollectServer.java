@@ -858,7 +858,7 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
     });
     toolsMenu.add(item);
 
-    item = new JMenuItem("Adjust conversion expresions...");
+    item = new JMenuItem("Adjust conversion expressions...");
     item.addActionListener(new ActionListener() {
 
       public void actionPerformed(ActionEvent e) {
