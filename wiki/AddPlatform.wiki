@@ -1,4 +1,4 @@
-#summary Process to add new platforms support to collect-view system
+#summary Process to add new platforms support to collect-view tool
 
 = Introduction =
 
