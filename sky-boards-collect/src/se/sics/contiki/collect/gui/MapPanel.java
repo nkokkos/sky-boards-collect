@@ -58,8 +58,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.math.RoundingMode;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Properties;
@@ -85,14 +83,13 @@ import se.sics.contiki.collect.Configurable;
 import se.sics.contiki.collect.Link;
 import se.sics.contiki.collect.Node;
 import se.sics.contiki.collect.SensorData;
-import se.sics.contiki.collect.SensorInfo;
 import se.sics.contiki.collect.Visualizer;
 
 /**
  *
  */
 public class MapPanel extends JPanel implements Configurable, Visualizer,
-    ActionListener, MouseListener, MouseMotionListener, SensorInfo {
+    ActionListener, MouseListener, MouseMotionListener{
 
   private static final long serialVersionUID = -8256619482599309425L;
 
@@ -120,8 +117,8 @@ public class MapPanel extends JPanel implements Configurable, Visualizer,
   private JCheckBoxMenuItem showNetworkItem;
   private JCheckBoxMenuItem configItem;
   private JMenuItem resetNetworkItem;
-  private JMenuItem dataFormatRowItem;
-  private JMenuItem dataFormatColItem;
+  private JMenuItem paintLastValuesItem;
+  
   private MapNode popupNode;
 
   private Hashtable<String, MapNode> nodeTable = new Hashtable<String, MapNode>();
@@ -179,9 +176,7 @@ public class MapPanel extends JPanel implements Configurable, Visualizer,
           false);
       backgroundItem.setEnabled(false);
       popupMenu.addSeparator();
-      dataFormatRowItem = createCheckBoxMenuItem(popupMenu, "Row format", true);
-      dataFormatColItem = createCheckBoxMenuItem(popupMenu, "Column format",
-          false);
+      paintLastValuesItem = createCheckBoxMenuItem(popupMenu, "Paint last values",true);
     } else {
       configItem = createCheckBoxMenuItem(popupMenu, "Show Layout Settings",
           false);
@@ -527,12 +522,10 @@ public class MapPanel extends JPanel implements Configurable, Visualizer,
     }
 
     for (MapNode n : nodes) {
-      if (isMap && dataFormatRowItem.isSelected())
-        n.paint(g, n.x, n.y, this.isMap, MapNode.ROW_FORMAT);
-      else if (isMap && dataFormatColItem.isSelected())
-        n.paint(g, n.x, n.y, this.isMap, MapNode.COL_FORMAT);
+      if (isMap && paintLastValuesItem.isSelected())
+        n.paint(g, n.x, n.y, true);
       else
-        n.paint(g, n.x, n.y, false, MapNode.COL_FORMAT);
+        n.paint(g, n.x, n.y, false);
 
       g.setColor(Color.black);
       if (n.isSelected) {
@@ -638,12 +631,8 @@ public class MapPanel extends JPanel implements Configurable, Visualizer,
     } else if (isMap && source == backgroundItem) {
       showBackground = mapImage != null && backgroundItem.isSelected();
       repaint();
-    } else if (isMap && source == dataFormatRowItem) {
-      dataFormatColItem.setSelected(false);
-      repaint();
-
-    } else if (isMap && source == dataFormatColItem) {
-      dataFormatRowItem.setSelected(false);
+    } else if (isMap && source == paintLastValuesItem) {
+      //paintLastValuesItem.setSelected(!paintLastValuesItem.isSelected());
       repaint();
     }
   }
@@ -855,110 +844,24 @@ public class MapPanel extends JPanel implements Configurable, Visualizer,
     public boolean hasFixedLocation;
     public boolean isSelected;
     public String message;
-    public final static int ROW_FORMAT = 0;
-    public final static int COL_FORMAT = 1;
 
     MapNode(MapPanel panel, Node node) {
       this.node = node;
     }
 
-    public void paint(Graphics g, int x, int y, boolean paintSensorData,
-        int format) {
+    public void paint(Graphics g, int x, int y, boolean paintSensorData) {
       final int od = 3;
       g.setColor(Color.black);
       g.drawString(node.getID(), x + od * 2 + 3, y + 4);
 
       if (paintSensorData) {
-        switch (format) {
-          case ROW_FORMAT:
-            paintLastDataRow(g, od);
-            break;
-
-          case COL_FORMAT:
-            paintLastDataColumn(g, od);
-        }
+        node.paintLastData(g, x, y, od);
       }
-
+      
       if (hasFixedLocation) {
         g.setColor(Color.red);
       }
       g.fillOval(x - od, y - od, od * 2 + 1, od * 2 + 1);
-
-    }
-
-    private void paintLastDataColumn(Graphics g, int od) {
-      final int vspace = 15;
-
-      if (node.getSensorDataCount() == 0)
-        return;
-      SensorData sd = node.getLastSD();
-      switch (node.getLastSD().getType()) {
-        case TmoteSky:
-          g.drawString("Light1 = " + round(sd.getLight1()), x + od * 2 + 3, y
-              + 4 + vspace);
-          g.drawString("Light2 = " + round(sd.getLight2()), x + od * 2 + 3, y
-              + 4 + vspace * 2);
-          g.drawString("Temp. = " + round(sd.getTemperatureTmoteSky()), x + od
-              * 2 + 3, y + 4 + vspace * 3);
-          g.drawString("Hum. = " + round(sd.getHumidity()), x + od * 2 + 3, y
-              + 4 + vspace * 4);
-          // g.draw3DRect(x+od * 2 + 3, y+4, 100, 50, false);
-          break;
-
-        case AR1000:
-          g.drawString("CO=" + round(sd.getCO()), x + od * 2 + 3, y + 4
-              + vspace);
-          g.drawString("CO2=" + round(sd.getCO2()), x + od * 2 + 3, y + 4
-              + vspace * 2);
-          g.drawString("Dust=" + round(sd.getDust()), x + od * 2 + 3, y + 4
-              + vspace * 3);
-          // g.draw3DRect(x+od * 2 + 3, y+4, 100, 50, false);
-          break;
-
-        case DS1000:
-          g.drawString("Temp. = " + round(sd.getTemperatureDS1000()), x + od
-              * 2 + 3, y + 4 + vspace);
-          g.drawString("CO = " + round(sd.getCO()), x + od * 2 + 3, y + 4
-              + vspace * 2);
-          g.drawString("CO2 = " + round(sd.getCO2()), x + od * 2 + 3, y + 4
-              + vspace * 3);
-          // g.draw3DRect(x+od * 2 + 3, y+4, 100, 50, false);
-      }
-      g.drawString(node.getID(), x + od * 2 + 3, y + 4);
-    }
-
-    private void paintLastDataRow(Graphics g, int od) {
-      String str = " [ ]";
-      if (node.getSensorDataCount() == 0)
-        return;
-      SensorData sd = node.getLastSD();
-      switch (node.getLastSD().getType()) {
-        case TmoteSky:
-          str = " [ L1=" + round(sd.getLight1()) + " | L2="
-              + round(sd.getLight1()) + " | Temp="
-              + round(sd.getTemperatureTmoteSky()) + " | Hum="
-              + round(sd.getHumidity()) + " ]";
-          break;
-
-        case AR1000:
-          str = " [ CO=" + round(sd.getCO()) + " | CO2=" + round(sd.getCO2())
-              + " | Dust=" + round(sd.getDust()) + " ]";
-          break;
-
-        case DS1000:
-          str = " [ Temp=" + round(sd.getTemperatureDS1000()) + " | CO="
-              + round(sd.getCO()) + " | CO2=" + round(sd.getCO2()) + " ]";
-      }
-      g.drawString(node.getID() + str, x + od * 2 + 3, y + 4);
-    }
-
-    private String round(double d) {
-      int digits = 4;
-
-      NumberFormat frm = NumberFormat.getInstance();
-      frm.setMaximumFractionDigits(digits);
-      frm.setRoundingMode(RoundingMode.UP);
-      return frm.format(d);
     }
 
   } // end of inner class MapNode

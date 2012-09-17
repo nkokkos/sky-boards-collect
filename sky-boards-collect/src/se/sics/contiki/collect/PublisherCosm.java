@@ -12,10 +12,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Hashtable;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+
+import se.sics.contiki.collect.gui.DataFeederCosm;
 
 public class PublisherCosm extends Thread {
   final static String CosmServer = "http://api.cosm.com/v2/feeds/";
@@ -24,13 +28,15 @@ public class PublisherCosm extends Thread {
   private String cosmFeed;
   private String cosmTitle = "Default Title";
   private final String cosmVersion = "1.0.0";
-  Hashtable<String, String> feedTable;
+  private Hashtable<String, String> feedTable;
+  private DataFeederCosm guiCosm;
 
   public PublisherCosm(Hashtable<String, String> feedTable, String key,
-      String cosmFeed) {
+      String cosmFeed, DataFeederCosm guiCosm) {
     APIkey = key;
     this.feedTable = feedTable;
     this.cosmFeed = cosmFeed;
+    this.guiCosm=guiCosm;
   }
 
   public String getAPIkey() {
@@ -82,6 +88,13 @@ public class PublisherCosm extends Thread {
     if (e != null) {
       e.printStackTrace();
     }
+  }
+  
+  public void addResponseToGUI(String r){
+    Calendar cal = Calendar.getInstance();
+    cal.getTime();
+    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+	guiCosm.addResponseLine(sdf.format(cal.getTime())+" Cosm> "+r);
   }
 
   public void run() {
@@ -154,8 +167,10 @@ public class PublisherCosm extends Thread {
 
     String str = null;
     try {
-      System.out.println("Cosm Publisher@ " + urlConn.getResponseCode() + " "
-          + urlConn.getResponseMessage());
+      String shortline=urlConn.getResponseCode()+ " " +
+    		  urlConn.getResponseMessage(); 
+      addResponseToGUI(shortline);
+      System.out.println("Cosm Publisher@ "+shortline);
       input = new BufferedReader(
           new InputStreamReader(urlConn.getInputStream()));
       while (null != ((str = input.readLine()))) {

@@ -96,11 +96,13 @@ import se.sics.contiki.collect.gui.TimeChartPanel;
 import se.sics.contiki.collect.gui.FirmwareDialog;
 import se.sics.contiki.collect.gui.NodeCalibrationDialog;
 import se.sics.contiki.collect.gui.DataFeederSense;
+import se.sics.contiki.collect.platform.*;
 
 /**
  *
  */
-public class CollectServer implements SerialConnectionListener {
+@SuppressWarnings({"serial", "unchecked", "rawtypes"})
+public class CollectServer implements SerialConnectionListener, SensorIdentifier {
 
   public static final String WINDOW_TITLE = "Sensor Data Collect with Contiki";
   public static final String STDIN_COMMAND = "<STDIN>";
@@ -141,6 +143,7 @@ public class CollectServer implements SerialConnectionListener {
   private final MoteProgramAction moteProgramAction;
   private JFileChooser fileChooser;
 
+  
   private JList nodeList;
   private DefaultListModel nodeModel;
   private Node[] selectedNodes;
@@ -158,7 +161,7 @@ public class CollectServer implements SerialConnectionListener {
   private int defaultMaxItemCount = 250;
   private long nodeTimeDelta;
 
-  @SuppressWarnings("serial")
+  
   public CollectServer() {
     loadConfig(config, CONFIG_FILE);
 
@@ -287,13 +290,7 @@ public class CollectServer implements SerialConnectionListener {
           }
 
           protected double getSensorDataValue(SensorData data) {
-            switch (data.getType()) {
-              case SensorInfo.TmoteSky:
-                return data.getTemperatureTmoteSky();
-              case SensorInfo.DS1000:
-                return data.getTemperatureDS1000();
-            }
-            return Double.NaN;
+            return data.getSensorDataValue(TEMPERATURE_SENSOR);
           }
         },
         new TimeChartPanel(this, SENSORS, "Battery Voltage", "Battery Voltage",
@@ -326,64 +323,45 @@ public class CollectServer implements SerialConnectionListener {
             "Time", "%") {
           {
             chart.getXYPlot().getRangeAxis().setRange(0.0, 100.0);
+            setGlobalRange(true);
           }
-
           protected double getSensorDataValue(SensorData data) {
-            if (data.getType() != SensorInfo.TmoteSky)
-              return Double.NaN;
-
-            return data.getHumidity();
+            return data.getSensorDataValue(HUMIDITY_SENSOR);
           }
         },
         new TimeChartPanel(this, SENSORS, "Light 1",
             "Photosynthetically Active Radiation", "Time", "Lx") {
+          {setGlobalRange(true);}
           protected double getSensorDataValue(SensorData data) {
-            if (data.getType() != SensorInfo.TmoteSky)
-              return Double.NaN;
-
-            return data.getLight1();
+            return data.getSensorDataValue(LIGHT1_SENSOR);
           }
         },
         new TimeChartPanel(this, SENSORS, "Light 2", "Total Solar Radiation",
             "Time", "Lx") {
+          {setGlobalRange(true);}
           protected double getSensorDataValue(SensorData data) {
-            if (data.getType() != SensorInfo.TmoteSky)
-              return Double.NaN;
-
-            return data.getLight2();
+            return data.getSensorDataValue(LIGHT2_SENSOR);
           }
         },
         new TimeChartPanel(this, SENSORS, "CO", "Carbon monoxide", "Time",
             "ppm") {
+          {setGlobalRange(true);}
           protected double getSensorDataValue(SensorData data) {
-            switch (data.getType()) {
-              case SensorInfo.AR1000:
-                return data.getCO();
-              case SensorInfo.DS1000:
-                return data.getCO();
-            }
-            return Double.NaN;
+            return data.getSensorDataValue(CO_SENSOR);
           }
         },
         new TimeChartPanel(this, SENSORS, "CO2", "Carbon dioxide", "Time",
             "ppm") {
+          {setGlobalRange(true);}
           protected double getSensorDataValue(SensorData data) {
-            switch (data.getType()) {
-              case SensorInfo.AR1000:
-                return data.getCO2();
-              case SensorInfo.DS1000:
-                return data.getCO2();
-            }
-            return Double.NaN;
+            return data.getSensorDataValue(CO2_SENSOR);
           }
         },
         new TimeChartPanel(this, SENSORS, "Dust", "Particle concentration",
             "Time", "mg/m^3") {
+          {setGlobalRange(true);}
           protected double getSensorDataValue(SensorData data) {
-            if (data.getType() != SensorInfo.AR1000)
-              return Double.NaN;
-
-            return data.getDust();
+            return data.getSensorDataValue(DUST_SENSOR);
           }
         },
         new TimeChartPanel(this, NETWORK, "Neighbors", "Neighbor Count",
@@ -942,19 +920,18 @@ public class CollectServer implements SerialConnectionListener {
           && !property.startsWith("firm")) {
         // Add node
         if ((nodetype = getConfig("firm," + property)) != null) {
-          Node node = getNode(property, true, Integer.parseInt(nodetype));
-          node.setNodeType(Integer.parseInt(nodetype));
+          getNode(property, true, Integer.parseInt(nodetype));
         }
       }
     }
 
     // Add variable values for sensor calibration stored in config file
     for (int j = 0; j < vars.size(); j++) {
-      String[] varKey = ((String) vars.get(j)).split(",");
+      String[] varKey = vars.get(j).split(",");
       String nodeID = varKey[1];
       String sensorName = varKey[2];
       String varName = varKey[3];
-      NodeSensor sensor = nodeTable.get(nodeID).getNodeSensor(sensorName);
+      Sensor sensor = nodeTable.get(nodeID).getNodeSensor(sensorName);
       if (sensor != null) {
         sensor.setVar(varName, Double.parseDouble(values.get(j)));
       }
@@ -977,7 +954,7 @@ public class CollectServer implements SerialConnectionListener {
 
       else if (service.equals("feedsense")) {
         String sensorName = varKey[2];
-        NodeSensor sensor = n.getNodeSensor(sensorName);
+        Sensor sensor = n.getNodeSensor(sensorName);
         if (sensor == null)
           return;
         sensor.setFeedID(getConfig(property));
@@ -1187,20 +1164,18 @@ public class CollectServer implements SerialConnectionListener {
       switch (nodeType) {
         case SensorInfo.TmoteSky:
           node = new NodeTmoteSky(nodeID);
-          setConfig("firm," + nodeID, String.valueOf(nodeType));
           break;
         case SensorInfo.AR1000:
           node = new NodeAR1000(nodeID);
-          setConfig("firm," + nodeID, String.valueOf(nodeType));
           break;
         case SensorInfo.DS1000:
-          node = new NodeDS1000(nodeID);
-          setConfig("firm," + nodeID, String.valueOf(nodeType));
+          node = new NodeDS1000(nodeID);     
           break;
-        default: // sink node likely
-          node = new Node(nodeID);
+        default: 
+        	node = new NodeTmoteSky(nodeID);  
       }
-
+      setConfig("firm," + nodeID, String.valueOf(nodeType));
+      
       nodeTable.put(nodeID, node);
 
       synchronized (this) {
@@ -1273,10 +1248,8 @@ public class CollectServer implements SerialConnectionListener {
     Node[] selected = getSelectedNodes();
     if (selected == null || selected.length != 1)
       return;
-
-    new NodeCalibrationDialog("Node " + selected[0].getID(), selected[0],
+    new NodeCalibrationDialog(this,"Node " + selected[0].getID(), selected[0],
         configTable);
-
   }
 
   // -------------------------------------------------------------------
@@ -1403,7 +1376,6 @@ public class CollectServer implements SerialConnectionListener {
         SwingUtilities.invokeLater(new Runnable() {
           public void run() {
             for (int i = 0, n = visualizers.length; i < n; i++) {
-              // filterVisualizers(i,sensorData);
               visualizers[i].nodeDataReceived(sensorData);
             }
           }
@@ -1417,8 +1389,16 @@ public class CollectServer implements SerialConnectionListener {
 
     if (nodeID != null) {
       Node neighbor = nodeTable.get(nodeID);
-      if (neighbor == null)
-        neighbor = addNode(nodeID, -1);// -1 = sink or unknown
+ 
+      /* Cannot know at this point what kind of node neighbor is:
+       * Do not create node instance unless that node is sink */
+      if (neighbor == null) {
+        if (sensorData.getValue(SensorData.HOPS)==1){
+    		neighbor=addNode(nodeID, SensorInfo.SINK); 
+        }
+        else return;
+      }
+
       Node source = sensorData.getNode();
       Link link = source.getLink(neighbor);
       link.setETX(sensorData.getBestNeighborETX());
@@ -1836,8 +1816,7 @@ public class CollectServer implements SerialConnectionListener {
     System.err
         .println("Usage: java CollectServer [-n] [-i] [-r] [-f [file]] [-a host:port] [-p port] [-c command] [COMPORT]");
     System.err.println("       -n : Do not read or save sensor data log");
-    System.err
-        .println("       -r : Clear any existing sensor data log at startup");
+    System.err.println("       -r : Clear any existing sensor data log at startup");
     System.err.println("       -i : Do not allow serial output");
     System.err.println("       -f : Read serial data from standard in");
     System.err.println("       -a : Connect to specified host:port");

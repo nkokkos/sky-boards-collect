@@ -12,8 +12,7 @@ import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.math.RoundingMode;
-import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Vector;
@@ -21,30 +20,33 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import se.sics.contiki.collect.Configurable;
 import se.sics.contiki.collect.Node;
-import se.sics.contiki.collect.NodeSensor;
+import se.sics.contiki.collect.Sensor;
 import se.sics.contiki.collect.PublisherCosm;
 import se.sics.contiki.collect.SensorData;
-import se.sics.contiki.collect.SensorInfo;
 import se.sics.contiki.collect.Visualizer;
 
-public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
+public class DataFeederCosm extends JPanel implements Visualizer,
     Configurable {
 
   private static final long serialVersionUID = 1L;
   String category;
   JPasswordField keyField;
-  JTextField responseField; // TODO
-  JComboBox comboBoxNode;
-  JComboBox comboBoxSensor;
-  JComboBox comboBoxRaw;
+  JComboBox<String> comboBoxNode;
+  JComboBox<String> comboBoxSensor;
+  JComboBox<String> comboBoxRaw;
   JButton startButton;
   JButton stopButton;
   JButton setButton;
@@ -60,6 +62,7 @@ public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
   JTextField titleField;
   JLabel statusLabel;
   PublisherCosm publisher;
+  JTextArea logArea;
 
   private Hashtable<String, Node> nodes = new Hashtable<String, Node>();
 
@@ -71,8 +74,8 @@ public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
     keyField = new JPasswordField();
     keyField.setColumns(30);
 
-    comboBoxNode = new JComboBox();
-    comboBoxNode.setModel(new DefaultComboBoxModel());
+    comboBoxNode = new JComboBox<String>();
+    comboBoxNode.setModel(new DefaultComboBoxModel<String>());
     comboBoxNode.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         if (comboBoxNode.getItemCount() == 0)
@@ -80,19 +83,19 @@ public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
         int idx = comboBoxNode.getSelectedIndex();
         feedingNode = comboBoxNode.getItemAt(idx).toString();
         Node n = nodes.get(feedingNode);
-        NodeSensor[] sensors = n.getNodeSensors();
+        Sensor[] sensors = n.getSensors();
         Vector<String> sensorNames = new Vector<String>();
         for (int i = 0; i < sensors.length; i++)
-          sensorNames.add(sensors[i].getName());
+          sensorNames.add(sensors[i].getId());
         comboBoxSensor
-            .setModel(new DefaultComboBoxModel(sensorNames.toArray()));
+            .setModel(new DefaultComboBoxModel<String>(sensorNames));
         feedingSensor = comboBoxSensor.getItemAt(0).toString();
         loadFeedIDvalue();
       }
     });
 
-    comboBoxSensor = new JComboBox();
-    comboBoxSensor.setModel(new DefaultComboBoxModel());
+    comboBoxSensor = new JComboBox<String>();
+    comboBoxSensor.setModel(new DefaultComboBoxModel<String>());
     comboBoxSensor.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         if (comboBoxNode.getItemCount() == 0)
@@ -103,8 +106,8 @@ public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
     });
 
     String[] opt = { "Raw", "Converted" };
-    comboBoxRaw = new JComboBox();
-    comboBoxRaw.setModel(new DefaultComboBoxModel(opt));
+    comboBoxRaw = new JComboBox<String>();
+    comboBoxRaw.setModel(new DefaultComboBoxModel<String>(opt));
     comboBoxRaw.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         int idx = comboBoxRaw.getSelectedIndex();
@@ -115,9 +118,6 @@ public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
           feedRaw = false;
       }
     });
-
-    responseField = new JTextField();
-    responseField.setEditable(false);
 
     startButton = new JButton("Start Feeding");
     startButton.addActionListener(new ActionListener() {
@@ -212,9 +212,22 @@ public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
     controlPanel.add(statusPanel);
     controlPanel.add(new JLabel(""));
     controlPanel.add(new JSeparator());
-
+ 
+    logArea = new JTextArea(2,30);
+    logArea.setEditable(false);
+    controlPanel.add(new JScrollPane(logArea));
+    
+    JPopupMenu popupMenu = new JPopupMenu();
+    JMenuItem clearItem = new JMenuItem("Clear");
+    clearItem.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        logArea.setText("");
+      }
+    });
+    popupMenu.add(clearItem);
+    logArea.setComponentPopupMenu(popupMenu);
+ 
     panel.add(controlPanel, BorderLayout.NORTH);
-
   }
 
   @Override
@@ -240,24 +253,38 @@ public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
     return panel;
   }
 
-  @Override
   public void nodeAdded(Node node) {
-    if (!isVisible())
-      return;
+    if (!isVisible()) return;
+    String nodeID=node.getID();
+    if (nodes.get(nodeID)!=null) return;
     SensorData sd = node.getLastSD();
-    if (sd == null)
-      return; // unknown node type
-
-    nodes.put(node.getID(), node);
-    comboBoxNode.setModel(new DefaultComboBoxModel(nodes.keySet().toArray()));
+    if (sd == null) return; // unknown node type    
+    nodes.put(nodeID, node);
+	comboBoxNode.setModel(new DefaultComboBoxModel<String>(getSortedNodeList()));
+	comboBoxNode.setSelectedItem(new String(nodeID));
   }
+  
+  private Vector<String> getSortedNodeList(){
+    Vector<Node> list = new Vector<Node>();
+     for (Object key : nodes.keySet()) {
+	   list.add(nodes.get(key));   
+	 }
+	 Node[] nodeList=list.toArray(new Node[0]); 
+	 Arrays.sort(nodeList); 
+	 return toStringList(nodeList);
+  }
+	  
+  private Vector<String> toStringList(Node[] nodeList){
+    Vector<String> list = new Vector<String>();
+	for (int i=0;i<nodeList.length;i++)
+	  list.add(nodeList[i].getID());
+	  return list;
+	}
 
-  @Override
   public void nodeDataReceived(SensorData sensorData) {
-    if (!isVisible())
-      return;
+    if (!isVisible()) return;
     Hashtable<String, String> feedTable = new Hashtable<String, String>();
-    if (nodes.get(sensorData.getNode()) == null) {
+    if (nodes.get(sensorData.getNodeID()) == null) {
       nodeAdded(sensorData.getNode());
     }
     Node n = sensorData.getNode();
@@ -265,43 +292,31 @@ public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
     if (doFeed && n.getFeedID() != null) {
       fillFeedTable(n, sensorData, feedTable);
       String key = arrayToString(keyField.getPassword());
-      PublisherCosm publisher = new PublisherCosm(feedTable, key, n.getFeedID());
+      PublisherCosm publisher = new PublisherCosm(feedTable, key, n.getFeedID(),this);
       publisher.setCosmTitle(n.getFeedTitle());
       publisher.start();
     }
   }
 
   void fillFeedTable(Node n, SensorData sd, Hashtable<String, String> feedTable) {
-    NodeSensor[] sensors = n.getNodeSensors();
+    Sensor[] sensors = n.getSensors();
     for (int i = 0; i < sensors.length; i++) {
-      putValue(sensors[i].getSensorId(), n, sd, feedTable);
+      putValue(sensors[i].getId(), n, sd, feedTable);
     }
   }
 
-  private void putValue(int sensorId, Node n, SensorData sd,
+  private void putValue(String sensorId, Node n, SensorData sd,
       Hashtable<String, String> feedTable) {
 
     String value;
     if (n.getFeedID() != null) {
       if (feedRaw) {
-        value = Integer.toString(sd.getValue(sensorId));
+        value = Integer.toString(n.getLastValueOf(sensorId));
       } else {
-        value = round(sd.getConvOf(sensorId, null));
+        value = n.getRoundedConvOf(sensorId);
       }
-      // TODO stream names selected by user
-      String streamID = n.getNodeSensor(sensorId).getName();
-      feedTable.put(streamID, value);
+      feedTable.put(sensorId, value);
     }
-  }
-
-  private String round(double d) {
-    // TODO round digits selected by user
-    int digits = 4;
-
-    NumberFormat frm = NumberFormat.getInstance();
-    frm.setMaximumFractionDigits(digits);
-    frm.setRoundingMode(RoundingMode.UP);
-    return frm.format(d);
   }
 
   @Override
@@ -383,8 +398,24 @@ public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
     }
     return result.toString();
   }
+  
+  public void addResponseLine(final String text) {
+	SwingUtilities.invokeLater(new Runnable() {
+    public void run() {
+    String current = logArea.getText();
+    int len = current.length();
+    if (len > 4096) {
+      current = current.substring(len - 4096);
+    }
+    current = len > 0 ? (current + '\n' + text) : text;
+    logArea.setText(current);
+    logArea.setCaretPosition(current.length());
+    }
+   });
+  }
 
   public void updateConfig(Properties config) {
+	System.out.println("Saving settings");
     String id;
     for (Object key : nodes.keySet()) {
       Node n = nodes.get(key);
@@ -395,5 +426,4 @@ public class DataFeederCosm extends JPanel implements Visualizer, SensorInfo,
         config.remove("feedcosm," + n.getID());
     }
   }
-
 }
