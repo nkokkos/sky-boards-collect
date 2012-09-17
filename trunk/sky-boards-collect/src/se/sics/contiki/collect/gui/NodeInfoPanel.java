@@ -68,6 +68,7 @@ import javax.swing.table.TableRowSorter;
 import se.sics.contiki.collect.CollectServer;
 import se.sics.contiki.collect.Configurable;
 import se.sics.contiki.collect.Node;
+import se.sics.contiki.collect.platform.NodeTmoteSky;
 import se.sics.contiki.collect.SensorData;
 import se.sics.contiki.collect.SensorInfo;
 import se.sics.contiki.collect.Visualizer;
@@ -547,7 +548,7 @@ public class NodeInfoPanel extends JPanel implements Visualizer, Configurable {
   public static abstract class TableData extends AbstractAction {
     private static final long serialVersionUID = -3045755073722516926L;
 
-    private final static Node AVERAGE_NODE = new Node("99999999.9", "Avg");
+    private final static Node AVERAGE_NODE = new NodeTmoteSky("99999999.9", "Avg");
 
     public final String name;
     public final Class<?> dataClass;

@@ -23,7 +23,8 @@ public class FirmwareDialog extends javax.swing.JDialog implements
     java.awt.event.ActionListener {
 
   private final ArrayList<String> firmList = new ArrayList<String>();
-  private final ArrayList<JComboBox> CBlist = new ArrayList<JComboBox>();
+
+  private final ArrayList<JComboBox<String>> CBlist = new ArrayList<JComboBox<String>>();
 
   public FirmwareDialog(final JFrame parent, final String title,
       final String[] moteList, final String[] firmwares) {
@@ -31,7 +32,7 @@ public class FirmwareDialog extends javax.swing.JDialog implements
     super(parent, title, true);
 
     JTextField textMote;
-    JComboBox comboBoxFw;
+    JComboBox<String> comboBoxFw;
 
     try {
       setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -58,9 +59,9 @@ public class FirmwareDialog extends javax.swing.JDialog implements
         textMote.setBounds(31, ypos, 333, 23);
         textMote.setEditable(false);
 
-        final ComboBoxModel jComboBox1Model = new DefaultComboBoxModel(
+        final ComboBoxModel<String> jComboBox1Model = new DefaultComboBoxModel<String>(
             firmwares);
-        comboBoxFw = new JComboBox();
+        comboBoxFw = new JComboBox<String>();
         getContentPane().add(comboBoxFw);
         comboBoxFw.setModel(jComboBox1Model);
         comboBoxFw.setBounds(395, ypos, 227, 23);
@@ -89,7 +90,7 @@ public class FirmwareDialog extends javax.swing.JDialog implements
 
   public void actionPerformed(final ActionEvent e) {
     for (int i = 0; i < CBlist.size(); i++) {
-      final JComboBox comboBox = CBlist.get(i);
+      final JComboBox<String> comboBox = CBlist.get(i);
       final int idx = comboBox.getSelectedIndex();
       firmList.add(comboBox.getItemAt(idx).toString());
     }

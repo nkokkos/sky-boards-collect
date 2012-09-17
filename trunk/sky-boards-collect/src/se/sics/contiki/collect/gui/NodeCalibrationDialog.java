@@ -9,6 +9,7 @@ package se.sics.contiki.collect.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -38,18 +39,17 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import se.sics.contiki.collect.CollectServer;
 import se.sics.contiki.collect.Configurable;
 import se.sics.contiki.collect.Node;
-import se.sics.contiki.collect.NodeAR1000;
-import se.sics.contiki.collect.NodeTmoteSky;
-import se.sics.contiki.collect.NodeDS1000;
-import se.sics.contiki.collect.NodeSensor;
+import se.sics.contiki.collect.Sensor;
 import se.sics.contiki.collect.SensorData;
-import se.sics.contiki.collect.SensorInfo;
 import se.sics.contiki.collect.Variable;
 
-public class NodeCalibrationDialog extends JFrame implements
-    PropertyChangeListener, Configurable, SensorInfo {
+public class NodeCalibrationDialog extends JFrame
+    implements
+      PropertyChangeListener,
+      Configurable {
 
   private static final long serialVersionUID = 1L;
   public final int DEF_MIN_X = 1;
@@ -57,7 +57,7 @@ public class NodeCalibrationDialog extends JFrame implements
   public final int DEF_INC_X = 5;
 
   Node node;
-  NodeSensor[] sensors;
+  Sensor[] sensors;
   SensorData data;
   Vector<JPanel> charts;
   Vector<Function> functions;
@@ -75,42 +75,40 @@ public class NodeCalibrationDialog extends JFrame implements
 
   JButton buttonReset;
   JButton buttonFormula;
-  JComboBox comboBoxXOpt;
+  JComboBox<String> comboBoxXOpt;
   int nodeType;
 
   /* do not use delim char in sensor/variable name */
   public static final char delim = '\n';
 
-  public NodeCalibrationDialog(String title, final Node node, Properties config) {
+  public NodeCalibrationDialog(CollectServer server, String title,
+      final Node node, Properties config) {
     super(title);
     fieldsTable = new Hashtable<String, JPanel>();
-
-    if (node.getSensorsCount() == 0)
-      return; // Sink node or unknown firmware
 
     calibrationConfig = config;
     charts = new Vector<JPanel>();
     functions = new Vector<Function>();
     this.node = node;
-    sensors = node.getNodeSensors();
+    sensors = node.getSensors();
     tabbedPane = new JTabbedPane();
-    String sensorName;
+    String sensorId;
 
     for (int i = 0; i < node.getSensorsCount(); i++) {
-      sensorName = sensors[i].getName();
+      sensorId = sensors[i].getId();
       mainPanel = new JPanel();
       mainPanel.setLayout(new FlowLayout());
       tabbedPane.add(mainPanel);
-      tabbedPane.setTitleAt(i, sensorName + " sensor");
+      tabbedPane.setTitleAt(i, sensorId + " sensor");
 
       varsPanel = new JPanel();
       varsPanel.setLayout(new BorderLayout());
       labelPaneVars = new JPanel(new GridLayout(0, 1));
       fieldPaneVars = new JPanel(new GridLayout(0, 1));
-      fieldsTable.put(sensorName, fieldPaneVars);
+      fieldsTable.put(sensorId, fieldPaneVars);
 
       labelPaneVars.add(new JLabel("Last adc_value: "));
-      fieldPaneVars.add(new JLabel(getLastADCValue(sensorName)));
+      fieldPaneVars.add(new JLabel(getLastADCValue(sensorId)));
 
       insertVarPaneSeparator();
 
@@ -133,21 +131,22 @@ public class NodeCalibrationDialog extends JFrame implements
         createVarsTextFields(i, j);
       }
 
-      chartPanel = createChart(sensors[i].getSensorId());
+      chartPanel = createChart(sensors[i].getId());
+      if (chartPanel==null) return;
       charts.add(chartPanel);
 
-      createComboBoxXOpt(sensorName, sensors[i].getSensorId());
+      createComboBoxXOpt(sensors[i].getId());
 
       buttonReset = new JButton("Reset values");
-      buttonReset.setName(sensorName);
+      buttonReset.setName(sensorId);
       buttonReset.addActionListener(new ButtonResetAction());
 
-      buttonFormula = new JButton("View conversion\n expressions");
-      buttonFormula.setName(sensorName);
+      buttonFormula = new JButton("Show formulas");
+      buttonFormula.setName(sensorId);
       buttonFormula.addActionListener(new ButtonFormulaAction());
 
       insertVarPaneSeparator();
-      labelPaneVars.add(new JLabel("X-axis parameter:"));
+      labelPaneVars.add(new JLabel("X-axis:"));
       fieldPaneVars.add(comboBoxXOpt);
 
       insertVarPaneSeparator();
@@ -161,7 +160,8 @@ public class NodeCalibrationDialog extends JFrame implements
       varsPanel.add(fieldPaneVars, BorderLayout.LINE_END);
 
       mainPanel.add(varsPanel);
-      mainPanel.add(chartPanel);
+      mainPanel.add(chartPanel);    
+      chartPanel.setPreferredSize(new Dimension(500, 270));
 
       // TODO Add option "compare to->(Node with same firmware)"
     }
@@ -177,9 +177,8 @@ public class NodeCalibrationDialog extends JFrame implements
   }
 
   String getLastADCValue(String sensor) {
-    int SENSOR = Node.keyConv(sensor);
-    SensorData sd = node.getLastSD();
-    int lastValue = sd.getValue(SENSOR);
+    if (node.getLastSD()==null) return "";
+    int lastValue = node.getLastValueOf(sensor);
     return Integer.toString(lastValue);
   }
 
@@ -188,7 +187,7 @@ public class NodeCalibrationDialog extends JFrame implements
     JFormattedTextField valueField = new JFormattedTextField(format);
     valueField.setValue(value);
     valueField.setColumns(10);
-    valueField.setName(sensors[idx].getName() + delim + s);
+    valueField.setName(sensors[idx].getId() + delim + s);
     valueField.addPropertyChangeListener("value", this);
     fieldPaneVars.add(valueField);
   }
@@ -200,25 +199,26 @@ public class NodeCalibrationDialog extends JFrame implements
     JFormattedTextField valueField = new JFormattedTextField(format);
     valueField.setValue(new Double(vars[v].getValue()));
     valueField.setColumns(10);
-    valueField.setName(sensors[s].getName() + delim + vars[v].getName());
+    valueField.setName(sensors[s].getId() + delim + vars[v].getName());
     valueField.addPropertyChangeListener("value", this);
     fieldPaneVars.add(valueField);
   }
 
-  void createComboBoxXOpt(String SensorName, int sensorId) {
-    String[] opt = { "adc value", "Sensor voltage(Vs)" };
-    comboBoxXOpt = new JComboBox();
-    comboBoxXOpt.setModel(new DefaultComboBoxModel(opt));
-    comboBoxXOpt.setName(SensorName);
+  void createComboBoxXOpt(String sensorId) {
+    String[] opt = {"adc value", "Sensor voltage(Vs)"};
+    comboBoxXOpt = new JComboBox<String>();
+    comboBoxXOpt.setModel(new DefaultComboBoxModel<String>(opt));
+    comboBoxXOpt.setName(sensorId);
     comboBoxXOpt.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        JComboBox cb = (JComboBox) e.getSource();
+        @SuppressWarnings("unchecked")
+        JComboBox<String> cb = ((JComboBox<String>) e.getSource());
         String sensor = cb.getName();
         int idx = cb.getSelectedIndex();
         Function f;
 
         for (int i = 0; i < functions.size(); i++) {
-          if (functions.get(i).getSensorId() == Node.keyConv(sensor)) {
+          if (functions.get(i).getSensorId() == sensor) {
             f = functions.get(i);
             if (idx == 0) {
               f.setShowVs(false);
@@ -236,21 +236,21 @@ public class NodeCalibrationDialog extends JFrame implements
   public void propertyChange(PropertyChangeEvent e) {
     int update = -1;
     Object source = e.getSource();
-    StringTokenizer tokens = new StringTokenizer(((JFormattedTextField) source)
-        .getName(), delim + "");
+    StringTokenizer tokens = new StringTokenizer(
+        ((JFormattedTextField) source).getName(), delim + "");
     String sensorStr = tokens.nextToken();
     String varStr = tokens.nextToken();
     Variable var;
     double newValue = ((Number) ((JFormattedTextField) source).getValue())
         .doubleValue();
 
-    NodeSensor sensor = node.getNodeSensor(sensorStr);
+    Sensor sensor = node.getNodeSensor(sensorStr);
     if ((var = sensor.getVar(varStr)) != null)
       if (var.getValue() == newValue)
         return;
 
     for (int i = 0; i < sensors.length; i++)
-      if (sensors[i].getName().equals(sensorStr)) {
+      if (sensors[i].getId().equals(sensorStr)) {
         if (varStr.equals("minx"))
           functions.get(i).setMinX((int) newValue);
         else if (varStr.equals("maxx"))
@@ -259,7 +259,7 @@ public class NodeCalibrationDialog extends JFrame implements
           functions.get(i).setIncrement((int) newValue);
         else {
           sensors[i].setVar(varStr, newValue);
-          updateConfig(sensors[i].getName(), varStr, newValue);
+          updateConfig(sensors[i].getId(), varStr, newValue);
         }
         update = i;
       }
@@ -275,14 +275,13 @@ public class NodeCalibrationDialog extends JFrame implements
     chartPanel.updateUI();
   }
 
-  private ChartPanel createChart(int sensorId) {
+  private ChartPanel createChart(String sensorId) {
     if (node.getSensorDataCount() == 0)
       return null;
     data = node.getSensorData(node.getSensorDataCount() - 1);
-    SensorData auxsd = new SensorData(data.getNode(), data.getType());
-    Function conv = new Function(auxsd, node.getNodeSensor(sensorId)) {
+    Function conv = new Function(node.getNodeSensor(sensorId)) {
       protected double f(int value) {
-        return data().getConvOf(getSensorId(), value);
+        return sensor.getConv(value);
       }
     };
     functions.add(conv);
@@ -310,28 +309,9 @@ public class NodeCalibrationDialog extends JFrame implements
   }
 
   private JLabel getConversionImage(String sensorName) {
-
-    String firmName = "";
     if (node.getSensorDataCount() == 0)
       return null;
-    data = node.getSensorData(node.getSensorDataCount() - 1);
-
-    switch (data.getType()) {
-      case TmoteSky:
-        firmName = "TmoteSky";
-        break;
-      case AR1000:
-        firmName = "AR1000";
-        break;
-      case DS1000:
-        firmName = "DS1000";
-        break;
-      case SensorInfo.EM1000:
-        break; // TODO
-      case SensorInfo.EX1000:
-        break; // TODO
-    }
-
+    String firmName = node.getFirmName();
     ImageIcon imgIcon = new ImageIcon("./images/" + firmName + "-" + sensorName
         + "-" + "formula.jpeg");
     JLabel imgLabel = new JLabel();
@@ -340,25 +320,25 @@ public class NodeCalibrationDialog extends JFrame implements
   }
 
   private abstract class Function {
-    SensorData data;
+    protected Sensor sensor;
     private String xLabel = "adc_value";
     private String yLabel;
     private int minX = 1;
     private int maxX = 4096;
     private int increment = 5;
     private boolean hasVs = false;
-    private int sensorId;
+    private String sensorId;
     private boolean showVs = false;
 
-    Function(SensorData data, NodeSensor sensor) {
-      this.data = data;
+    Function(Sensor sensor) {
+      this.sensor = sensor;
       this.yLabel = sensor.getUnits();
-      this.sensorId = sensor.getSensorId();
-      this.hasVs = sensor.hasVoltage();
+      this.sensorId = sensor.getId();
+      this.hasVs = sensor.ADC12();
     }
 
     public Number getX(int i) {
-      NodeSensor s;
+      Sensor s;
       if (hasVs && showVs) {
         s = data.getNode().getNodeSensor(sensorId);
         double vRef = s.getVar("Vref").getValue();
@@ -368,10 +348,6 @@ public class NodeCalibrationDialog extends JFrame implements
     }
 
     abstract double f(int value);
-
-    SensorData data() {
-      return data;
-    }
 
     public void setMinX(int minX) {
       this.minX = minX;
@@ -419,7 +395,7 @@ public class NodeCalibrationDialog extends JFrame implements
       this.showVs = showVs;
     }
 
-    public int getSensorId() {
+    public String getSensorId() {
       return sensorId;
     }
   }
@@ -427,19 +403,7 @@ public class NodeCalibrationDialog extends JFrame implements
   private class ButtonResetAction implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       String sensor = ((Component) e.getSource()).getName();
-
-      int t = node.getLastSD().getType();
-      switch (t) {
-        case TmoteSky:
-          ((NodeTmoteSky) node).setDefaultValues(sensor);
-          break;
-        case DS1000:
-          ((NodeDS1000) node).setDefaultValues(sensor);
-          break;
-        case AR1000:
-          ((NodeAR1000) node).setDefaultValues(sensor);
-          break;
-      }
+      node.setDefaultValues(sensor);
 
       JPanel fieldPaneVars = fieldsTable.get(sensor);
       Component[] cArray = fieldPaneVars.getComponents();
@@ -447,7 +411,7 @@ public class NodeCalibrationDialog extends JFrame implements
         reset(cArray[i]);
       }
       for (int i = 0; i < sensors.length; i++)
-        if (sensors[i].getName().equals(sensor))
+        if (sensors[i].getId().equals(sensor))
           updateChart(i);
 
     }
@@ -463,7 +427,7 @@ public class NodeCalibrationDialog extends JFrame implements
       String varStr = tokens.nextToken();
       Variable var;
 
-      NodeSensor sensor = node.getNodeSensor(sensorStr);
+      Sensor sensor = node.getNodeSensor(sensorStr);
       if ((var = sensor.getVar(varStr)) != null) {
         ((JFormattedTextField) field).setValue(var.getValue());
         updateConfig(sensorStr, varStr, var.getValue());
@@ -486,13 +450,17 @@ public class NodeCalibrationDialog extends JFrame implements
 
   public void updateConfig(String sensor, String var, double newVal) {
     calibrationConfig.put(
-        "var," + node.getID() + "," + sensor + "," + "" + var, String
-            .valueOf(newVal));
+        "var," + node.getID() + "," + sensor + "," + "" + var,
+        String.valueOf(newVal));
   }
 
   @Override
   public void updateConfig(Properties config) {
-    // TODO Instead of updateConfig(String sensor, String var, double newVal)
-    // Do the same as in DataFeederCosm
+    /*
+     * for (int i=0;i<sensors.length;i++){ Variable[] vars=sensors[i].getVars();
+     * for (int j=0;j<vars.length;j++) config.put("var," + node.getID() + "," +
+     * sensors[i].getName() + "," + "" + vars[j].getName(), String.
+     * valueOf(vars[j].getValue())); }
+     */
   }
 }

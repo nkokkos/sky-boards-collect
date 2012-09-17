@@ -42,7 +42,7 @@ package se.sics.contiki.collect;
 /**
  *
  */
-public class SensorDataAggregator implements SensorInfo {
+public class SensorDataAggregator implements SensorInfo, SensorIdentifier {
 
   private final Node node;
   private long[] values;
@@ -248,17 +248,9 @@ public class SensorDataAggregator implements SensorInfo {
   }
 
   public double getAverageTemperature() {
-    SensorData sd = node.getLastSD();
-    switch (sd.getType()) {
-      case TmoteSky:
-        return dataCount > 0 ? (sd
-            .getTemperatureTmoteSky((int) values[TEMPERATURE] / dataCount))
-            : 0.0;
-      case DS1000:
-        return dataCount > 0 ? (sd
-            .getTemperatureDS1000((int) values[TEMPERATURE] / dataCount)) : 0.0;
-    }
-    return 0.0;
+    return dataCount > 0 ?
+        node.getConvOf(TEMPERATURE_SENSOR,(int)values[TEMPERATURE] / dataCount)
+        :0.0;
   }
 
   public double getAverageRtmetric() {

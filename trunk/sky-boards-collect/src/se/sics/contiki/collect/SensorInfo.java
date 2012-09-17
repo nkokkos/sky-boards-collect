@@ -94,6 +94,8 @@ public interface SensorInfo {
   public static final int CO1000 = 5; // Force & load, tilt (inclinacion), Accelerometer
   public static final int EX1000 = 6; // extend the motes I/O capability, EXpansion board
   
+  public static final int SINK = -1;
+  
   public static final int VALUES_COUNT = 30;
 
 }

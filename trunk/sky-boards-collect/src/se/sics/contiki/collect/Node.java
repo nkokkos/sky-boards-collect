@@ -39,13 +39,16 @@
 
 package se.sics.contiki.collect;
 
+import java.awt.Graphics;
+import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
 /**
  *
  */
-public class Node implements Comparable<Node> {
+public abstract class  Node implements Comparable<Node>, SensorIdentifier {
 
   private static final boolean SINGLE_LINK = true;
 
@@ -59,11 +62,7 @@ public class Node implements Comparable<Node> {
   private Hashtable<String, Object> objectTable;
 
   private long lastActive;
-  protected Hashtable<Integer, NodeSensor> sensors = new Hashtable<Integer, NodeSensor>();
-  private int nodeType;
-  private String feedID;
-  private String feedTitle;
-  public String type="";
+
 
   public Node(String nodeID) {
     this(nodeID, nodeID);
@@ -74,7 +73,7 @@ public class Node implements Comparable<Node> {
     this.name = nodeName;
     feedID = null;
     sensorDataAggregator = new SensorDataAggregator(this);
-    sensors = new Hashtable<Integer, NodeSensor>();
+    sensors = new Hashtable<String, Sensor>();
   }
 
   public final String getID() {
@@ -228,63 +227,118 @@ public class Node implements Comparable<Node> {
   }
 
   // -------------------------------------------------------------------
-  // node sensors getters
+  // sky-boards-collect extension
   // -------------------------------------------------------------------
-
-  public NodeSensor[] getNodeSensors() {
-    NodeSensor[] sensors_array = new NodeSensor[sensors.size()];
+  protected Hashtable<String, Sensor> sensors = new Hashtable<String, Sensor>();
+  protected Hashtable<String, Integer> dataMsgMapping = new Hashtable<String, Integer>();
+  private String feedID;
+  private String feedTitle;
+  public String type;
+  
+  public Sensor[] getSensors() {
+    Sensor[] sensors_array = new Sensor[sensors.size()];
     int i = sensors.size() - 1;
     for (Object key : sensors.keySet()) {
       sensors_array[i] = sensors.get(key);
       i--;
     }
-
     return sensors_array;
   }
 
-  public NodeSensor getNodeSensor(int key) {
-    return sensors.get(key);
-  }
-
-  public NodeSensor getNodeSensor(String name) {
-    return sensors.get(keyConv(name));
-  }
-
-  static public int keyConv(String sensorName) {
-    if (sensorName.equals("Light1"))
-      return SensorInfo.LIGHT1;
-    if (sensorName.equals("Light2"))
-      return SensorInfo.LIGHT2;
-    if (sensorName.equals("Temperature"))
-      return SensorInfo.TEMPERATURE;
-    if (sensorName.equals("Humidity"))
-      return SensorInfo.HUMIDITY;
-    if (sensorName.equals("CO"))
-      return SensorInfo.CO;
-    if (sensorName.equals("CO2"))
-      return SensorInfo.CO2;
-    if (sensorName.equals("Dust"))
-      return SensorInfo.DUST;
-
-    return -1;
+  public Sensor getNodeSensor(String name) {
+    return sensors.get(name);
   }
 
   public int getSensorsCount() {
     return sensors.size();
   }
-
-  public void setNodeType(int nodeType) {
-    this.nodeType = nodeType;
+  public void setDefaultValues(String sensorID) {
+    sensors.get(sensorID).setConstants();
   }
-
-  public int getNodeType() {
-    return nodeType;
+  
+  public double getConvOf(String sensorID, Integer value) {
+    Sensor s=sensors.get(sensorID);
+    if (s==(Sensor) null)
+      return Double.NaN;
+    else{
+      return s.getConv(value);
+    }
   }
+  
+  public double getConvOf(String sensorID, SensorData data) {
+    Sensor s=sensors.get(sensorID);
+    if (s==(Sensor) null)
+      return Double.NaN;
+    else{
+      int value=data.getValue(dataMsgMap(sensorID));
+      return s.getConv(value);
+    }
+  }
+  
+  public double getConvOf(String sensorID) {
+    if (this.getLastSD()==null)
+      return Double.NaN;
+    Sensor s=sensors.get(sensorID);
+    if (s==(Sensor) null)
+      return Double.NaN;
+    else{
+      return s.getConv(getLastValueOf(sensorID));
+    }
+  }
+  
+  public String getRoundedConvOf(String sensorID){
+    return round(getConvOf(sensorID),
+        sensors.get(sensorID).getRoundDigits());
+  }
+  
+  public int getLastValueOf(String sensorID) {
+    SensorData sd=this.getLastSD();
+    return sd.getValue(dataMsgMapping.get(sensorID));
+  }
+  
+  public int dataMsgMap(String sensorID){
+    return dataMsgMapping.get(sensorID);
+  }
+  
+  public String getFirmName() {
+    return type;
+  }
+  
+  public void paintLastData(Graphics g, int x, int y, int od) {
+    int vspace = 15;
+    int strmaxsz = 6;
+    int i = 1;
+    y+=4;
+    x+=3+(od*2);
+    String sensorStr="";
 
-  // -------------------------------------------------------------------
-  // Feed for Cosm
-  // -------------------------------------------------------------------
+    if (getLastSD() == null)
+      return;
+    
+    for (String sensorID: sensors.keySet()){
+      if (sensorID.length()>strmaxsz)
+        sensorStr=sensorID.substring(0, strmaxsz);
+      else sensorStr=sensorID;
+      g.drawString(sensorStr+" = "+getRoundedConvOf(sensorID), x, y + vspace*i);
+      i++;  
+    }
+  }
+  
+  static String round(double d, int digits) {
+    NumberFormat frm = NumberFormat.getInstance();
+    frm.setMaximumFractionDigits(digits);
+    frm.setRoundingMode(RoundingMode.UP);
+    return frm.format(d);
+  }
+  
+  // Abstract methods
+  public abstract void init();
+  public abstract void addSensors();
+  public abstract void mapMsgFormat();
+  public abstract void setNodeType();
+  
 
+  // Cosm
   public void setFeedID(String feedID) {
     this.feedID = feedID;
   }

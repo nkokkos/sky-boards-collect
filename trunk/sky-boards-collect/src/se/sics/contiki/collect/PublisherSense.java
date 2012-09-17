@@ -12,21 +12,27 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Hashtable;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+
+import se.sics.contiki.collect.gui.DataFeederSense;
 
 public class PublisherSense extends Thread {
 
   final static String SenseServer = "http://api.sen.se/events/";
 
   private String APIkey;
-  Hashtable<String, String> feedTable;
+  private Hashtable<String, String> feedTable;
+  private DataFeederSense guiSense;
 
-  public PublisherSense(Hashtable<String, String> feedTable, String key) {
+  public PublisherSense(Hashtable<String, String> feedTable, String key, DataFeederSense guiSense) {
     APIkey = key;
     this.feedTable = feedTable;
+    this.guiSense = guiSense;
   }
 
   public String getAPIkey() {
@@ -61,6 +67,13 @@ public class PublisherSense extends Thread {
     if (e != null) {
       e.printStackTrace();
     }
+  }
+  
+  public void addResponseToGUI(String r){
+    Calendar cal = Calendar.getInstance();
+    cal.getTime();
+    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+	guiSense.addResponseLine(sdf.format(cal.getTime())+" Sense> "+r);
   }
 
   public void run() {
@@ -129,8 +142,10 @@ public class PublisherSense extends Thread {
 
     String str = null;
     try {
-      System.out.println("sen.se Publisher@ " + urlConn.getResponseCode() + " "
-          + urlConn.getResponseMessage());
+      String shortline=urlConn.getResponseCode()+ " " +
+    		  urlConn.getResponseMessage(); 
+      addResponseToGUI(shortline);
+      System.out.println("sen.se Publisher@ "+shortline);
       input = new BufferedReader(
           new InputStreamReader(urlConn.getInputStream()));
       while (null != ((str = input.readLine()))) {
