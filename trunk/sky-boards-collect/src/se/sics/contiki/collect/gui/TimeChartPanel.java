@@ -212,7 +212,7 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
       double value = 0.0;
       long time = 0L;
       for (int j = 0; j < groupSize; j++) {
-        SensorData data = node.getSensorData(i);
+        SensorData data = node.getSensorData(i); // i+j?
         value += getSensorDataValue(data);
         time += data.getNodeTime() / 1000L;
       }
@@ -272,7 +272,7 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
           if (value > maxValue) maxValue = value;
         }
       }
-      if (minValue < maxValue) {
+      if (minValue <= maxValue) {
         double minSize = getRangeMinimumSize();
         double min = minValue;
         double max = maxValue;
