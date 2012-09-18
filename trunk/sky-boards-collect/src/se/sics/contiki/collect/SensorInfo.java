@@ -89,9 +89,9 @@ public interface SensorInfo {
   public static final int TmoteSky = 0; // Temp, hum, light1, light2
   public static final int AR1000 = 1; // CO, CO2, Dust
   public static final int DS1000 = 2; // CO, CO2, Temp
-  public static final int EM1000 = 3; // Temp, hum, acceleration, light1, light2
+  public static final int EM1000 = 3; // Temp, hum, accelerometer, light1, light2
   public static final int SE1000 = 4; // Infrared, magnetic, dB level
-  public static final int CO1000 = 5; // Force & load, tilt (inclinacion), Accelerometer
+  public static final int CO1000 = 5; // Force & load, tilt (inclinacion), accelerometer
   public static final int EX1000 = 6; // extend the motes I/O capability, EXpansion board
   
   public static final int SINK = -1;
