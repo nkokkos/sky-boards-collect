@@ -1,4 +1,4 @@
-#summary How to use cooja collect-view plugin with other collect-view version
+#summary How to modify cooja collect-view plugin to execute another collect-view version
 
 Open 
 {{{
