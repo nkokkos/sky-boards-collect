@@ -125,6 +125,10 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
 
   @Override
   public void nodeDataReceived(SensorData data) {
+    //this instance doesn't need to show values from that node
+    if ((new Double(getSensorDataValue(data))).isNaN())
+      return;
+    
     if (hasGlobalRange) {
       boolean update = false;
       if (minValue > maxValue) {
@@ -144,7 +148,7 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
         updateGlobalRange();
       }
     }
-    if (isVisible() && selectedNodes != null && selectedNodes.length == timeSeries.getSeriesCount()) {
+    if (isVisible() && selectedNodes != null ) {//&& selectedNodes.length == timeSeries.getSeriesCount()
       Node node = data.getNode();
       for (int i = 0, n = selectedNodes.length; i < n; i++) {
         if (node == selectedNodes[i]) {
@@ -181,14 +185,20 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
         // Reduce the number of items by grouping them and use the average for each group
         int groupSize = getGroupSize(node);
         if (groupSize > 1) {
-          updateSeries(series, node, groupSize);
+         updateSeries(series, node, groupSize);
         } else {
           for (int i = 0, n = node.getSensorDataCount(); i < n; i++) {
             SensorData data = node.getSensorData(i);
-            series.addOrUpdate(new Second(new Date(data.getNodeTime())), getSensorDataValue(data));
+            Double value=new Double(getSensorDataValue(data));
+            if (!value.isNaN()){
+              series.addOrUpdate(new Second(new Date(data.getNodeTime())), value);
+            }
+            else break;//this instance doesn't need to show values from that node
           }
         }
-        timeSeries.addSeries(series);
+        if (series.getItemCount()!=0){
+          timeSeries.addSeries(series);
+        }
       }
     }
   }
@@ -206,19 +216,60 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
     }
     return 1;
   }
-
-  protected void updateSeries(TimeSeries series, Node node, int groupSize) {
+  protected void updateSeriesQuick(TimeSeries series, Node node, int groupSize) {
     for (int i = 0, n = node.getSensorDataCount(); i < n; i += groupSize) {
       double value = 0.0;
       long time = 0L;
       for (int j = 0; j < groupSize; j++) {
-        SensorData data = node.getSensorData(i); // i+j?
+        SensorData data = node.getSensorData(i);
         value += getSensorDataValue(data);
         time += data.getNodeTime() / 1000L;
       }
       series.addOrUpdate(new Second(new Date((time / groupSize) * 1000L)), value / groupSize);
     }
   }
+  protected void updateSeries(TimeSeries series, Node node, int groupSize) {
+    int dataCount=node.getSensorDataCount();
+    int i, n, k;
+    double value = 0.0;
+    SensorData data = null;
+    long timeStart, timeTotal, timeAvg;
+    
+    if ((new Double(getSensorDataValue(node.getSensorData(0)))).isNaN())
+      return;//this instance doesn't have to show values from that node
+    
+    for (i = 0, n = dataCount; i+groupSize < n; i += groupSize) {  
+      timeTotal = timeAvg = 0L;
+      data = node.getSensorData(i);
+      value = getSensorDataValue(data); 
+      timeStart = data.getNodeTime() / 1000L;
+      for (int j = 1; j < groupSize; j++) {
+        data = node.getSensorData(i + j);
+        timeTotal += (((data.getNodeTime() / 1000L) - timeStart));
+        value += getSensorDataValue(data); 
+      }
+      timeAvg=(timeTotal / groupSize) + timeStart;
+      series.addOrUpdate(new Second(new Date((timeAvg * 1000L))), value / groupSize);
+    }
+    
+    // add last group. More code but much more cost-efficient that
+    // having a check condition (i+j<n) for all values  
+    int lastGroupSize=n-i;
+    
+    timeTotal = timeAvg = 0L;
+    data = node.getSensorData(i);
+    value = getSensorDataValue(data);
+    timeStart = data.getNodeTime() / 1000L;
+
+    for (k = i+1; k < n; k++){
+      data = node.getSensorData(k);
+      timeTotal += (((data.getNodeTime() / 1000L)-timeStart));
+      value += getSensorDataValue(data);
+    }
+    timeAvg=(timeTotal / lastGroupSize) + timeStart;
+    series.addOrUpdate(new Second(new Date((timeAvg * 1000L))), value / lastGroupSize);
+  }
+ 
 
   public boolean getBaseShapeVisible() {
     return ((XYLineAndShapeRenderer)this.chart.getXYPlot().getRenderer()).getBaseShapesVisible();
@@ -263,7 +314,7 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
     }
   }
 
-  private void updateGlobalRange() {
+  public void updateGlobalRange() {
     if (hasGlobalRange) {
       if (minValue > maxValue) {
         for (int i = 0, n = server.getSensorDataCount(); i < n; i++) {
@@ -281,9 +332,9 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
           min -= d;
           max += d;
         }
-        if (rangeTick > 0) {
+        if (rangeTick > 0) { // DEPURAR CO2 ACTUAL
           min = ((int) (min - rangeTick / 2) / rangeTick) * rangeTick;
-//          max = ((int) (max + rangeTick / 2) / rangeTick) * rangeTick;
+          //max = ((int) (max + rangeTick / 2) / rangeTick) * rangeTick;
         }
         chart.getXYPlot().getRangeAxis().setRange(min, max);
       }
