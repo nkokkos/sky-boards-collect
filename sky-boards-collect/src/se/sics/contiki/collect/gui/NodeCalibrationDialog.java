@@ -9,7 +9,6 @@ package se.sics.contiki.collect.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -160,8 +159,7 @@ public class NodeCalibrationDialog extends JFrame
       varsPanel.add(fieldPaneVars, BorderLayout.LINE_END);
 
       mainPanel.add(varsPanel);
-      mainPanel.add(chartPanel);    
-      chartPanel.setPreferredSize(new Dimension(500, 270));
+      mainPanel.add(chartPanel);
 
       // TODO Add option "compare to->(Node with same firmware)"
     }

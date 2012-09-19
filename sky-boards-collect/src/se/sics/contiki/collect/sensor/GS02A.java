@@ -30,15 +30,17 @@ public class GS02A extends Sensor {
     double case2_v2 = getValueOf("case2_v2");
     double case3_v1 = getValueOf("case3_v1");
     double case3_v2 = getValueOf("case3_v2");
+    double up_limit = getValueOf("upper_limit");
+    double low_limit = getValueOf("lower_limit");
 
     double Vs = ((double) value / (double) 4096) * vRef;
     double sensitivity = ((Vcc / Vs) - 1) * RL / R0;
 
-    if (sensitivity > 0.8)
-      return 10.0;
-    if (0.8 < sensitivity || sensitivity > 0.5)
+    if (sensitivity > up_limit)
+      return 10;
+    if (up_limit < sensitivity || sensitivity > low_limit)
       return (double) ((-case2_v1 * sensitivity) + case2_v2);
-    return (double) ((-case3_v1 * sensitivity) + case3_v2); // sensitivity<=0,5
+    return (double) ((-case3_v1 * sensitivity) + case3_v2); // sensitivity<=lower limit
   }
 
   @Override
@@ -51,6 +53,8 @@ public class GS02A extends Sensor {
     setVar("case2_v2", 250);
     setVar("case3_v1", 3600);
     setVar("case3_v2", 1900);
+    setVar("upper_limit",0.7);
+    setVar("lower_limit",0.5);
   }
 
 }

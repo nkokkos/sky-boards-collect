@@ -323,7 +323,6 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
             "Time", "%") {
           {
             chart.getXYPlot().getRangeAxis().setRange(0.0, 100.0);
-            setGlobalRange(true);
           }
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(HUMIDITY_SENSOR);
@@ -331,35 +330,30 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
         },
         new TimeChartPanel(this, SENSORS, "Light 1",
             "Photosynthetically Active Radiation", "Time", "Lx") {
-          {setGlobalRange(true);}
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(LIGHT1_SENSOR);
           }
         },
         new TimeChartPanel(this, SENSORS, "Light 2", "Total Solar Radiation",
             "Time", "Lx") {
-          {setGlobalRange(true);}
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(LIGHT2_SENSOR);
           }
         },
         new TimeChartPanel(this, SENSORS, "CO", "Carbon monoxide", "Time",
             "ppm") {
-          {setGlobalRange(true);}
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(CO_SENSOR);
           }
         },
         new TimeChartPanel(this, SENSORS, "CO2", "Carbon dioxide", "Time",
             "ppm") {
-          {setGlobalRange(true);}
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(CO2_SENSOR);
           }
         },
         new TimeChartPanel(this, SENSORS, "Dust", "Particle concentration",
             "Time", "mg/m^3") {
-          {setGlobalRange(true);}
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(DUST_SENSOR);
           }
@@ -1250,6 +1244,15 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
       return;
     new NodeCalibrationDialog(this,"Node " + selected[0].getID(), selected[0],
         configTable);
+   /* 
+    if (visualizers != null) {
+      for (int i = 0, n = visualizers.length; i < n; i++) {
+        if (visualizers[i] instanceof TimeChartPanel){
+          ((TimeChartPanel)visualizers[i]).update();
+        }
+      }
+    }*/
+    
   }
 
   // -------------------------------------------------------------------
