@@ -1237,22 +1237,29 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
   public Node[] getSelectedNodes() {
     return selectedNodes;
   }
-
+  // -------------------------------------------------------------------
+  // Adjust conversions tool
+  // -------------------------------------------------------------------
   private void adjustConversions() {
     Node[] selected = getSelectedNodes();
     if (selected == null || selected.length != 1)
       return;
     new NodeCalibrationDialog(this,"Node " + selected[0].getID(), selected[0],
-        configTable);
-   /* 
-    if (visualizers != null) {
-      for (int i = 0, n = visualizers.length; i < n; i++) {
-        if (visualizers[i] instanceof TimeChartPanel){
-          ((TimeChartPanel)visualizers[i]).update();
-        }
+        configTable);   
+  }
+  
+  public void AdjustUpdateChart(){  
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        if (visualizers != null) {
+          for (int i = 0, n = visualizers.length; i < n; i++) {
+            if (visualizers[i] instanceof TimeChartPanel){
+              ((TimeChartPanel)visualizers[i]).update();
+            }
+          }
+        } 
       }
-    }*/
-    
+    });
   }
 
   // -------------------------------------------------------------------

@@ -13,6 +13,8 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.text.NumberFormat;
@@ -48,13 +50,15 @@ import se.sics.contiki.collect.Variable;
 public class NodeCalibrationDialog extends JFrame
     implements
       PropertyChangeListener,
-      Configurable {
+      Configurable,
+      WindowListener{
 
   private static final long serialVersionUID = 1L;
   public final int DEF_MIN_X = 1;
   public final int DEF_MAX_X = 4096;
   public final int DEF_INC_X = 5;
 
+  CollectServer server;
   Node node;
   Sensor[] sensors;
   SensorData data;
@@ -84,7 +88,7 @@ public class NodeCalibrationDialog extends JFrame
       final Node node, Properties config) {
     super(title);
     fieldsTable = new Hashtable<String, JPanel>();
-
+    this.server=server;
     calibrationConfig = config;
     charts = new Vector<JPanel>();
     functions = new Vector<Function>();
@@ -165,8 +169,9 @@ public class NodeCalibrationDialog extends JFrame
     }
     this.getContentPane().add(tabbedPane);
     setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+    addWindowListener(this);
     pack();
-    setVisible(true);
+    setVisible(true);    
   }
 
   private void insertVarPaneSeparator() {
@@ -461,4 +466,31 @@ public class NodeCalibrationDialog extends JFrame
      * valueOf(vars[j].getValue())); }
      */
   }
+
+  @Override
+  public void windowActivated(WindowEvent arg0) {}
+
+  @Override
+  public void windowClosed(WindowEvent arg0) {
+    //server.AdjustUpdateChart();
+  }
+
+  @Override
+  public void windowClosing(WindowEvent arg0) {
+    server.AdjustUpdateChart();
+    dispose();
+    System.out.println("window close");
+  }
+
+  @Override
+  public void windowDeactivated(WindowEvent arg0) {}
+
+  @Override
+  public void windowDeiconified(WindowEvent arg0) {}
+
+  @Override
+  public void windowIconified(WindowEvent arg0) {}
+
+  @Override
+  public void windowOpened(WindowEvent arg0) {}
 }
