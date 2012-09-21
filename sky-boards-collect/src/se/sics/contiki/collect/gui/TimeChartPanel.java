@@ -332,7 +332,7 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
           min -= d;
           max += d;
         }
-        if (rangeTick > 0) { // DEPURAR CO2 ACTUAL
+        if (rangeTick > 0) { 
           min = ((int) (min - rangeTick / 2) / rangeTick) * rangeTick;
           //max = ((int) (max + rangeTick / 2) / rangeTick) * rangeTick;
         }
@@ -373,6 +373,12 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
       timeSeries.removeAllSeries();
     }
     super.setVisible(visible);
+  }
+  
+  public void update() {
+    if (isVisible()) {
+      updateCharts();
+    }
   }
 
   protected abstract double getSensorDataValue(SensorData data);

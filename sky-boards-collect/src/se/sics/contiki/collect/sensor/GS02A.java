@@ -53,7 +53,7 @@ public class GS02A extends Sensor {
     setVar("case2_v2", 250);
     setVar("case3_v1", 3600);
     setVar("case3_v2", 1900);
-    setVar("upper_limit",0.7);
+    setVar("upper_limit",0.8);
     setVar("lower_limit",0.5);
   }
 
