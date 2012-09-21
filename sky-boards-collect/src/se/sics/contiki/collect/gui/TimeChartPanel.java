@@ -152,7 +152,7 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
       Node node = data.getNode();
       for (int i = 0, n = selectedNodes.length; i < n; i++) {
         if (node == selectedNodes[i]) {
-          TimeSeries series = timeSeries.getSeries(i);
+          TimeSeries series = timeSeries.getSeries(node.getName());
           int groupSize = getGroupSize(node);
           if (groupSize > 1) {
             series.clear();
@@ -166,6 +166,7 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
       }
     }
   }
+
 
   @Override
   public void clearNodeData() {
