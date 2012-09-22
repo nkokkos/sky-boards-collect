@@ -479,7 +479,6 @@ public class NodeCalibrationDialog extends JFrame
   public void windowClosing(WindowEvent arg0) {
     server.AdjustUpdateChart();
     dispose();
-    System.out.println("window close");
   }
 
   @Override
