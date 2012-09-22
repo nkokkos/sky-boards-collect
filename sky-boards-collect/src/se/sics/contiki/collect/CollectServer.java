@@ -273,6 +273,8 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
 
           protected void addSensorData(SensorData data) {
             Node node = data.getNode();
+            if (node.getNodeSensor(TEMPERATURE_SENSOR)==null) 
+              return;
             String nodeName = node.getName();
             SensorDataAggregator aggregator = node.getSensorDataAggregator();
             dataset.addValue(aggregator.getAverageTemperature(), categories[0],
@@ -1165,6 +1167,8 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
         case SensorInfo.DS1000:
           node = new NodeDS1000(nodeID);     
           break;
+        case SensorInfo.SINK:
+          node = new NodeSink(nodeID);
         default: 
         	node = new NodeTmoteSky(nodeID);  
       }
