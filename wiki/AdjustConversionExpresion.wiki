@@ -19,7 +19,7 @@ https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal1.jpg
 
 We need to know *ADC_VALUE*. This is the output from ADC12 (Analog-to-digital 12 bit converter) that a node sends to application, and represents analog voltage from the sensor converted by ADC12 to a digital representation. Then within the Java application, conversion formulas are applied to this value to obtain the real physical magnitude. Conversion formulas are very related to sensor/ADC12 circuit properties.
 
-The adc_value value is shown in the app dialog: 
+The adc_value is shown in the app dialog: 
 
 https://sky-boards-collect.googlecode.com/svn/wiki/captures/2captura1-1b.png
 
@@ -48,5 +48,3 @@ https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal5.jpg
 Now, close adjust conversion expressions dialog and chart will be updated to the right values:
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal6.jpg
-
-
