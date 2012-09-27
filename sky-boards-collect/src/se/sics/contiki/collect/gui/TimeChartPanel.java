@@ -233,42 +233,32 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
     int dataCount=node.getSensorDataCount();
     int i, n, k;
     double value = 0.0;
-    SensorData data = null;
-    long timeStart, timeTotal, timeAvg;
+    long time = 0L;
     
     if ((new Double(getSensorDataValue(node.getSensorData(0)))).isNaN())
-      return;//this instance doesn't have to show values from that node
+      return;
     
     for (i = 0, n = dataCount; i+groupSize < n; i += groupSize) {  
-      timeTotal = timeAvg = 0L;
-      data = node.getSensorData(i);
-      value = getSensorDataValue(data); 
-      timeStart = data.getNodeTime() / 1000L;
-      for (int j = 1; j < groupSize; j++) {
-        data = node.getSensorData(i + j);
-        timeTotal += (((data.getNodeTime() / 1000L) - timeStart));
+      value = 0.0;
+      time = 0L;
+      for (int j = 0; j < groupSize; j++) {
+        SensorData data = node.getSensorData(i + j);
         value += getSensorDataValue(data); 
+        time += data.getNodeTime() / 1000L;
       }
-      timeAvg=(timeTotal / groupSize) + timeStart;
-      series.addOrUpdate(new Second(new Date((timeAvg * 1000L))), value / groupSize);
+      series.addOrUpdate(new Second(new Date(((time / groupSize) * 1000L))), value / groupSize);
     }
     
-    // add last group. More code but much more cost-efficient that
-    // having a check condition (i+j<n) for all values  
+    // add last group.
     int lastGroupSize=n-i;
-    
-    timeTotal = timeAvg = 0L;
-    data = node.getSensorData(i);
-    value = getSensorDataValue(data);
-    timeStart = data.getNodeTime() / 1000L;
-
-    for (k = i+1; k < n; k++){
-      data = node.getSensorData(k);
-      timeTotal += (((data.getNodeTime() / 1000L)-timeStart));
+    time = 0L;
+    value = 0.0;
+    for (k = i; k < n; k++){
+      SensorData data = node.getSensorData(k);
       value += getSensorDataValue(data);
+      time += data.getNodeTime() / 1000L;
     }
-    timeAvg=(timeTotal / lastGroupSize) + timeStart;
-    series.addOrUpdate(new Second(new Date((timeAvg * 1000L))), value / lastGroupSize);
+    series.addOrUpdate(new Second(new Date(((time / lastGroupSize) * 1000L))), value / lastGroupSize);
   }
  
 
