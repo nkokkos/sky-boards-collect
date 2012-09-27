@@ -7,7 +7,7 @@ https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/sc2.png
 
 ----
 
- * *Last sensor data in "Sensor Map" tab (It can be disabled in right click menu). Image shows a network with a Tmote sky and AR1000 motes.*
+ * *Last sensor data in "Sensor Map" tab (It can be disabled in right click menu). Image shows a network with Tmote sky and AR1000 motes.*
 
 
 https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/sc3.png
