@@ -21,7 +21,7 @@ We need to know *ADC_VALUE*. This is the output from ADC12 (Analog-to-digital 12
 
 The adc_value is shown in the app dialog: 
 
-https://sky-boards-collect.googlecode.com/svn/wiki/captures/2captura1-1b.png
+https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/2captura1-1b.png
 
 = Step 3 =
 
