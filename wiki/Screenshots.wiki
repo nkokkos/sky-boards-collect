@@ -19,7 +19,7 @@ https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/sc5.png
 ----
  * *Adjust conversion expressions tool. Select a node and go to _Tools_ menu item to start setting constants that appear in conversion expressions. Function is updated in real time.*
 
-https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/sc6.png
+https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/screen6.png
 ----
  * *Send sensor data to Cosm and open.sen.se*
 
