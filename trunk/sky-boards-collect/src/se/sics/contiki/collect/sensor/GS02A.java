@@ -47,7 +47,7 @@ public class GS02A extends Sensor {
   public void setConstants() {
     setVar("Vref", 2.5);
     setVar("RL", 20000.0);
-    setVar("R0", 280000.0);
+    setVar("R0", 880000.0);
     setVar("Vcc", 3.0);
     setVar("case2_v1", 300);
     setVar("case2_v2", 250);
