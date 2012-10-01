@@ -43,7 +43,7 @@ https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal4.jpg
 
 https://sky-boards-collect.googlecode.com/svn/wiki/img/imgcal5.jpg
 
-*NOTE:* MinX, MaxX and IncX values are only intended to define function resolution for visualization purposes, its value doesn't affect conversion.
+*NOTE:* MinX, MaxX and IncX values are only intended to define the range in which conversion function is generated, its value doesn't affect conversion.
 
 Now, close adjust conversion expressions dialog and chart will be updated to the right values:
 
