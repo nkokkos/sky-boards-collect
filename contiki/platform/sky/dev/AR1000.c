@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012, Swedish Institute of Computer Science
+ * Copyright (c) 2012, Swedish Institute of Computer Science
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,19 +33,14 @@
  /**
  *   \file
  *        Contiki driver for the attachable sky sensor board AR1000.
- *        Check ~/contiki/platform/sky/dev/sky-sensors.c to see how the 
- *        ADC12 is configured.
  *
  *   \author	 
- *        Eloy Díaz 	  
+ *        Eloy Díaz <eldial@gmail.com>
  */
 
 #include "contiki.h"
-#include "lib/sensors.h"
 #include "dev/sky-sensors.h"
-#include "AR1000.h"
-
-#include <io.h>
+#include "dev/AR1000.h"
 
 /*
 * SH-300-DC ---> ADC3  (CO2)

@@ -1,15 +1,13 @@
  /**
- *    \file
- *         Test program and usage example of the DS1000 driver
- * 						
+ *  \file
+ *       Test program and usage example of the DS1000 sensorboard contiki driver.
  *
- *    \author	 
- *         Eloy Díaz 	  
+ *  \author	 
+ *       Eloy Díaz <eldial@gmail.com>
  */
 #include "contiki.h"
-#include "lib/sensors.h"
-#include "dev/sky-sensors.h"
-#include "dev/DS1000.h"
+#include "DS1000.h"
+
 #include <stdio.h> 
 
 void print_values();
@@ -35,7 +33,8 @@ PROCESS_THREAD(ds1000_test, ev, data)
     PROCESS_WAIT_UNTIL(etimer_expired(&et));
     print_values();
     i++;
-  }i=0;
+  }
+  i=0;
 
   printf ("\n\nrunning SENSORS_DEACTIVATE(ds1000). Values should be fixed now\n");
   SENSORS_DEACTIVATE(ds1000);
@@ -45,7 +44,8 @@ PROCESS_THREAD(ds1000_test, ev, data)
     PROCESS_WAIT_UNTIL(etimer_expired(&et));
     print_values();
     i++;
-  }i=0;
+  }
+  i=0;
 
   printf ("\n\nrunning SENSORS_ACTIVATE(ds1000). Values should slightly change\n");
   SENSORS_ACTIVATE(ds1000);
@@ -55,7 +55,8 @@ PROCESS_THREAD(ds1000_test, ev, data)
     PROCESS_WAIT_UNTIL(etimer_expired(&et));
     print_values();
     i++;
-  }i=0;
+  }
+  i=0;
 
   printf ("\nTest complete\n");
   PROCESS_END();

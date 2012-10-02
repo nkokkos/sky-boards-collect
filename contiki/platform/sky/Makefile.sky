@@ -2,6 +2,13 @@
 
 CONTIKI_TARGET_SOURCEFILES += contiki-sky-platform.c \
 	sht11.c sht11-sensor.c light-sensor.c battery-sensor.c \
-	button-sensor.c radio-sensor.c AR1000.c DS1000.c CO1000.c
+	button-sensor.c radio-sensor.c
+
+ifndef SMALL
+SMALL=1
+endif
 
 include $(CONTIKI)/platform/sky/Makefile.common
+CONTIKI_TARGET_SOURCEFILES += DS1000.c
+CONTIKI_TARGET_SOURCEFILES += AR1000.c
+CONTIKI_TARGET_SOURCEFILES += CO1000.c

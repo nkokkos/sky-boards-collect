@@ -33,11 +33,9 @@
  /**
  *   \file
  *        Contiki driver for the attachable sky sensor board CO1000.
- *        Check ~/contiki/platform/sky/dev/sky-sensors.c to see how the 
- *        ADC12 is configured.
  *
  *   \author	 
- *        Eloy Díaz 	  
+ *        Eloy Díaz <eldial@gmail.com>
  */
 
 #include "contiki.h"
