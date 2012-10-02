@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Swedish Institute of Computer Science
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,67 +26,63 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * 
+ * This file is part of the Contiki operating system.
+ *
+ * $Id: collect-view-shell.c,v 1.1 2010/11/12 17:46:56 nifi Exp $
  */
 
-
- /**
- *   \file
- *        Contiki driver for the attachable sky sensor board DS1000.
- *
- *   \author	 
- *        Eloy Díaz <eldial@gmail.com>  
+/**
+ * \file
+ *         Contiki Collect View Shell
+ * \author
+ *         Adam Dunkels <adam@sics.se>
  */
 
 #include "contiki.h"
-#include "dev/sky-sensors.h"
-#include "dev/DS1000.h"
+#include "shell.h"
+#include "serial-shell.h"
+#include "collect-view.h"
 
+#define WITH_COFFEE 0
 
-/**
-* SH-300-DC ---> ADC3  (CO2)
-* PSX-01E   ---> ADC4  (Temperature)
-* GS-02A    ---> ADC5  (CO)
-*/
-#define INPUT_CHANNEL  ((1 << INCH_3) | (1 << INCH_4) | (1 << INCH_5))
-
-/**
-* Voltage reference ~ 2.5
-* See MSP420 User's guide and sky-sensors.c
-* for more details.
-*/
-#define INPUT_REFERENCE  SREF_1
-
-#define CO2_MEM   ADC12MEM3
-#define TEMP_MEM  ADC12MEM4
-#define CO_MEM    ADC12MEM5
-
-const struct sensors_sensor ds1000;
 /*---------------------------------------------------------------------------*/
-static int
-value(int type)
+PROCESS(collect_view_shell_process, "Contiki Collect View Shell");
+AUTOSTART_PROCESSES(&collect_view_shell_process);
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(collect_view_shell_process, ev, data)
 {
-  switch(type) {
-   case SENSOR_CO2:
-     return CO2_MEM;
-   case SENSOR_TEMP:
-     return TEMP_MEM;
-   case SENSOR_CO:
-     return CO_MEM;
-  }
-  return 0;
+  PROCESS_BEGIN();
+
+  serial_shell_init();
+  shell_blink_init();
+
+#if WITH_COFFEE
+  shell_file_init();
+  shell_coffee_init();
+#endif /* WITH_COFFEE */
+
+  /* shell_download_init(); */
+  /* shell_rime_sendcmd_init(); */
+  /* shell_ps_init(); */
+  shell_reboot_init();
+  shell_rime_init();
+  shell_rime_netcmd_init();
+  /* shell_rime_ping_init(); */
+  /* shell_rime_debug_init(); */
+  /* shell_rime_debug_runicast_init(); */
+  shell_powertrace_init();
+  /* shell_base64_init(); */
+  shell_text_init();
+  shell_time_init();
+  /* shell_checkpoint_init(); */
+  /* shell_sendtest_init(); */
+
+#if CONTIKI_TARGET_SKY
+  shell_sky_init();
+#endif /* CONTIKI_TARGET_SKY */
+
+  shell_collect_view_init();
+
+  PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-static int
-status(int type)
-{
-  return sky_sensors_status(INPUT_CHANNEL, type);
-}
-/*---------------------------------------------------------------------------*/
-static int
-configure(int type, int c)
-{ 
-  return sky_sensors_configure(INPUT_CHANNEL, INPUT_REFERENCE, type, c);
-}
-/*---------------------------------------------------------------------------*/
-SENSORS_SENSOR(ds1000, "ds1000", value, configure, status);

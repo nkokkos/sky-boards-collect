@@ -1,15 +1,13 @@
  /**
- *    \file
- *         Test program and usage example of the AR1000 driver
- * 						
+ *  \file
+ *       Test program and usage example of the AR1000 sensorboard contiki driver.
  *
- *    \author	 
- *         Eloy Díaz 	  
+ *  \author	 
+ *       Eloy Díaz <eldial@gmail.com>
  */
 #include "contiki.h"
-#include "lib/sensors.h"
-#include "dev/sky-sensors.h"
-#include "dev/AR1000.h"
+#include "AR1000.h"
+
 #include <stdio.h> 
 
 void print_values();
@@ -24,39 +22,44 @@ PROCESS_THREAD(ar1000_test, ev, data)
 
   static struct etimer et;
   static int i=0;
-	
+
   printf ("\n\nrunning SENSORS_ACTIVATE(ar1000). Values should slightly change\n");
   SENSORS_ACTIVATE(ar1000);
   printf ("SENSORS_ACTIVATE: %d\n",ar1000.status(SENSORS_ACTIVE));
-  printf ("SENSOS_READY: %d\n",ar1000.status(SENSORS_READY));
+  printf ("SENSORS_READY: %d\n",ar1000.status(SENSORS_READY));
 
   while (i<20){
     etimer_set(&et, CLOCK_SECOND * 1);
     PROCESS_WAIT_UNTIL(etimer_expired(&et));
     print_values();
     i++;
-	}i=0;
+  }
+  i=0;
 
   printf ("\n\nrunning SENSORS_DEACTIVATE(ar1000). Values should be fixed now\n");
   SENSORS_DEACTIVATE(ar1000);
+
   while (i<10){
     etimer_set(&et, CLOCK_SECOND * 1);
     PROCESS_WAIT_UNTIL(etimer_expired(&et));
     print_values();
     i++;
-  }i=0;
+  }
+  i=0;
 
   printf ("\n\nrunning SENSORS_ACTIVATE(ar1000). Values should slightly change\n");
   SENSORS_ACTIVATE(ar1000);
-  while (i<20){
+
+  while (i<20)	{
     etimer_set(&et, CLOCK_SECOND * 1);
     PROCESS_WAIT_UNTIL(etimer_expired(&et));
     print_values();
     i++;
-  }i=0;
+  }
+  i=0;
 
   printf ("\nTest complete\n");
-  PROCESS_END(); 
+  PROCESS_END();	 
 }
 
 void print_values(){

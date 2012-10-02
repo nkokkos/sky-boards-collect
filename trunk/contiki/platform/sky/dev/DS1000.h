@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2012, Swedish Institute of Computer Science
+ * Copyright (c) 2012, Swedish Institute of Computer Science
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,12 +32,10 @@
 
  /**
  *   \file
- *        Contiki driver for the attachable sky sensor board DS1000.
- *        Check ~/contiki/platform/sky/dev/sky-sensors.c to see how the 
- *        ADC12 is configured.
+ *        DS1000 sensor board header file.
  *
  *   \author	 
- *        Eloy Díaz 	  
+ *        Eloy Díaz <eldial@gmail.com> 
  */
 
 #ifndef __DS1000_SENSOR_H__
@@ -46,8 +44,8 @@
 #include "lib/sensors.h"
 
 extern const struct sensors_sensor ds1000;
-#define SENSOR_CO   11
-#define SENSOR_CO2  12
-#define SENSOR_TEMP 14
+#define SENSOR_CO   0
+#define SENSOR_CO2  1
+#define SENSOR_TEMP 2
 
 #endif /* __DS1000-SENSOR_H__ */
