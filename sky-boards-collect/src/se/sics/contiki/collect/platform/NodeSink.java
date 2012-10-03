@@ -1,5 +1,11 @@
-package se.sics.contiki.collect.platform;
+/*
+ * NodeSink
+ *
+ * Author  : Eloy Díaz <eldial@gmail.com>
+ * Created : 30 sep 2012
+ */
 
+package se.sics.contiki.collect.platform;
 
 import se.sics.contiki.collect.Node;
 import se.sics.contiki.collect.SensorInfo;
@@ -18,8 +24,6 @@ public class NodeSink extends Node implements SensorInfo {
   
   @Override
   public void init() {
-    addSensors();
-    mapMsgFormat();
     setNodeType();
   }
   

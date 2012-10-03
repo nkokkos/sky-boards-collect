@@ -189,8 +189,9 @@ public class DataFeederCosm extends JPanel implements Visualizer,
     titlePanel.add(titleField);
 
     JPanel feedControl = new JPanel();
-    feedControl.add(removeButton);
     feedControl.add(setButton);
+    feedControl.add(removeButton);
+
 
     controlPanel.add(feedPanel);
     controlPanel.add(titlePanel);

@@ -10,8 +10,8 @@
  * Temperature Accuracy: ± 0.4 °C (typical)
  */
 package se.sics.contiki.collect.sensor;
-
 import se.sics.contiki.collect.Sensor;
+
 public class SHT11Temperature extends Sensor {
   
   /*Last value for associated humidity sensor temperature compensation.

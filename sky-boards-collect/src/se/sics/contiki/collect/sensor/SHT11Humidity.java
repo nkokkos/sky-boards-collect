@@ -1,4 +1,3 @@
-package se.sics.contiki.collect.sensor;
 /*
  * SHT11Temperature
  *
@@ -9,6 +8,7 @@ package se.sics.contiki.collect.sensor;
  * Humidity Resolution: 0.05 (typical)
  * Humidity Accuracy: ± 3 %RH (typical)
  */
+package se.sics.contiki.collect.sensor;
 import se.sics.contiki.collect.Sensor;
 
 public class SHT11Humidity extends Sensor {

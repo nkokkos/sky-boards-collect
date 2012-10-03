@@ -203,20 +203,18 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
       }
     }
   }
-
-  protected int getGroupSize(Node node) {
+  
+  protected int getGroupSize(Node node){
     if (maxItemCount > 0) {
       int sensorDataCount = node.getSensorDataCount();
-      if (sensorDataCount > maxItemCount) {
-        int groupSize = sensorDataCount / maxItemCount;
-        if (sensorDataCount / groupSize >= maxItemCount) {
-          groupSize++;
-        }
-        return groupSize;
-      }
+      int groupSize = sensorDataCount / maxItemCount;
+      if (sensorDataCount % maxItemCount > 0)
+        groupSize++;
+      return groupSize;
     }
     return 1;
   }
+  
   protected void updateSeriesQuick(TimeSeries series, Node node, int groupSize) {
     for (int i = 0, n = node.getSensorDataCount(); i < n; i += groupSize) {
       double value = 0.0;
@@ -229,6 +227,7 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
       series.addOrUpdate(new Second(new Date((time / groupSize) * 1000L)), value / groupSize);
     }
   }
+  
   protected void updateSeries(TimeSeries series, Node node, int groupSize) {
     int dataCount=node.getSensorDataCount();
     int i, n, k;
