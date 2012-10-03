@@ -5,19 +5,23 @@ PRE:
 Make sure /contiki/examples/sky-boards-collect/collect-ar1000/ exists
 Make sure /contiki/examples/sky-boards-collect/collect-ds1000/ exists
 
-1. Edit CollectView.java line 120 to set your sky-boards-collect.jar file location
+1. Open CollectView plugin source file
 
-2. Copy CollectView.java into
+/contiki/tools/cooja/apps/collect-view/java/se/sics/se/cooja/plugins/CollectView.java
 
-/contiki/tools/cooja/apps/collect-view/java/se/sics/cooja/plugins/collectview/
+2. Find this line 
 
-(rename old file to, eg, collectview-bk.java)
+String jarFile = contikiPath + "/tools/collect-view/dist/collect-view.jar";
 
-3. Open Cooja and go to file>Open simulation>Browse, 
+3. Edit line to set sky-boards-collect.jar location. Eg:
+
+String jarFile = contikiPath + "/tools/sky-boards-collect/sky-boards-collect.jar";
+
+4. Open Cooja and go to file>Open simulation>Browse, 
 then open example-sky-boards-collect.csc. Wait for Cooja to setup simulation.
 
-4. Click Start in "Simulation Control" window.
-5. Click Start collect & Send command to nodes in collect view 
+5. Click Start in "Simulation Control" window.
+6. Click Start collect & Send command to nodes in collect view 
 
 It is possible to adjust conversion expression for simulated nodes
 It is possible to send all data from simulated network nodes to Cosm/sen.se too
