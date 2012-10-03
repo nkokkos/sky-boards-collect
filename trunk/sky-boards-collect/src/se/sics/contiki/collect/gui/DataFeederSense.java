@@ -1,5 +1,5 @@
 /*
- * DataFeederOpenSense
+ * DataFeederSense
  *
  * Author  : Eloy Díaz <eldial@gmail.com>
  * Created : 28 jul 2012
@@ -180,9 +180,10 @@ public class DataFeederSense extends JPanel implements Visualizer,
     feedPanel.add(new JLabel("Feed ID:"));
     feedPanel.add(field);
     JPanel feedControl = new JPanel();
-    feedControl.add(removeButton);
-    feedControl.add(setButton);
 
+    feedControl.add(setButton);
+    feedControl.add(removeButton);
+    
     controlPanel.add(feedPanel);
     controlPanel.add(feedControl);
     controlPanel.add(new JLabel(""));

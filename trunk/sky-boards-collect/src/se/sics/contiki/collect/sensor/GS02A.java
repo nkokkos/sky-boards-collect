@@ -1,4 +1,3 @@
-package se.sics.contiki.collect.sensor;
 /*
  * GS02A
  *
@@ -8,6 +7,7 @@ package se.sics.contiki.collect.sensor;
  * GS-02A CO sensor
  * Resistive-based technology
  */
+package se.sics.contiki.collect.sensor;
 import se.sics.contiki.collect.Sensor;
 
 public class GS02A extends Sensor {

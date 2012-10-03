@@ -1,4 +1,3 @@
-package se.sics.contiki.collect.sensor;
 /*
  * SX01E
  *
@@ -8,6 +7,8 @@ package se.sics.contiki.collect.sensor;
  * SX-01E Dust (particle concentration) sensor
  * Linear output voltage
  */
+
+package se.sics.contiki.collect.sensor;
 import se.sics.contiki.collect.Sensor;
 
 public class SX01E extends Sensor {

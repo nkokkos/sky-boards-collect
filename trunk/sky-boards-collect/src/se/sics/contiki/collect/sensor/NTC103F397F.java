@@ -8,7 +8,6 @@
  * NTC Thermistor Technology 
  */
 package se.sics.contiki.collect.sensor;
-
 import se.sics.contiki.collect.Sensor;
 
 public class NTC103F397F extends Sensor {

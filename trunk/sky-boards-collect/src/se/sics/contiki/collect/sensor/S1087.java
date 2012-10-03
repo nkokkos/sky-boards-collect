@@ -1,4 +1,3 @@
-package se.sics.contiki.collect.sensor;
 /*
  * S1087
  *
@@ -8,6 +7,7 @@ package se.sics.contiki.collect.sensor;
  * Hamamatsu® S1087 light sensor
  * Visible Range (560 nm peak sensitivity wavelength)
  */
+package se.sics.contiki.collect.sensor;
 import se.sics.contiki.collect.Sensor;
 
 public class S1087 extends Sensor {

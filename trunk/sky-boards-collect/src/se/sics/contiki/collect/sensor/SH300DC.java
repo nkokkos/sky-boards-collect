@@ -1,4 +1,3 @@
-package se.sics.contiki.collect.sensor;
 /*
  * SH300DC
  *
@@ -8,6 +7,7 @@ package se.sics.contiki.collect.sensor;
  * SH-300-DC CO2 sensor
  * Voltage output based 
  */
+package se.sics.contiki.collect.sensor;
 import se.sics.contiki.collect.Sensor;
 
 public class SH300DC extends Sensor {

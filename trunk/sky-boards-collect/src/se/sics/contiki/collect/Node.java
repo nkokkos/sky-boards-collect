@@ -245,8 +245,8 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
     return sensors_array;
   }
 
-  public Sensor getNodeSensor(String sensorID) {
-    return sensors.get(sensorID);
+  public Sensor getNodeSensor(String name) {
+    return sensors.get(name);
   }
 
   public int getSensorsCount() {
