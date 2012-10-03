@@ -1,15 +1,3 @@
-#summary How to modify cooja collect-view plugin to execute another collect-view version
+#summary How to run sky-boards-collect example in Cooja, the Contiki Network Simulator.
 
-Open 
-{{{
-~/contiki/tools/cooja/apps/collect-view/java/se/sics/se/cooja/plugins/collect-view.java
-}}}
-
-Edit this line.
-
-{{{
-String jarFile = contikiPath + "/tools/collect-view/dist/collect-view.jar";
-}}}
-
-
-Then (re)start Cooja and open e.g. example-collect-view.csc
+http://code.google.com/p/sky-boards-collect/source/browse/trunk/contiki/examples/sky-boards-collect/cooja-test/README.TXT
