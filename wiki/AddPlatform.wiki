@@ -6,3 +6,8 @@ TODO
 
 
 = Details =
+
+ # Platform firmware
+ # Sensors classes
+ # Platform class
+ # Add instances
