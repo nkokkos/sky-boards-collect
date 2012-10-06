@@ -2,7 +2,7 @@
 
 = Introduction =
 
-TODO
+This guide briefly shows how to add platforms into sky-boards-collect. Despite the project name, newly introduced platforms doesn't need to be sky based.
 
 
 = Details =
