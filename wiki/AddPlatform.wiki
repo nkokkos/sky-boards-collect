@@ -1,4 +1,4 @@
-#summary Guide to add new platforms support to Contiki collect-view tool
+#summary Guide to add platforms to Contiki collect-view tool
 
 = Introduction =
 
