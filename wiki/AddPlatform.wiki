@@ -40,5 +40,4 @@ Take existing platform classes as reference. If a sensor that didn't previously 
 
 In main class, {{{CollectServer.java}}}, add platform instance in {{{getNode}}} method.
 
-If a sensor that didn't previously exist in the application is introduced along with the defined platform, {{{TimeChartPanel}}} instance should be added into {{{visualizers[]}}} structure (defined in class constructor). Take existing clases as reference.
-
+If a sensor that didn't previously exist in the application is introduced along with the defined platform, {{{TimeChartPanel}}} instance should be added into {{{visualizers[]}}} structure (defined in class constructor). Take existing code as reference.
