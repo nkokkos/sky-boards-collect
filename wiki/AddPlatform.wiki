@@ -14,7 +14,7 @@ To define contiki-collect firmware for a platform, create {{{collect-view-platfo
  * {{{collect-view.[ch]}}}
  * {{{/svn/trunk/contiki/examples/}}}, for examples
 
-After that, edit {{{SensorInfo.java}}} to reflect the platform message format in CollectView tool.
+After that, edit {{{SensorInfo.java}}} to reflect the platform message format in {{{CollectView}}} tool.
 ----
 
 2. *Sensors classes*
