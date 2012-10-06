@@ -7,7 +7,7 @@ TODO
 
 = Details =
 
- # Platform firmware
+ # Platform Contiki-collect firmware
  # Sensors classes
  # Platform class
  # Add instances
