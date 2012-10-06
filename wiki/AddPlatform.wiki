@@ -1,4 +1,4 @@
-#summary Guide to add platforms to Contiki collect-view tool
+#summary Guide to add platforms to sky-boards-collect
 
 = Introduction =
 
@@ -7,7 +7,33 @@ TODO
 
 = Details =
 
- # Platform Contiki-collect firmware
- # Sensors classes
- # Platform class
- # Add instances
+1. *Platform firmware*
+
+To define contiki-collect firmware for a platform, take {{{collect-view-sky.c}}} as reference.
+
+Then edit {{{SensorInfo.java}}} to specify the platform message format.
+
+See /svn/trunk/contiki/examples/ for examples
+----
+
+2. *Sensors classes*
+
+A sensor class implements the sensor conversion expressions. See:
+
+ * /svn/trunk/sky-boards-collect/src/se/sics/contiki/collect/sensor
+
+Take existing sensor classes as reference.
+----
+
+3. *Platform class*
+
+The platform class creates its sensors instances, and map the sensor identifiers to the specific collect message position. See:
+
+ * /svn/trunk/sky-boards-collect/src/se/sics/contiki/collect/sensor
+
+Take existing platform classes as reference. If a sensor that doesn't exist is introduced along with the defined platform, sensor identifier should be create in {{{SensorIdentifier.java}}}. eg:
+
+{{{public static final String TILT_X_SENSOR = "Tilt X";}}}
+----
+
+4. *Add instances*
