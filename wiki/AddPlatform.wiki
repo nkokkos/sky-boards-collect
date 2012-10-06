@@ -9,11 +9,12 @@ This guide briefly shows how to add platforms into sky-boards-collect. Despite t
 
 1. *Platform firmware*
 
-To define contiki-collect firmware for a platform, take {{{collect-view-sky.c}}} as reference.
+To define contiki-collect firmware for a platform, create {{{collect-view-platform.[ch]}}}. See:
 
-After that, edit {{{SensorInfo.java}}} to specify the platform message format.
+ * {{{collect-view.[ch]}}}
+ * {{{/svn/trunk/contiki/examples/}}}, for examples
 
- * See {{{/svn/trunk/contiki/examples/ for examples}}}
+After that, edit {{{SensorInfo.java}}} to reflect the platform message format in CollectView tool.
 ----
 
 2. *Sensors classes*
