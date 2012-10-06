@@ -1,3 +1,3 @@
-#summary How to run sky-boards-collect example in Cooja, the Contiki Network Simulator.
+#summary How to run sky-boards-collect with Cooja, the Contiki Network Simulator.
 
 http://code.google.com/p/sky-boards-collect/source/browse/trunk/contiki/examples/sky-boards-collect/cooja-test/README.TXT
