@@ -9,6 +9,8 @@ package se.sics.contiki.collect.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -58,7 +60,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
   String feedingSensor;
   JPanel fieldPaneVars;
   Properties config;
-  JTextField field;
+  JTextField feedIdField;
   JLabel statusLabel;
   PublisherSense publisher;
   JTextArea logArea;
@@ -133,7 +135,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
       }
     });
 
-    stopButton = new JButton("Stop Feeding");
+    stopButton = new JButton("Stop Feeding ");
     stopButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         doFeed = false;
@@ -155,70 +157,132 @@ public class DataFeederSense extends JPanel implements Visualizer,
       }
     });
 
-    field = new JTextField();
-    field.setText(null);
-    field.setColumns(11);
+    feedIdField = new JTextField();
+    feedIdField.setText(null);
+    feedIdField.setColumns(11);
 
     statusLabel = new JLabel("Status: Not feeding");
 
-    JPanel controlPanel = new JPanel(new GridLayout(0, 1));
-    controlPanel.add(new JLabel(""));
+    JPanel cosmPanel = new JPanel(new GridBagLayout());
 
-    JPanel keyPanel = new JPanel();
-    keyPanel.add(new JLabel("sen.se API Key:"));
-    keyPanel.add(keyField);
-    controlPanel.add(keyPanel);
+    GridBagConstraints c = new GridBagConstraints();
+    c.gridx=0;
+    c.gridy=0;
+    c.gridwidth=1;
+    c.weightx=0.5;
+    c.fill=GridBagConstraints.NONE;
+    c.anchor=GridBagConstraints.LINE_END;
+    cosmPanel.add(new JLabel("API key "),c);
 
-    controlPanel.add(new JLabel(""));
-    controlPanel.add(new JSeparator());
-
-    JPanel feedPanel = new JPanel();
-    feedPanel.add(new JLabel("Node:"));
-    feedPanel.add(comboBoxNode);
-    feedPanel.add(new JLabel("Sensor:"));
-    feedPanel.add(comboBoxSensor);
-    feedPanel.add(new JLabel("Feed ID:"));
-    feedPanel.add(field);
-    JPanel feedControl = new JPanel();
-
-    feedControl.add(setButton);
-    feedControl.add(removeButton);
+    c.gridx=1;
+    c.gridy=0;
+    c.gridwidth=2;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    cosmPanel.add(keyField,c);
     
-    controlPanel.add(feedPanel);
-    controlPanel.add(feedControl);
-    controlPanel.add(new JLabel(""));
-    controlPanel.add(new JSeparator());
-
-    JPanel startPanel = new JPanel();
-    startPanel.add(new JLabel("Send "));
-    startPanel.add(comboBoxRaw);
-    startPanel.add(new JLabel("values.  "));
-    startPanel.add(startButton);
-    startPanel.add(stopButton);
-    controlPanel.add(startPanel);
-
-    JPanel statusPanel = new JPanel();
-    statusPanel.add(statusLabel);
-
-    controlPanel.add(statusPanel);
-    controlPanel.add(new JLabel(""));
-    controlPanel.add(new JSeparator());
- 
-    logArea = new JTextArea(2,30);
-    logArea.setEditable(false);
-    controlPanel.add(new JScrollPane(logArea));
+    c.gridx=0;
+    c.gridy=1;
+    c.gridwidth=3;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    cosmPanel.add(new JSeparator(),c);
     
-    JPopupMenu popupMenu = new JPopupMenu();
-    JMenuItem clearItem = new JMenuItem("Clear");
-    clearItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        logArea.setText("");
-      }
-    });
-    popupMenu.add(clearItem);
-    logArea.setComponentPopupMenu(popupMenu);
- 
-    panel.add(controlPanel, BorderLayout.NORTH);
+    c.gridx=0;
+    c.gridy=2;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.NONE;
+    c.anchor=GridBagConstraints.CENTER;
+    cosmPanel.add(new JLabel("Node"),c);
+    
+    c.gridx=1;
+    c.gridy=2;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.NONE;
+    c.anchor=GridBagConstraints.CENTER;
+    cosmPanel.add(new JLabel("Sensor"),c);
+    
+    c.gridx=0;
+    c.gridy=3;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    cosmPanel.add(comboBoxNode,c);
+    
+    c.gridx=1;
+    c.gridy=3;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    cosmPanel.add(comboBoxSensor,c);
+    
+    c.gridx=2;
+    c.gridy=3;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.NONE;
+    c.anchor=GridBagConstraints.CENTER;
+    cosmPanel.add(removeButton,c);
+    
+    c.gridx=0;
+    c.gridy=4;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.NONE;
+    c.anchor=GridBagConstraints.CENTER;
+    cosmPanel.add(new JLabel("Send values"),c);
+    
+    c.gridx=1;
+    c.gridy=4;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.NONE;
+    c.anchor=GridBagConstraints.CENTER;
+    cosmPanel.add(new JLabel("Feed ID"),c);
+    
+    c.gridx=0;
+    c.gridy=5;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    cosmPanel.add(comboBoxRaw,c);
+    
+    c.gridx=1;
+    c.gridy=5;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    cosmPanel.add(feedIdField, c);
+    
+    c.gridx=2;
+    c.gridy=5;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.NONE;
+    c.anchor=GridBagConstraints.CENTER;
+    cosmPanel.add(setButton, c);
+    
+    c.gridx=0;
+    c.gridy=6;
+    c.gridwidth=3;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    cosmPanel.add(new JSeparator(),c);
+      
+   
+    c.gridx=1;
+    c.gridy=8;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    c.anchor=GridBagConstraints.CENTER;
+    cosmPanel.add(startButton, c);
+    
+    c.gridx=2;
+    c.gridy=8;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    c.anchor=GridBagConstraints.CENTER;
+    cosmPanel.add(stopButton, c);
+    
+    panel.add(cosmPanel,BorderLayout.NORTH);
+  }
+  
+  private void setConstraints(GridBagConstraints c, int gridx, int gridy, 
+      int gridwidth, int fill, int anchor){
+    c.gridx=gridx;
+    c.gridy=gridy;
+    c.gridwidth=gridwidth;
+    c.fill=fill;
+    c.anchor=anchor;
   }
 
   @Override
@@ -228,7 +292,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
     nodes.clear();
     comboBoxNode.removeAllItems();
     comboBoxSensor.removeAllItems();
-    field.setText(null);
+    feedIdField.setText(null);
   }
 
   public String getCategory() {
@@ -328,7 +392,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
     if ((s = n.getNodeSensor(feedingSensor)) == null)
       return;
 
-    field.setText(s.getFeedID());
+    feedIdField.setText(s.getFeedID());
   }
 
   public void storeFeedIDvalue() {
@@ -341,11 +405,11 @@ public class DataFeederSense extends JPanel implements Visualizer,
     if ((s = n.getNodeSensor(feedingSensor)) == null)
       return;
 
-    String id = field.getText();
+    String id = feedIdField.getText();
     if (isValidFeedID(id))
-      s.setFeedID(field.getText());
+      s.setFeedID(feedIdField.getText());
     else
-      field.setText("Invalid feed ID");
+      feedIdField.setText("Invalid feed ID");
   }
 
   public void removeFeedIDvalue() {
@@ -359,7 +423,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
       return;
 
     s.setFeedID(null);
-    field.setText(null);
+    feedIdField.setText(null);
   }
 
   public static boolean isValidFeedID(String id) {
