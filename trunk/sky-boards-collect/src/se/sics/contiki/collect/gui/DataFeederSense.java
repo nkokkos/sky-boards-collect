@@ -11,23 +11,21 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.Vector;
+
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -35,8 +33,8 @@ import javax.swing.SwingUtilities;
 
 import se.sics.contiki.collect.Configurable;
 import se.sics.contiki.collect.Node;
-import se.sics.contiki.collect.Sensor;
 import se.sics.contiki.collect.PublisherSense;
+import se.sics.contiki.collect.Sensor;
 import se.sics.contiki.collect.SensorData;
 import se.sics.contiki.collect.Visualizer;
 
@@ -162,7 +160,6 @@ public class DataFeederSense extends JPanel implements Visualizer,
     feedIdField.setColumns(11);
 
     statusLabel = new JLabel("Status: Not feeding");
-
     JPanel cosmPanel = new JPanel(new GridBagLayout());
 
     GridBagConstraints c = new GridBagConstraints();
@@ -176,89 +173,97 @@ public class DataFeederSense extends JPanel implements Visualizer,
 
     c.gridx=1;
     c.gridy=0;
-    c.gridwidth=2;
+    c.gridwidth=3;
     c.fill=GridBagConstraints.HORIZONTAL;
+    c.insets = new Insets(5,0,5,20);
     cosmPanel.add(keyField,c);
     
     c.gridx=0;
     c.gridy=1;
-    c.gridwidth=3;
+    c.gridwidth=4;
     c.fill=GridBagConstraints.HORIZONTAL;
+    c.insets = new Insets(0,0,0,0);
     cosmPanel.add(new JSeparator(),c);
     
     c.gridx=0;
     c.gridy=2;
     c.gridwidth=1;
     c.fill=GridBagConstraints.NONE;
-    c.anchor=GridBagConstraints.CENTER;
-    cosmPanel.add(new JLabel("Node"),c);
+    c.anchor=GridBagConstraints.LINE_END;
+    cosmPanel.add(new JLabel("Node "),c);
     
     c.gridx=1;
     c.gridy=2;
     c.gridwidth=1;
-    c.fill=GridBagConstraints.NONE;
-    c.anchor=GridBagConstraints.CENTER;
-    cosmPanel.add(new JLabel("Sensor"),c);
-    
-    c.gridx=0;
-    c.gridy=3;
-    c.gridwidth=1;
     c.fill=GridBagConstraints.HORIZONTAL;
+    c.anchor=GridBagConstraints.CENTER;
     cosmPanel.add(comboBoxNode,c);
     
-    c.gridx=1;
-    c.gridy=3;
+    c.gridx=2;
+    c.gridy=2;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.NONE;
+    c.anchor=GridBagConstraints.LINE_END;
+    cosmPanel.add(new JLabel("Sensor "),c);
+    
+    c.gridx=3;
+    c.gridy=2;
     c.gridwidth=1;
     c.fill=GridBagConstraints.HORIZONTAL;
+    c.anchor=GridBagConstraints.CENTER;
+    c.insets = new Insets(5,0,5,20);
     cosmPanel.add(comboBoxSensor,c);
     
+    c.gridx=0;
+    c.gridy=3;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.NONE;
+    c.anchor=GridBagConstraints.LINE_END;
+    c.insets = new Insets(0,0,0,0);
+    cosmPanel.add(new JLabel("Send values "),c);
+    
+    c.gridx=1;
+    c.gridy=3;
+    c.gridwidth=1;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    c.anchor=GridBagConstraints.CENTER;
+    cosmPanel.add(comboBoxRaw,c);
+    
     c.gridx=2;
     c.gridy=3;
     c.gridwidth=1;
     c.fill=GridBagConstraints.NONE;
-    c.anchor=GridBagConstraints.CENTER;
-    cosmPanel.add(removeButton,c);
+    c.anchor=GridBagConstraints.LINE_END;
+    cosmPanel.add(new JLabel("Feed ID "),c);
     
-    c.gridx=0;
-    c.gridy=4;
-    c.gridwidth=1;
-    c.fill=GridBagConstraints.NONE;
-    c.anchor=GridBagConstraints.CENTER;
-    cosmPanel.add(new JLabel("Send values"),c);
-    
-    c.gridx=1;
-    c.gridy=4;
-    c.gridwidth=1;
-    c.fill=GridBagConstraints.NONE;
-    c.anchor=GridBagConstraints.CENTER;
-    cosmPanel.add(new JLabel("Feed ID"),c);
-    
-    c.gridx=0;
-    c.gridy=5;
+    c.gridx=3;
+    c.gridy=3;
     c.gridwidth=1;
     c.fill=GridBagConstraints.HORIZONTAL;
-    cosmPanel.add(comboBoxRaw,c);
-    
-    c.gridx=1;
-    c.gridy=5;
-    c.gridwidth=1;
-    c.fill=GridBagConstraints.HORIZONTAL;
+    c.insets = new Insets(5,0,5,20);
     cosmPanel.add(feedIdField, c);
-    
-    c.gridx=2;
-    c.gridy=5;
+   
+    c.gridx=3;
+    c.gridy=4;
     c.gridwidth=1;
     c.fill=GridBagConstraints.NONE;
     c.anchor=GridBagConstraints.CENTER;
-    cosmPanel.add(setButton, c);
+    JPanel remsetPanel=new JPanel();
+    remsetPanel.add(setButton);
+    remsetPanel.add(removeButton);
+    c.insets = new Insets(0,0,0,20);
+    cosmPanel.add(remsetPanel,c);
     
     c.gridx=0;
-    c.gridy=6;
-    c.gridwidth=3;
+    c.gridy=5;
+    c.gridwidth=4;
     c.fill=GridBagConstraints.HORIZONTAL;
+    c.insets = new Insets(0,0,0,0);
     cosmPanel.add(new JSeparator(),c);
-      
-   
+    
+    panel.add(cosmPanel,BorderLayout.NORTH);
+
+   /*
     c.gridx=1;
     c.gridy=8;
     c.gridwidth=1;
@@ -272,6 +277,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
     c.fill=GridBagConstraints.HORIZONTAL;
     c.anchor=GridBagConstraints.CENTER;
     cosmPanel.add(stopButton, c);
+    */
     
     panel.add(cosmPanel,BorderLayout.NORTH);
   }
