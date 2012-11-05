@@ -29,14 +29,12 @@ public class SenseTableGUI extends JTable {
     }
 
   public void setUpValuesColumn() {
-    // Set up the editor for the sport cells.
     JComboBox<String> comboBox = new JComboBox<String>();
     comboBox.addItem("Raw");
     comboBox.addItem("Converted");
     TableColumn valuesCol=this.getColumnModel().getColumn(3);
     setCellEditor(new DefaultCellEditor(comboBox));
 
-    // Set up tool tips for the sport cells.
     DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
     renderer.setToolTipText("Click for combo box");
     valuesCol.setCellRenderer(renderer);

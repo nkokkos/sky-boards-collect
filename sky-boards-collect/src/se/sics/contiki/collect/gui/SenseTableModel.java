@@ -36,24 +36,17 @@ public class SenseTableModel extends AbstractTableModel {
   }
 
   public Object getValueAt(int row, int col) {
-    return getData().get(row).getField(col);
+    if (getData().size()>0){
+      return getData().get(row).getField(col);
+    }
+    return null;
   }
 
-  /*
-   * JTable uses this method to determine the default renderer/ editor for each
-   * cell. If we didn't implement this method, then the last column would
-   * contain text ("true"/"false"), rather than a check box.
-   */
   public Class<? extends Object> getColumnClass(int c) {
-    return getValueAt(0, c).getClass();
+    return SenseRow.getClass(c);
   }
 
-  /*
-   * Don't need to implement this method unless your table's editable.
-   */
   public boolean isCellEditable(int row, int col) {
-    // Note that the data/cell address is constant,
-    // no matter where the cell appears on screen.
     if (col < 2) {
       return false;
     } else {
@@ -61,9 +54,6 @@ public class SenseTableModel extends AbstractTableModel {
     }
   }
 
-  /*
-   * Don't need to implement this method unless your table's data can change.
-   */
   public void setValueAt(Object value, int row, int col) {
     getData().get(row).setField(col, value);
     fireTableCellUpdated(row, col);
@@ -78,6 +68,7 @@ public class SenseTableModel extends AbstractTableModel {
 
 class SenseRow {
   Vector<Object> row = new Vector<Object>(5);
+  private static Object[] classes = {"", "", "", "", false};
 
   public SenseRow(String node, String sensor, String feedId, String conv,
       boolean send) {
@@ -94,5 +85,9 @@ class SenseRow {
 
   public void setField(int index, Object value) {
     row.set(index, value);
+  }
+  
+  public static Class<? extends Object> getClass(int c){
+    return classes[c].getClass();
   }
 }
