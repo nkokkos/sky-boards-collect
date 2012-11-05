@@ -5,6 +5,7 @@
  * Created : 04 Oct 2012
  */
 package se.sics.contiki.collect.gui;
+import java.util.HashSet;
 import java.util.Vector;
 
 import javax.swing.table.AbstractTableModel;
@@ -12,12 +13,16 @@ import javax.swing.table.AbstractTableModel;
 public class SenseTableModel extends AbstractTableModel {
   private static final long serialVersionUID = 1L;
   public final int defInitialCapacity = 15;
+  private int keyCol = 2;
 
   private String[] columnNames = { "Node", "Sensor", "Feed Id.",
       "Values", "Send" };
 
   private Vector<SenseRow> data = 
       new Vector<SenseRow>(defInitialCapacity);
+  
+  //Unique key: feed Id
+  private HashSet<String> keySet=new HashSet<String>(); 
 
   Vector<SenseRow> getData() {
     return data;
@@ -55,14 +60,24 @@ public class SenseTableModel extends AbstractTableModel {
   }
 
   public void setValueAt(Object value, int row, int col) {
-    getData().get(row).setField(col, value);
+    if (col==keyCol){
+      String oldValue=(String) getData().get(row).getField(col);
+      if (oldValue!=value){
+        keySet.remove(oldValue);
+        keySet.add((String) value);
+      }
+    }  
+    getData().get(row).setField(col, value);  
     fireTableCellUpdated(row, col);
   }
   
   public void addRow(String node, String sensor, String feedId, String conv,
       boolean send){
-    data.add(new SenseRow(node, sensor, feedId, conv, send));
-    fireTableDataChanged();
+    if (!keySet.contains(feedId)){
+      data.add(new SenseRow(node, sensor, feedId, conv, send));
+      keySet.add(feedId);
+      fireTableDataChanged();
+    }
   }
 }
 
