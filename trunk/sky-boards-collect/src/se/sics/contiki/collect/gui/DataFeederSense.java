@@ -55,6 +55,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
   JButton removeButton;
   boolean doFeed = false;
   boolean feedRaw = true;
+  String valType = "Conv";
   private JPanel panel;
   String feedingNode;
   String feedingSensor;
@@ -115,10 +116,10 @@ public class DataFeederSense extends JPanel implements Visualizer,
     comboBoxRaw.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         int idx = comboBoxRaw.getSelectedIndex();
-        String how = comboBoxRaw.getItemAt(idx).toString();
-        if (how.equals("Raw"))
+        valType = comboBoxRaw.getItemAt(idx).toString();
+        if (valType.equals("Raw"))
           feedRaw = true;
-        else if (how.equals("Converted"))
+        else if (valType.equals("Converted"))
           feedRaw = false;
       }
     });
@@ -435,6 +436,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
     String id = feedIdField.getText();
     if (isValidFeedID(id)){
       s.setFeedID(feedIdField.getText());
+      senseTableModel.addRow(feedingNode, feedingSensor, id, valType, true);
     }
     else
       JOptionPane.showMessageDialog(setButton, "Invalid feed ID", "Error",
