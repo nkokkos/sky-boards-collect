@@ -9,6 +9,8 @@ package se.sics.contiki.collect.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -38,8 +40,7 @@ import se.sics.contiki.collect.PublisherCosm;
 import se.sics.contiki.collect.SensorData;
 import se.sics.contiki.collect.Visualizer;
 
-public class DataFeederCosm extends JPanel implements Visualizer,
-    Configurable {
+public class DataFeederCosm extends JPanel implements Visualizer, Configurable {
 
   private static final long serialVersionUID = 1L;
   String category;
@@ -58,7 +59,8 @@ public class DataFeederCosm extends JPanel implements Visualizer,
   String feedingSensor;
   JPanel fieldPaneVars;
   Properties config;
-  JTextField field;
+  JTextField feedIdField;
+  JTextField DatastreamIdField;
   JTextField titleField;
   JLabel statusLabel;
   PublisherCosm publisher;
@@ -72,7 +74,6 @@ public class DataFeederCosm extends JPanel implements Visualizer,
     this.category = category;
 
     keyField = new JPasswordField();
-    keyField.setColumns(30);
 
     comboBoxNode = new JComboBox<String>();
     comboBoxNode.setModel(new DefaultComboBoxModel<String>());
@@ -87,8 +88,7 @@ public class DataFeederCosm extends JPanel implements Visualizer,
         Vector<String> sensorNames = new Vector<String>();
         for (int i = 0; i < sensors.length; i++)
           sensorNames.add(sensors[i].getId());
-        comboBoxSensor
-            .setModel(new DefaultComboBoxModel<String>(sensorNames));
+        comboBoxSensor.setModel(new DefaultComboBoxModel<String>(sensorNames));
         feedingSensor = comboBoxSensor.getItemAt(0).toString();
         loadFeedIDvalue();
       }
@@ -155,80 +155,100 @@ public class DataFeederCosm extends JPanel implements Visualizer,
       }
     });
 
-    field = new JTextField();
-    field.setText(null);
-    field.setColumns(11);
+    feedIdField = new JTextField();
+    feedIdField.setText(null);
+    feedIdField.setColumns(2);
+
+    DatastreamIdField = new JTextField();
+    DatastreamIdField.setText(null);
+    DatastreamIdField.setColumns(2);
 
     titleField = new JTextField();
     titleField.setText(null);
-    titleField.setColumns(25);
 
     statusLabel = new JLabel("Status: Not feeding");
 
-    JPanel controlPanel = new JPanel(new GridLayout(0, 1));
-    controlPanel.add(new JLabel(""));
+    JPanel cosmPanel = new JPanel(new GridBagLayout());
 
-    JPanel keyPanel = new JPanel();
-    keyPanel.add(new JLabel("Cosm API Key:"));
-    keyPanel.add(keyField);
-    controlPanel.add(keyPanel);
+    GridBagConstraints c = new GridBagConstraints();
+    c.gridx = 0;
+    c.gridy = 0;
+    c.gridwidth = 1;
+    c.weightx = 0.5;
+    c.fill = GridBagConstraints.NONE;
+    c.anchor = GridBagConstraints.LINE_END;
+    cosmPanel.add(new JLabel("Cosm API key "), c);
 
-    controlPanel.add(new JLabel(""));
-    controlPanel.add(new JSeparator());
+    c.gridx = 1;
+    c.gridy = 0;
+    c.gridwidth = 3;
+    c.fill = GridBagConstraints.HORIZONTAL;
+    c.anchor = GridBagConstraints.LINE_START;
+    cosmPanel.add(keyField, c);
 
-    JPanel feedPanel = new JPanel();
-    feedPanel.add(new JLabel("Node:"));
-    feedPanel.add(comboBoxNode);
-    feedPanel.add(new JLabel("Feed ID:"));
-    feedPanel.add(field);
-    feedPanel.add(new JLabel("Datastream IDs:"));
-    feedPanel.add(comboBoxSensor);
+    c.gridx = 0;
+    c.gridy = 1;
+    c.gridwidth = 4;
+    c.fill = GridBagConstraints.HORIZONTAL;
+    cosmPanel.add(new JSeparator(), c);
 
-    JPanel titlePanel = new JPanel();
-    titlePanel.add(new JLabel("Cosm Feed Title:"));
-    titlePanel.add(titleField);
+    c.gridx = 0;
+    c.gridy = 2;
+    c.gridwidth = 1;
+    c.fill = GridBagConstraints.NONE;
+    c.anchor = GridBagConstraints.LINE_END;
+    cosmPanel.add(new JLabel("Node "), c);
 
-    JPanel feedControl = new JPanel();
-    feedControl.add(setButton);
-    feedControl.add(removeButton);
+    c.gridx = 1;
+    c.gridy = 2;
+    c.gridwidth = 1;
+    c.fill = GridBagConstraints.HORIZONTAL;
+    c.anchor = GridBagConstraints.LINE_START;
+    cosmPanel.add(comboBoxNode, c);
 
+    c.gridx = 2;
+    c.gridy = 2;
+    c.gridwidth = 1;
+    c.fill = GridBagConstraints.NONE;
+    c.anchor = GridBagConstraints.LINE_END;
+    cosmPanel.add(new JLabel("Feed ID"), c);
 
-    controlPanel.add(feedPanel);
-    controlPanel.add(titlePanel);
-    controlPanel.add(feedControl);
-    controlPanel.add(new JLabel(""));
-    controlPanel.add(new JSeparator());
+    c.gridx = 3;
+    c.gridy = 2;
+    c.gridwidth = 1;
+    c.fill = GridBagConstraints.HORIZONTAL;
+    c.anchor = GridBagConstraints.LINE_START;
+    cosmPanel.add(feedIdField, c);
 
-    JPanel startPanel = new JPanel();
-    startPanel.add(new JLabel("Send "));
-    startPanel.add(comboBoxRaw);
-    startPanel.add(new JLabel("values.  "));
-    startPanel.add(startButton);
-    startPanel.add(stopButton);
-    controlPanel.add(startPanel);
+    c.gridx = 0;
+    c.gridy = 5;
+    c.gridwidth = 1;
+    c.fill = GridBagConstraints.NONE;
+    c.anchor = GridBagConstraints.LINE_END;
+    cosmPanel.add(new JLabel("Sensor"), c);
 
-    JPanel statusPanel = new JPanel();
-    statusPanel.add(statusLabel);
+    c.gridx = 1;
+    c.gridy = 5;
+    c.gridwidth = 1;
+    c.fill = GridBagConstraints.HORIZONTAL;
+    c.anchor = GridBagConstraints.LINE_START;
+    cosmPanel.add(comboBoxSensor, c);
 
-    controlPanel.add(statusPanel);
-    controlPanel.add(new JLabel(""));
-    controlPanel.add(new JSeparator());
- 
-    logArea = new JTextArea(2,30);
-    logArea.setEditable(false);
-    controlPanel.add(new JScrollPane(logArea));
-    
-    JPopupMenu popupMenu = new JPopupMenu();
-    JMenuItem clearItem = new JMenuItem("Clear");
-    clearItem.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        logArea.setText("");
-      }
-    });
-    popupMenu.add(clearItem);
-    logArea.setComponentPopupMenu(popupMenu);
- 
-    panel.add(controlPanel, BorderLayout.NORTH);
+    c.gridx = 2;
+    c.gridy = 5;
+    c.gridwidth = 1;
+    c.fill = GridBagConstraints.NONE;
+    c.anchor = GridBagConstraints.LINE_END;
+    cosmPanel.add(new JLabel("Datastream ID"), c);
+
+    c.gridx = 3;
+    c.gridy = 5;
+    c.gridwidth = 1;
+    c.fill = GridBagConstraints.HORIZONTAL;
+    c.anchor = GridBagConstraints.LINE_START;
+    cosmPanel.add(DatastreamIdField, c);
+
+    panel.add(cosmPanel, BorderLayout.NORTH);
   }
 
   @Override
@@ -238,7 +258,7 @@ public class DataFeederCosm extends JPanel implements Visualizer,
     nodes.clear();
     comboBoxNode.removeAllItems();
     comboBoxSensor.removeAllItems();
-    field.setText(null);
+    feedIdField.setText(null);
     titleField.setText(null);
   }
 
@@ -255,45 +275,52 @@ public class DataFeederCosm extends JPanel implements Visualizer,
   }
 
   public void nodeAdded(Node node) {
-    if (!isVisible()) return;
-    String nodeID=node.getID();
-    if (nodes.get(nodeID)!=null) return;
+    if (!isVisible())
+      return;
+    String nodeID = node.getID();
+    if (nodes.get(nodeID) != null)
+      return;
     SensorData sd = node.getLastSD();
-    if (sd == null) return; // unknown node type    
+    if (sd == null)
+      return; // unknown node type
     nodes.put(nodeID, node);
-	comboBoxNode.setModel(new DefaultComboBoxModel<String>(getSortedNodeList()));
-	comboBoxNode.setSelectedItem(new String(nodeID));
+    comboBoxNode
+        .setModel(new DefaultComboBoxModel<String>(getSortedNodeList()));
+    comboBoxNode.setSelectedItem(new String(nodeID));
   }
-  
-  private Vector<String> getSortedNodeList(){
+
+  private Vector<String> getSortedNodeList() {
     Vector<Node> list = new Vector<Node>();
-     for (Object key : nodes.keySet()) {
-	   list.add(nodes.get(key));   
-	 }
-	 Node[] nodeList=list.toArray(new Node[0]); 
-	 Arrays.sort(nodeList); 
-	 return toStringList(nodeList);
+    for (Object key : nodes.keySet()) {
+      list.add(nodes.get(key));
+    }
+    Node[] nodeList = list.toArray(new Node[0]);
+    Arrays.sort(nodeList);
+    return toStringList(nodeList);
   }
-	  
-  private Vector<String> toStringList(Node[] nodeList){
+
+  private Vector<String> toStringList(Node[] nodeList) {
     Vector<String> list = new Vector<String>();
-	for (int i=0;i<nodeList.length;i++)
-	  list.add(nodeList[i].getID());
-	  return list;
-	}
+    for (int i = 0; i < nodeList.length; i++)
+      list.add(nodeList[i].getID());
+    return list;
+  }
 
   public void nodeDataReceived(SensorData sensorData) {
-    if (!isVisible()) return;
+    if (!isVisible())
+      return;
     Hashtable<String, String> feedTable = new Hashtable<String, String>();
     if (nodes.get(sensorData.getNodeID()) == null) {
       nodeAdded(sensorData.getNode());
+      return;
     }
     Node n = sensorData.getNode();
 
     if (doFeed && n.getFeedID() != null) {
       fillFeedTable(n, sensorData, feedTable);
       String key = arrayToString(keyField.getPassword());
-      PublisherCosm publisher = new PublisherCosm(feedTable, key, n.getFeedID(),this);
+      PublisherCosm publisher = new PublisherCosm(feedTable, key,
+          n.getFeedID(), this);
       publisher.setCosmTitle(n.getFeedTitle());
       publisher.start();
     }
@@ -331,7 +358,7 @@ public class DataFeederCosm extends JPanel implements Visualizer,
       return;
     if ((n = nodes.get(feedingNode)) == null)
       return;
-    field.setText(n.getFeedID());
+    feedIdField.setText(n.getFeedID());
     titleField.setText(n.getFeedTitle());
   }
 
@@ -344,7 +371,7 @@ public class DataFeederCosm extends JPanel implements Visualizer,
     if ((n = nodes.get(feedingNode)) == null)
       return;
 
-    fid = field.getText();
+    fid = feedIdField.getText();
     ftitle = titleField.getText();
 
     if (ftitle == null || ftitle.equals("")) {
@@ -354,7 +381,7 @@ public class DataFeederCosm extends JPanel implements Visualizer,
       n.setFeedTitle(titleField.getText());
 
     if (!isValidFeedID(fid))
-      field.setText("Invalid feed ID");
+      feedIdField.setText("Invalid feed ID");
     else
       n.setFeedID(fid);
   }
@@ -367,14 +394,15 @@ public class DataFeederCosm extends JPanel implements Visualizer,
       return;
 
     n.setFeedID(null);
-    field.setText(null);
+    feedIdField.setText(null);
 
     n.setFeedTitle(null);
     titleField.setText(null);
   }
 
   public static boolean isValidFeedID(String id) {
-    if (id == null || id.equals("") || !isInteger(id))
+    if (id == null || id.equals("") || !isInteger(id)
+        || Integer.valueOf(id) < 0)
       return false;
 
     return true;
@@ -399,24 +427,24 @@ public class DataFeederCosm extends JPanel implements Visualizer,
     }
     return result.toString();
   }
-  
+
   public void addResponseLine(final String text) {
-	SwingUtilities.invokeLater(new Runnable() {
-    public void run() {
-    String current = logArea.getText();
-    int len = current.length();
-    if (len > 4096) {
-      current = current.substring(len - 4096);
-    }
-    current = len > 0 ? (current + '\n' + text) : text;
-    logArea.setText(current);
-    logArea.setCaretPosition(current.length());
-    }
-   });
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        String current = logArea.getText();
+        int len = current.length();
+        if (len > 4096) {
+          current = current.substring(len - 4096);
+        }
+        current = len > 0 ? (current + '\n' + text) : text;
+        logArea.setText(current);
+        logArea.setCaretPosition(current.length());
+      }
+    });
   }
 
   public void updateConfig(Properties config) {
-	System.out.println("Saving settings");
+    System.out.println("Saving settings");
     String id;
     for (Object key : nodes.keySet()) {
       Node n = nodes.get(key);
