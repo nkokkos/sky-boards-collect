@@ -55,7 +55,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
   JButton removeButton;
   boolean doFeed = false;
   boolean feedRaw = true;
-  String valType = "Conv";
+  String feedConv = "Converted";
   private JPanel panel;
   String feedingNode;
   String feedingSensor;
@@ -116,10 +116,10 @@ public class DataFeederSense extends JPanel implements Visualizer,
     comboBoxRaw.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         int idx = comboBoxRaw.getSelectedIndex();
-        valType = comboBoxRaw.getItemAt(idx).toString();
-        if (valType.equals("Raw"))
+        feedConv = comboBoxRaw.getItemAt(idx).toString();
+        if (feedConv.equals("Raw"))
           feedRaw = true;
-        else if (valType.equals("Converted"))
+        else if (feedConv.equals("Converted"))
           feedRaw = false;
       }
     });
@@ -163,7 +163,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
     feedIdField = new JTextField();
     feedIdField.setText(null);
     senseTableModel=new SenseTableModel();
-    senseTableGUI=new SenseTableGUI(senseTableModel);
+    senseTableGUI=new SenseTableGUI(this,senseTableModel);
     
     logArea = new JTextArea();
     logArea.setEditable(false);
@@ -436,7 +436,7 @@ public class DataFeederSense extends JPanel implements Visualizer,
     String id = feedIdField.getText();
     if (isValidFeedID(id)){
       s.setFeedID(feedIdField.getText());
-      senseTableModel.addRow(feedingNode, feedingSensor, id, valType, true);
+      senseTableModel.addRow(feedingNode, feedingSensor, id, feedConv, true);
     }
     else
       JOptionPane.showMessageDialog(setButton, "Invalid feed ID", "Error",
@@ -511,5 +511,20 @@ public class DataFeederSense extends JPanel implements Visualizer,
           config.remove("feedsense," + n.getID() + "," + sensors[i].getId());
       }
     }
+  }
+  
+  public void updateFeedConfigPanel(SenseRow row){
+    comboBoxNode.setSelectedItem(row.getField(SenseRow.IDX_NODE));
+    comboBoxSensor.setSelectedItem(row.getField(SenseRow.IDX_NODE));
+    feedIdField.setText((String) row.getField(SenseRow.IDX_FEEDID));
+    comboBoxRaw.setSelectedItem(row.getField(SenseRow.IDX_CONV));
+  }
+  
+  public void updateFeedIdField(String id){
+    feedIdField.setText(id);
+  }
+  
+  public void updateConvComboBox(String s){
+    comboBoxRaw.setSelectedItem(s);
   }
 }
