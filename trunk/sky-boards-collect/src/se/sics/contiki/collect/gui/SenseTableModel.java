@@ -1,5 +1,5 @@
 /*
- * DataFeederSense
+ * SenseTableModel
  *
  * Author  : Eloy Díaz <eldial@gmail.com>
  * Created : 04 Oct 2012
@@ -82,11 +82,17 @@ public class SenseTableModel extends AbstractTableModel {
 }
 
 class SenseRow {
-  Vector<Object> row = new Vector<Object>(5);
+  Vector<Object> row;
   private static Object[] classes = {"", "", "", "", false};
-
+  public static final int IDX_NODE = 0;
+  public static final int IDX_SENSOR = 1;
+  public static final int IDX_FEEDID = 2;
+  public static final int IDX_CONV = 3;
+  public static final int IDX_SEND = 4;
+  
   public SenseRow(String node, String sensor, String feedId, String conv,
       boolean send) {
+    row = new Vector<Object>(5);
     row.add(node);
     row.add(sensor);
     row.add(feedId);
