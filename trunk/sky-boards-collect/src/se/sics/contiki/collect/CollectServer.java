@@ -953,7 +953,7 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
         Sensor sensor = n.getNodeSensor(sensorName);
         if (sensor == null)
           return;
-        sensor.setFeedID(getConfig(property));
+        //sensor.setFeedID(getConfig(property));
       }
     }
   }

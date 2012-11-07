@@ -13,7 +13,6 @@ public abstract class Sensor {
 
   private Vector<Variable> vars;
   private String id;
-  private String feedID;
   private String units;
   private boolean adc12;
   private int roundDigits;
@@ -21,14 +20,6 @@ public abstract class Sensor {
   public Sensor(String sensorID, String nodeID) {
     vars = new Vector<Variable>();
     this.id = sensorID;
-  }
-
-  public String getFeedID() {
-    return feedID;
-  }
-
-  public void setFeedID(String id) {
-    feedID = id;
   }
 
   public String getId() {

@@ -416,7 +416,6 @@ public class NodeCalibrationDialog extends JFrame
       for (int i = 0; i < sensors.length; i++)
         if (sensors[i].getId().equals(sensor))
           updateChart(i);
-
     }
 
     public void reset(Component field) {

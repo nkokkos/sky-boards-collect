@@ -6,6 +6,7 @@
  */
 package se.sics.contiki.collect.gui;
 import java.util.HashSet;
+import java.util.ListIterator;
 import java.util.Vector;
 
 import javax.swing.table.AbstractTableModel;
@@ -74,10 +75,31 @@ public class SenseTableModel extends AbstractTableModel {
   public void addRow(String node, String sensor, String feedId, String conv,
       boolean send){
     if (!keySet.contains(feedId)){
+      int row=data.size();
       data.add(new SenseRow(node, sensor, feedId, conv, send));
       keySet.add(feedId);
-      fireTableDataChanged();
+      fireTableRowsInserted(row,row);
     }
+  }
+  
+  public void deleteRow(String feedId){
+    ListIterator<SenseRow> datalist=data.listIterator();
+    boolean found=false;
+    int row;
+    if (!keySet.contains(feedId))
+      return;
+    
+    while(datalist.hasNext() && !found){
+      SenseRow sr=datalist.next();
+      if (sr.getField(SenseRow.IDX_FEEDID).equals(feedId)){
+        found=true;
+        row=datalist.nextIndex()-1;
+        data.remove(row);
+        keySet.remove(feedId);
+        this.fireTableRowsDeleted(row, row);
+      }
+    }
+    
   }
 }
 
