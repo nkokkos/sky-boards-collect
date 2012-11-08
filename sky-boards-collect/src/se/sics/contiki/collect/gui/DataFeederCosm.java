@@ -58,7 +58,6 @@ public class DataFeederCosm extends JPanel implements Visualizer, Configurable {
   String feedingNode;
   String feedingSensor;
   JPanel fieldPaneVars;
-  Properties config;
   JTextField feedIdField;
   JTextField DatastreamIdField;
   JTextField titleField;
@@ -69,7 +68,6 @@ public class DataFeederCosm extends JPanel implements Visualizer, Configurable {
   private Hashtable<String, Node> nodes = new Hashtable<String, Node>();
 
   public DataFeederCosm(String category, Properties config) {
-    this.config = config;
     panel = new JPanel(new BorderLayout());
     this.category = category;
 

@@ -17,6 +17,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.ListIterator;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -45,16 +46,13 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
 
   private static final long serialVersionUID = 1L;
   String category;
-  Properties config;
   JPasswordField keyField;
   JButton startButton;
   JButton stopButton;
   JButton addButton;
   JButton deleteButton;
   private JPanel panel;
-
   boolean doFeed = false;
-
   JLabel statusLabel;
   PublisherSense publisher;
   JTextArea logArea;
@@ -64,7 +62,6 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
   private Hashtable<String, Node> nodes = new Hashtable<String, Node>();
 
   public DataFeederSense(String category, Properties config) {
-    this.config = config;
     panel = new JPanel(new BorderLayout());
     this.category = category;
 
@@ -107,7 +104,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
     deleteButton = new JButton("Delete");
     deleteButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        removeFeedIDvalue();
+        deleteSelectedRows();
       }
     });
 
@@ -277,12 +274,6 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
 
   private void putValue(String sensorId, Node n, SensorData sd,
       Hashtable<String, String> feedTable) {
-    /*
-     * String value; String id; Sensor s = n.getNodeSensor(sensorId); if ((id =
-     * s.getFeedId()) != null) { if (feedRaw) { value =
-     * Integer.toString(n.getLastValueOf(sensorId)); } else { value =
-     * n.getRoundedConvOf(sensorId); } feedTable.put(id, value); }
-     */
   }
 
   @Override
@@ -290,37 +281,15 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
     // ignore for now
   }
 
-  public void loadFeedIDvalue() {
-    /*
-     * Node n; Sensor s; if (feedingNode == null || feedingSensor == null)
-     * return; if ((n = nodes.get(feedingNode)) == null) return; if ((s =
-     * n.getNodeSensor(feedingSensor)) == null) return;
-     * 
-     * // feedIdField.setText(s.getFeedID());
-     */
-  }
-
-  public void storeFeedIDvalue() {
-    /*
-     * Node n; if (feedingNode == null || feedingSensor == null) return; if ((n
-     * = nodes.get(feedingNode)) == null) return; if
-     * (n.getNodeSensor(feedingSensor) == null) return;
-     * 
-     * String id = feedIdField.getText(); if (isValidFeedID(id)) {
-     * senseTableModel.addRow(feedingNode, feedingSensor, id, feedConv, true); }
-     * else JOptionPane.showMessageDialog(addButton, "Invalid feed ID", "Error",
-     * JOptionPane.ERROR_MESSAGE);
-     */
-  }
-
-  public void removeFeedIDvalue() {
-    /*
-     * Node n; Sensor s; if (feedingNode == null || feedingSensor == null)
-     * return; if ((n = nodes.get(feedingNode)) == null) return; if ((s =
-     * n.getNodeSensor(feedingSensor)) == null) return;
-     * 
-     * // s.setFeedID(null); senseTableModel.deleteRow(feedIdField.getText());
-     */
+  public void deleteSelectedRows() {
+    int[] selectedRows = senseTableGUI.getSelectedRows();
+    if (selectedRows.length==0) return;
+    int opt = JOptionPane.showConfirmDialog(deleteButton, "Delete "
+        + selectedRows.length + " row(s)?", "Confirm delete",
+        JOptionPane.YES_NO_OPTION);
+    if (opt == JOptionPane.YES_OPTION) {
+      senseTableModel.deleteRow(selectedRows);
+    }
   }
 
   public static String arrayToString(char[] a) {
@@ -348,33 +317,26 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
       }
     });
   }
-
+  
+/**
+ * Configuration line format
+ * 
+ * feedsense,<feedId> = <node>,<sensor>,<conv>,<send>
+ * |----------------|   |---------------------------|
+ *        key                      value
+ */
   public void updateConfig(Properties config) {
-    /*
-     * String id; for (Object key : nodes.keySet()) { Node n = nodes.get(key);
-     * Sensor[] sensors = n.getSensors(); for (int i = 0; i < sensors.length;
-     * i++) { if ((id = sensors[i].getFeedID()) != null) {
-     * config.setProperty("feedsense," + n.getID() + "," + sensors[i].getId(),
-     * id); } else config.remove("feedsense," + n.getID() + "," +
-     * sensors[i].getId()); } }
-     */
-  }
-
-  public void updateFeedConfigPanel(SenseRow row) {
-    /*
-     * comboBoxNode.setSelectedItem(row.getField(SenseRow.IDX_NODE));
-     * comboBoxSensor.setSelectedItem(row.getField(SenseRow.IDX_SENSOR));
-     * feedIdField.setText((String) row.getField(SenseRow.IDX_FEEDID));
-     * comboBoxRaw.setSelectedItem(row.getField(SenseRow.IDX_CONV));
-     */
-  }
-
-  public void updateFeedIdField(String id) {
-    // feedIdField.setText(id);
-  }
-
-  public void updateConvComboBox(String s) {
-    // comboBoxRaw.setSelectedItem(s);
+    ListIterator<SenseRow> li=((SenseTableModel) senseTableGUI.getModel()).getListIterator(); 
+    while (li.hasNext()){
+      SenseRow sr=li.next();
+      StringBuilder value=new StringBuilder();
+      String key="feedsense,"+(String)sr.getField(SenseRow.IDX_FEEDID);
+      value.append(sr.getField(SenseRow.IDX_NODE)+","+
+          sr.getField(SenseRow.IDX_SENSOR)+","+
+          sr.getField(SenseRow.IDX_CONV)+","+
+          sr.getField(SenseRow.IDX_SEND));
+      config.setProperty(key, value.toString());
+    }
   }
 
   private class addButtonDialog extends JFrame {
@@ -388,7 +350,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
     String feedingSensor;
     JButton OKbutton;
     JPanel pane;
-    
+
     public addButtonDialog(final Hashtable<String, Node> nodes) {
       super();
       pane = new JPanel();
@@ -399,19 +361,42 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
       OKbutton = new JButton("Add");
       OKbutton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-          String id=feedIdField.getText();
+          String id = feedIdField.getText();
           if (isValidFeedID(id)) {
-           senseTableModel.addRow(feedingNode, feedingSensor, id, feedConv, true); 
-           closeWindow();
-          }
-           else JOptionPane.showMessageDialog(pane, "Invalid feed ID", "Error",
-            JOptionPane.ERROR_MESSAGE);
+            senseTableModel.addRow(feedingNode, feedingSensor, id, feedConv,
+                true);
+            closeWindow();
+          } else
+            JOptionPane.showMessageDialog(pane, "Invalid feed ID", "Error",
+                JOptionPane.ERROR_MESSAGE);
         }
       });
       JButton cancelButton = new JButton("Cancel");
       cancelButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-          closeWindow();   
+          /* DEBUG LINES*/
+          senseTableModel.addRow("13", "Temperature", "111", "Raw",
+              true);
+          senseTableModel.addRow("13", "Temperature", "222", "Raw",
+              true);
+          senseTableModel.addRow("13", "Temperature", "333", "Raw",
+              true);
+          senseTableModel.addRow("13", "Temperature", "444", "Raw",
+              true);
+          senseTableModel.addRow("13", "Temperature", "555", "Raw",
+              true);
+          senseTableModel.addRow("13", "Temperature", "666", "Raw",
+              true);
+          senseTableModel.addRow("13", "Temperature", "777", "Raw",
+              true);
+          senseTableModel.addRow("13", "Temperature", "888", "Raw",
+              true);
+          senseTableModel.addRow("13", "Temperature", "999", "Raw",
+              true);
+          senseTableModel.addRow("13", "Temperature", "000", "Raw",
+              true);
+          /* DEBUG LINES*/
+          closeWindow();
         }
       });
       comboBoxNode = new JComboBox<String>();
@@ -446,7 +431,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
         }
       });
 
-      String[] opt = { "Converted", "Raw" };
+      String[] opt = {"Converted", "Raw"};
       comboBoxRaw = new JComboBox<String>();
       comboBoxRaw.setModel(new DefaultComboBoxModel<String>(opt));
       comboBoxRaw.addActionListener(new ActionListener() {
@@ -455,7 +440,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
           feedConv = comboBoxRaw.getItemAt(idx).toString();
         }
       });
-      
+
       GridBagConstraints c = new GridBagConstraints();
       c.gridx = 0;
       c.gridy = 0;
@@ -519,10 +504,11 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
       setVisible(true);
       setTitle("Feed configuration");
       pack();
-      
+
       if (comboBoxNode.getItemCount() > 0)
         comboBoxNode.setSelectedIndex(0);
     }
+
     public boolean isValidFeedID(String id) {
       if (id == null || id.equals("") || !isInteger(id)
           || Integer.valueOf(id) < 0)
@@ -538,8 +524,8 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
         return false;
       }
     }
-    
-    void closeWindow(){
+
+    void closeWindow() {
       this.setEnabled(false);
       this.dispose();
     }
