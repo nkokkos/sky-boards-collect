@@ -143,7 +143,6 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
   private final MoteProgramAction moteProgramAction;
   private JFileChooser fileChooser;
 
-  
   private JList nodeList;
   private DefaultListModel nodeModel;
   private Node[] selectedNodes;
@@ -160,6 +159,9 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
 
   private int defaultMaxItemCount = 250;
   private long nodeTimeDelta;
+  
+  private DataFeederSense dataFeederSense;
+  private DataFeederCosm dataFeederCosm;
 
   
   public CollectServer() {
@@ -256,12 +258,14 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
       mapPanel.setMapBackground(image);
     }
     NodeControl nodeControl = new NodeControl(this, MAIN);
+   dataFeederSense=new DataFeederSense(MAIN,configTable); 
+   dataFeederCosm=new DataFeederCosm(MAIN,configTable);
 
     visualizers = new Visualizer[] {
         nodeControl,
         mapPanel,
-        new DataFeederSense(MAIN, configTable),
-        new DataFeederCosm(MAIN, configTable),
+        dataFeederSense,
+        dataFeederCosm,
         new MapPanel(this, "Network Graph", MAIN, false),
         new BarChartPanel(this, SENSORS, "Average Temperature",
             "Average Temperature", "Nodes", "Celsius",
