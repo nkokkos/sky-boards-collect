@@ -41,7 +41,6 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import se.sics.contiki.collect.CollectServer;
-import se.sics.contiki.collect.Configurable;
 import se.sics.contiki.collect.Node;
 import se.sics.contiki.collect.Sensor;
 import se.sics.contiki.collect.SensorData;
@@ -50,7 +49,6 @@ import se.sics.contiki.collect.Variable;
 public class NodeCalibrationDialog extends JFrame
     implements
       PropertyChangeListener,
-      Configurable,
       WindowListener{
 
   private static final long serialVersionUID = 1L;
@@ -454,16 +452,6 @@ public class NodeCalibrationDialog extends JFrame
     calibrationConfig.put(
         "var," + node.getID() + "," + sensor + "," + "" + var,
         String.valueOf(newVal));
-  }
-
-  @Override
-  public void updateConfig(Properties config) {
-    /*
-     * for (int i=0;i<sensors.length;i++){ Variable[] vars=sensors[i].getVars();
-     * for (int j=0;j<vars.length;j++) config.put("var," + node.getID() + "," +
-     * sensors[i].getName() + "," + "" + vars[j].getName(), String.
-     * valueOf(vars[j].getValue())); }
-     */
   }
 
   @Override

@@ -64,6 +64,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -83,26 +84,33 @@ import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
+
 import se.sics.contiki.collect.gui.AggregatedTimeChartPanel;
 import se.sics.contiki.collect.gui.BarChartPanel;
+import se.sics.contiki.collect.gui.ConvPanel;
 import se.sics.contiki.collect.gui.DataFeederCosm;
+import se.sics.contiki.collect.gui.DataFeederSense;
+import se.sics.contiki.collect.gui.FirmwareDialog;
 import se.sics.contiki.collect.gui.MapPanel;
+import se.sics.contiki.collect.gui.NodeCalibrationDialog;
 import se.sics.contiki.collect.gui.NodeControl;
 import se.sics.contiki.collect.gui.NodeInfoPanel;
 import se.sics.contiki.collect.gui.SerialConsole;
 import se.sics.contiki.collect.gui.TimeChartPanel;
-import se.sics.contiki.collect.gui.FirmwareDialog;
-import se.sics.contiki.collect.gui.NodeCalibrationDialog;
-import se.sics.contiki.collect.gui.DataFeederSense;
-import se.sics.contiki.collect.platform.*;
+import se.sics.contiki.collect.platform.NodeAR1000;
+import se.sics.contiki.collect.platform.NodeDS1000;
+import se.sics.contiki.collect.platform.NodeSink;
+import se.sics.contiki.collect.platform.NodeTmoteSky;
 
 /**
  *
  */
-@SuppressWarnings({"serial", "unchecked", "rawtypes"})
-public class CollectServer implements SerialConnectionListener, SensorIdentifier {
+@SuppressWarnings({ "serial", "unchecked", "rawtypes" })
+public class CollectServer implements SerialConnectionListener,
+    SensorIdentifier {
 
   public static final String WINDOW_TITLE = "Sensor Data Collect with Contiki";
   public static final String STDIN_COMMAND = "<STDIN>";
@@ -159,11 +167,10 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
 
   private int defaultMaxItemCount = 250;
   private long nodeTimeDelta;
-  
+
   private DataFeederSense dataFeederSense;
   private DataFeederCosm dataFeederCosm;
 
-  
   public CollectServer() {
     loadConfig(config, CONFIG_FILE);
 
@@ -258,10 +265,12 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
       mapPanel.setMapBackground(image);
     }
     NodeControl nodeControl = new NodeControl(this, MAIN);
-   dataFeederSense=new DataFeederSense(MAIN,configTable); 
-   dataFeederCosm=new DataFeederCosm(MAIN,configTable);
+    dataFeederSense = new DataFeederSense(MAIN, configTable);
+    dataFeederCosm = new DataFeederCosm(MAIN, configTable);
+    ConvPanel ConvPanel = new ConvPanel(this, MAIN, "Conversions");
 
     visualizers = new Visualizer[] {
+        ConvPanel,
         nodeControl,
         mapPanel,
         dataFeederSense,
@@ -271,13 +280,13 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
             "Average Temperature", "Nodes", "Celsius",
             new String[] { "Celsius" }) {
           {
-            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(
-                NumberAxis.createIntegerTickUnits());
+            chart.getCategoryPlot().getRangeAxis()
+                .setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
 
           protected void addSensorData(SensorData data) {
             Node node = data.getNode();
-            if (node.getNodeSensor(TEMPERATURE_SENSOR)==null) 
+            if (node.getNodeSensor(TEMPERATURE_SENSOR) == null)
               return;
             String nodeName = node.getName();
             SensorDataAggregator aggregator = node.getSensorDataAggregator();
@@ -288,8 +297,8 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
         new TimeChartPanel(this, SENSORS, "Temperature", "Temperature", "Time",
             "Celsius") {
           {
-            chart.getXYPlot().getRangeAxis().setStandardTickUnits(
-                NumberAxis.createIntegerTickUnits());
+            chart.getXYPlot().getRangeAxis()
+                .setStandardTickUnits(NumberAxis.createIntegerTickUnits());
             setRangeTick(5);
             setRangeMinimumSize(10.0);
             setGlobalRange(true);
@@ -314,8 +323,8 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
         new TimeChartPanel(this, SENSORS, "Battery Indicator",
             "Battery Indicator", "Time", "Indicator") {
           {
-            chart.getXYPlot().getRangeAxis().setStandardTickUnits(
-                NumberAxis.createIntegerTickUnits());
+            chart.getXYPlot().getRangeAxis()
+                .setStandardTickUnits(NumberAxis.createIntegerTickUnits());
             setRangeTick(5);
             setRangeMinimumSize(10.0);
             setGlobalRange(true);
@@ -330,6 +339,7 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
           {
             chart.getXYPlot().getRangeAxis().setRange(0.0, 100.0);
           }
+
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(HUMIDITY_SENSOR);
           }
@@ -404,8 +414,8 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
             "Network Hops", "Nodes", "Hops", new String[] { "Last Hop",
                 "Average Hops" }, false) {
           {
-            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(
-                NumberAxis.createIntegerTickUnits());
+            chart.getCategoryPlot().getRangeAxis()
+                .setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
 
           protected void addSensorData(SensorData data) {
@@ -600,24 +610,24 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
             "Received Packets Per Node", "Nodes", "Packets", new String[] {
                 "Packets", "Duplicates" }) {
           {
-            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(
-                NumberAxis.createIntegerTickUnits());
+            chart.getCategoryPlot().getRangeAxis()
+                .setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
 
           protected void addSensorData(SensorData data) {
             Node node = data.getNode();
             SensorDataAggregator sda = node.getSensorDataAggregator();
             dataset.addValue(sda.getDataCount(), categories[0], node.getName());
-            dataset.addValue(sda.getDuplicateCount(), categories[1], node
-                .getName());
+            dataset.addValue(sda.getDuplicateCount(), categories[1],
+                node.getName());
           }
         },
         new BarChartPanel(this, NETWORK, "Received (5 min)",
             "Received Packets (last 5 min)", "Nodes", "Packets", new String[] {
                 "Packets", "Duplicates" }) {
           {
-            chart.getCategoryPlot().getRangeAxis().setStandardTickUnits(
-                NumberAxis.createIntegerTickUnits());
+            chart.getCategoryPlot().getRangeAxis()
+                .setStandardTickUnits(NumberAxis.createIntegerTickUnits());
           }
 
           protected void addSensorData(SensorData data) {
@@ -672,12 +682,12 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
             Node node = data.getNode();
             String nodeName = node.getName();
             SensorDataAggregator aggregator = node.getSensorDataAggregator();
-            dataset.addValue(100 * aggregator
-                .getAverageDutyCycle(SensorInfo.TIME_LISTEN), categories[0],
-                nodeName);
-            dataset.addValue(100 * aggregator
-                .getAverageDutyCycle(SensorInfo.TIME_TRANSMIT), categories[1],
-                nodeName);
+            dataset.addValue(
+                100 * aggregator.getAverageDutyCycle(SensorInfo.TIME_LISTEN),
+                categories[0], nodeName);
+            dataset.addValue(
+                100 * aggregator.getAverageDutyCycle(SensorInfo.TIME_TRANSMIT),
+                categories[1], nodeName);
           }
         },
         new BarChartPanel(this, POWER, "Instantaneous Power",
@@ -894,6 +904,7 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
   }
 
   private void parseConfigFile() {
+    // TODO XML file
     String bounds = configTable.getProperty("collect.bounds");
     if (bounds != null) {
       String[] b = bounds.split(",");
@@ -904,28 +915,26 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
     }
 
     Vector<String> vars = new Vector<String>();
-    Vector<String> feeds = new Vector<String>();
     Vector<String> values = new Vector<String>();
 
     // Add nodes stored in config file
-    for (Object key : configTable.keySet()) {
-      String property = key.toString();
+    for (Object k : configTable.keySet()) {
+      String key = k.toString();
       String nodetype;
-      if (property.startsWith("var")) {
-        vars.add(property);
-        values.add(getConfig(property));
-      } else if (property.startsWith("feed")) {
-        feeds.add(property);
-      } else if (!property.startsWith("collect")
-          && !property.startsWith("firm")) {
+      if (key.startsWith("var")) {
+        vars.add(key);
+        values.add(getConfig(key));
+      } else if (key.startsWith("feedcosm")) {// do nothing
+      } else if (key.startsWith("feedsense")) {// do nothing
+      } else if (!key.startsWith("collect") && !key.startsWith("firm")) {
         // Add node
-        if ((nodetype = getConfig("firm," + property)) != null) {
-          getNode(property, true, Integer.parseInt(nodetype));
+        if ((nodetype = getConfig("firm," + key)) != null) {
+          getNode(key, true, Integer.parseInt(nodetype));
         }
       }
     }
 
-    // Add variable values for sensor calibration stored in config file
+    // set sensor variables
     for (int j = 0; j < vars.size(); j++) {
       String[] varKey = vars.get(j).split(",");
       String nodeID = varKey[1];
@@ -934,30 +943,6 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
       Sensor sensor = nodeTable.get(nodeID).getNodeSensor(sensorName);
       if (sensor != null) {
         sensor.setVar(varName, Double.parseDouble(values.get(j)));
-      }
-    }
-    // Add feed IDs
-    for (int j = 0; j < feeds.size(); j++) {
-      String property = feeds.get(j);
-      String[] varKey = property.split(",");
-      String service = varKey[0];
-      String nodeID = varKey[1];
-      Node n = nodeTable.get(nodeID);
-      if (n == null)
-        return;
-
-      if (service.equals("feedcosm")) {
-        String title = varKey[2];
-        n.setFeedID(getConfig(property));
-        n.setFeedTitle(title);
-      }
-
-      else if (service.equals("feedsense")) {
-        String sensorName = varKey[2];
-        Sensor sensor = n.getNodeSensor(sensorName);
-        if (sensor == null)
-          return;
-        //sensor.setFeedID(getConfig(property));
       }
     }
   }
@@ -1098,8 +1083,8 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
   }
 
   public String getConfig(String property, String defaultValue) {
-    return configTable.getProperty(property, config.getProperty(property,
-        defaultValue));
+    return configTable.getProperty(property,
+        config.getProperty(property, defaultValue));
   }
 
   public void setConfig(String property, String value) {
@@ -1162,22 +1147,22 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
     Node node = nodeTable.get(nodeID);
     if (node == null) {
       switch (nodeType) {
-        case SensorInfo.TmoteSky:
-          node = new NodeTmoteSky(nodeID);
-          break;
-        case SensorInfo.AR1000:
-          node = new NodeAR1000(nodeID);
-          break;
-        case SensorInfo.DS1000:
-          node = new NodeDS1000(nodeID);     
-          break;
-        case SensorInfo.SINK:
-          node = new NodeSink(nodeID);
-        default: 
-        	node = new NodeTmoteSky(nodeID);  
+      case SensorInfo.TmoteSky:
+        node = new NodeTmoteSky(nodeID);
+        break;
+      case SensorInfo.AR1000:
+        node = new NodeAR1000(nodeID);
+        break;
+      case SensorInfo.DS1000:
+        node = new NodeDS1000(nodeID);
+        break;
+      case SensorInfo.SINK:
+        node = new NodeSink(nodeID);
+      default:
+        node = new NodeTmoteSky(nodeID);
       }
       setConfig("firm," + nodeID, String.valueOf(nodeType));
-      
+
       nodeTable.put(nodeID, node);
 
       synchronized (this) {
@@ -1245,6 +1230,7 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
   public Node[] getSelectedNodes() {
     return selectedNodes;
   }
+
   // -------------------------------------------------------------------
   // Adjust conversions tool
   // -------------------------------------------------------------------
@@ -1252,20 +1238,20 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
     Node[] selected = getSelectedNodes();
     if (selected == null || selected.length != 1)
       return;
-    new NodeCalibrationDialog(this,"Node " + selected[0].getID(), selected[0],
-        configTable);   
+    new NodeCalibrationDialog(this, "Node " + selected[0].getID(), selected[0],
+        configTable);
   }
-  
-  public void AdjustUpdateChart(){  
+
+  public void AdjustUpdateChart() {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         if (visualizers != null) {
           for (int i = 0, n = visualizers.length; i < n; i++) {
-            if (visualizers[i] instanceof TimeChartPanel){
-              ((TimeChartPanel)visualizers[i]).update();
+            if (visualizers[i] instanceof TimeChartPanel) {
+              ((TimeChartPanel) visualizers[i]).update();
             }
           }
-        } 
+        }
       }
     });
   }
@@ -1407,14 +1393,16 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
 
     if (nodeID != null) {
       Node neighbor = nodeTable.get(nodeID);
- 
-      /* Cannot know at this point what kind of node neighbor is:
-       * Do not create node instance unless that node is sink */
+
+      /*
+       * Cannot know at this point what kind of node neighbor is: Do not create
+       * node instance unless that node is sink
+       */
       if (neighbor == null) {
-        if (sensorData.getValue(SensorData.HOPS)==1){
-    		neighbor=addNode(nodeID, SensorInfo.SINK); 
-        }
-        else return;
+        if (sensorData.getValue(SensorData.HOPS) == 1) {
+          neighbor = addNode(nodeID, SensorInfo.SINK);
+        } else
+          return;
       }
 
       Node source = sensorData.getNode();
@@ -1736,53 +1724,53 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
       String arg = args[i];
       if (arg.length() == 2 && arg.charAt(0) == '-') {
         switch (arg.charAt(1)) {
-          case 'a':
-            if (i + 1 < n) {
-              host = args[++i];
-              int pIndex = host.indexOf(':');
-              if (pIndex > 0) {
-                port = Integer.parseInt(host.substring(pIndex + 1));
-                host = host.substring(0, pIndex);
-              }
-            } else {
-              usage(arg);
+        case 'a':
+          if (i + 1 < n) {
+            host = args[++i];
+            int pIndex = host.indexOf(':');
+            if (pIndex > 0) {
+              port = Integer.parseInt(host.substring(pIndex + 1));
+              host = host.substring(0, pIndex);
             }
-            break;
-          case 'c':
-            if (i + 1 < n) {
-              command = args[++i];
-            } else {
-              usage(arg);
-            }
-            break;
-          case 'p':
-            if (i + 1 < n) {
-              port = Integer.parseInt(args[++i]);
-            } else {
-              usage(arg);
-            }
-            break;
-          case 'r':
-            resetSensorLog = true;
-            break;
-          case 'n':
-            useSensorLog = false;
-            break;
-          case 'i':
-            useSerialOutput = false;
-            break;
-          case 'f':
-            command = STDIN_COMMAND;
-            if (i + 1 < n && !args[i + 1].startsWith("-")) {
-              logFileToLoad = args[++i];
-            }
-            break;
-          case 'h':
-            usage(null);
-            break;
-          default:
+          } else {
             usage(arg);
-            break;
+          }
+          break;
+        case 'c':
+          if (i + 1 < n) {
+            command = args[++i];
+          } else {
+            usage(arg);
+          }
+          break;
+        case 'p':
+          if (i + 1 < n) {
+            port = Integer.parseInt(args[++i]);
+          } else {
+            usage(arg);
+          }
+          break;
+        case 'r':
+          resetSensorLog = true;
+          break;
+        case 'n':
+          useSensorLog = false;
+          break;
+        case 'i':
+          useSerialOutput = false;
+          break;
+        case 'f':
+          command = STDIN_COMMAND;
+          if (i + 1 < n && !args[i + 1].startsWith("-")) {
+            logFileToLoad = args[++i];
+          }
+          break;
+        case 'h':
+          usage(null);
+          break;
+        default:
+          usage(arg);
+          break;
         }
       } else if (comPort == null) {
         comPort = arg;
@@ -1834,7 +1822,8 @@ public class CollectServer implements SerialConnectionListener, SensorIdentifier
     System.err
         .println("Usage: java CollectServer [-n] [-i] [-r] [-f [file]] [-a host:port] [-p port] [-c command] [COMPORT]");
     System.err.println("       -n : Do not read or save sensor data log");
-    System.err.println("       -r : Clear any existing sensor data log at startup");
+    System.err
+        .println("       -r : Clear any existing sensor data log at startup");
     System.err.println("       -i : Do not allow serial output");
     System.err.println("       -f : Read serial data from standard in");
     System.err.println("       -a : Connect to specified host:port");
