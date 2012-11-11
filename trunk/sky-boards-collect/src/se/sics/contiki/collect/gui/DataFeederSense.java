@@ -195,6 +195,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
     sensePanel.add(startStopPanel, c);
 
     panel.add(sensePanel, BorderLayout.CENTER);
+    loadConfig(config);
   }
 
   @Override
@@ -278,12 +279,13 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
 
   @Override
   public void nodesSelected(Node[] node) {
-    // ignore for now
+    // ignore
   }
 
   public void deleteSelectedRows() {
     int[] selectedRows = senseTableGUI.getSelectedRows();
-    if (selectedRows.length==0) return;
+    if (selectedRows.length == 0)
+      return;
     int opt = JOptionPane.showConfirmDialog(deleteButton, "Delete "
         + selectedRows.length + " row(s)?", "Confirm delete",
         JOptionPane.YES_NO_OPTION);
@@ -317,25 +319,39 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
       }
     });
   }
-  
-/**
- * Configuration line format
- * 
- * feedsense,<feedId> = <node>,<sensor>,<conv>,<send>
- * |----------------|   |---------------------------|
- *        key                      value
- */
+
+  /**
+   * Configuration line format (key=value)
+   * feedsense,<feedId> = <node>,<sensor>,<conv>,<send>
+   */
   public void updateConfig(Properties config) {
-    ListIterator<SenseRow> li=((SenseTableModel) senseTableGUI.getModel()).getListIterator(); 
-    while (li.hasNext()){
-      SenseRow sr=li.next();
-      StringBuilder value=new StringBuilder();
-      String key="feedsense,"+(String)sr.getField(SenseRow.IDX_FEEDID);
-      value.append(sr.getField(SenseRow.IDX_NODE)+","+
-          sr.getField(SenseRow.IDX_SENSOR)+","+
-          sr.getField(SenseRow.IDX_CONV)+","+
-          sr.getField(SenseRow.IDX_SEND));
+    ListIterator<SenseRow> li = ((SenseTableModel) senseTableGUI.getModel())
+        .getListIterator();
+    while (li.hasNext()) {
+      SenseRow sr = li.next();
+      StringBuilder value = new StringBuilder();
+      String key = "feedsense," + (String) sr.getField(SenseRow.IDX_FEEDID);
+      value.append(sr.getField(SenseRow.IDX_NODE) + ","
+          + sr.getField(SenseRow.IDX_SENSOR) + ","
+          + sr.getField(SenseRow.IDX_CONV) + ","
+          + sr.getField(SenseRow.IDX_SEND));
       config.setProperty(key, value.toString());
+    }
+  }
+
+  /**
+   * Configuration line format (key=value)
+   * feedsense,<feedId> = <node>,<sensor>,<conv>,<send>
+   */
+  public void loadConfig(Properties config) {
+    for (Object k : config.keySet()) {
+      String key = k.toString();
+      if (((String) key).startsWith("feedsense")) {
+        String[] SKey = key.split(",");
+        String[] values = config.getProperty(key).split(",");
+        boolean send = Boolean.parseBoolean(values[3]);
+        senseTableModel.addRow(values[0], values[1], SKey[1], values[2], send);
+      }
     }
   }
 
@@ -374,28 +390,18 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
       JButton cancelButton = new JButton("Cancel");
       cancelButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-          /* DEBUG LINES*/
-          senseTableModel.addRow("13", "Temperature", "111", "Raw",
-              true);
-          senseTableModel.addRow("13", "Temperature", "222", "Raw",
-              true);
-          senseTableModel.addRow("13", "Temperature", "333", "Raw",
-              true);
-          senseTableModel.addRow("13", "Temperature", "444", "Raw",
-              true);
-          senseTableModel.addRow("13", "Temperature", "555", "Raw",
-              true);
-          senseTableModel.addRow("13", "Temperature", "666", "Raw",
-              true);
-          senseTableModel.addRow("13", "Temperature", "777", "Raw",
-              true);
-          senseTableModel.addRow("13", "Temperature", "888", "Raw",
-              true);
-          senseTableModel.addRow("13", "Temperature", "999", "Raw",
-              true);
-          senseTableModel.addRow("13", "Temperature", "000", "Raw",
-              true);
-          /* DEBUG LINES*/
+          /* DEBUG LINES */
+          senseTableModel.addRow("13", "Temperature", "111", "Raw", true);
+          senseTableModel.addRow("13", "Temperature", "222", "Raw", true);
+          senseTableModel.addRow("13", "Temperature", "333", "Raw", true);
+          senseTableModel.addRow("13", "Temperature", "444", "Raw", true);
+          senseTableModel.addRow("13", "Temperature", "555", "Raw", true);
+          senseTableModel.addRow("13", "Temperature", "666", "Raw", true);
+          senseTableModel.addRow("13", "Temperature", "777", "Raw", true);
+          senseTableModel.addRow("13", "Temperature", "888", "Raw", true);
+          senseTableModel.addRow("13", "Temperature", "999", "Raw", true);
+          senseTableModel.addRow("13", "Temperature", "000", "Raw", true);
+          /* DEBUG LINES */
           closeWindow();
         }
       });
@@ -431,7 +437,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
         }
       });
 
-      String[] opt = {"Converted", "Raw"};
+      String[] opt = { "Converted", "Raw" };
       comboBoxRaw = new JComboBox<String>();
       comboBoxRaw.setModel(new DefaultComboBoxModel<String>(opt));
       comboBoxRaw.addActionListener(new ActionListener() {
@@ -449,39 +455,46 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_START;
       pane.add(new JLabel("Node"), c);
+
       c.gridx = 1;
       c.gridy = 0;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
       pane.add(comboBoxNode, c);
+
       c.gridx = 0;
       c.gridy = 1;
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_START;
       pane.add(new JLabel("Sensor"), c);
+
       c.gridx = 1;
       c.gridy = 1;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
       pane.add(comboBoxSensor, c);
+
       c.gridx = 0;
       c.gridy = 2;
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_START;
       pane.add(new JLabel("Send values"), c);
+
       c.gridx = 1;
       c.gridy = 2;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
       pane.add(comboBoxRaw, c);
+
       c.gridx = 0;
       c.gridy = 3;
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_START;
       pane.add(new JLabel("Feed identifier "), c);
+
       c.gridx = 1;
       c.gridy = 3;
       c.weightx = 0.1;
@@ -498,6 +511,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
       groupPanel.add(OKbutton);
       groupPanel.add(cancelButton);
       pane.add(groupPanel, c);
+
       setContentPane(pane);
       setPreferredSize(new Dimension(300, 250));
       // this.setDefaultCloseOperation();
