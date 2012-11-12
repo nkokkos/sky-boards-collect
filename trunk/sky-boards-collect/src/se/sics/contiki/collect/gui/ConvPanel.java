@@ -9,10 +9,11 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.ListIterator;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
@@ -48,34 +49,36 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
   Node selectedNode;
   Sensor[] sensors;
   SensorData data;
-  Vector<JPanel> charts;
-  Vector<Function> functions;
-  private Hashtable<String, JPanel> fieldsTable;
+  ArrayList<XYSeriesCollection> seriesList;
+  ArrayList<Function> functions;
+  private Hashtable<String, ArrayList<JFormattedTextField>> fieldsTable;
   Properties calibrationConfig;
 
   JTabbedPane tabbedPane; // tabbedPanel
   JPanel mainPanel; // main Panel for each tab
   JFreeChart chart;
   ChartPanel chartPanel;
+  XYSeriesCollection dataset;
   
   JButton buttonReset;
   JButton buttonFormula;
   JComboBox<String> comboBoxXOpt;
   GridBagConstraints c;
-  public static final char delim = '\n';
+  public static final String delim = "\n";
   public final int DEF_MIN_X = 1;
   public final int DEF_MAX_X = 4096;
   public final int DEF_INC_X = 5;
   
-  public ConvPanel(CollectServer server, String category, String title){
+  public ConvPanel(CollectServer server, String category, String title,Properties config){
     super(new BorderLayout());
     this.title=title;
     this.category=category;
+    calibrationConfig=config;
     active=true;
     tabbedPane = new JTabbedPane();
-    fieldsTable = new Hashtable<String, JPanel>();
-    charts = new Vector<JPanel>();
-    functions = new Vector<Function>();
+    
+    
+    //fieldsTable.
   }
 
   public String getCategory() {
@@ -97,6 +100,9 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
     selectedNode=node[0];
     sensors=selectedNode.getSensors();
     tabbedPane.removeAll();
+    seriesList = new ArrayList<XYSeriesCollection>();
+    functions = new ArrayList<Function>();
+    fieldsTable  = new Hashtable<String, ArrayList<JFormattedTextField>> ();
     
     for (int i = 0; i < sensors.length; i++) {
       String sensorId = sensors[i].getId();
@@ -124,6 +130,8 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
       }
       
       // Add fields
+      ArrayList<JFormattedTextField> fieldList = 
+          new ArrayList<JFormattedTextField>();
       c.fill=GridBagConstraints.HORIZONTAL;
       c.weightx=0.1;
       c.gridx=1;
@@ -138,8 +146,9 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
       for (int j = 0; j<vars.length;j++){
         c.gridy++;
         height++;
-        createVarsTextFields(i, j);
+        fieldList.add(createVarsTextFields(i, j));
       }
+      fieldsTable.put(sensorId, fieldList);
       
       // Add buttons/combobox
       createComboBoxXOpt(sensors[i].getId());
@@ -150,7 +159,7 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
       mainPanel.add(comboBoxXOpt,c);
 
       buttonReset = new JButton("Reset values");
-      buttonReset.setName(sensorId);
+      buttonReset.setName(sensorId+delim+i);
       buttonReset.addActionListener(new ButtonResetAction());
       c.gridy++;
       height++;
@@ -190,7 +199,7 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
     mainPanel.add(valueField,c);
   }
   
-  void createVarsTextFields(int s, int v) {
+  JFormattedTextField createVarsTextFields(int s, int v) {
     Variable[] vars = sensors[s].getVars();
     NumberFormat format = NumberFormat.getNumberInstance();
     format.setMaximumFractionDigits(15);
@@ -200,6 +209,7 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
     valueField.setName(sensors[s].getId() + delim + vars[v].getName());
     valueField.addPropertyChangeListener("value", this);
     mainPanel.add(valueField,c);
+    return valueField;
   }
   
   void createComboBoxXOpt(String sensorId) {
@@ -235,7 +245,7 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
     int update = -1;
     Object source = e.getSource();
     StringTokenizer tokens = new StringTokenizer(
-        ((JFormattedTextField) source).getName(), delim + "");
+        ((JFormattedTextField) source).getName(), delim);
     String sensorStr = tokens.nextToken();
     String varStr = tokens.nextToken();
     Variable var;
@@ -267,10 +277,14 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
   }
 
   private void updateChart(int chartIndex) {
-    JPanel chartPanel = charts.get(chartIndex);
-    chartPanel.removeAll();
-    chartPanel.add(paintChart(functions.get(chartIndex)));
-    chartPanel.updateUI();
+    dataset = seriesList.get(chartIndex);
+    dataset.removeAllSeries();
+    Function conv=functions.get(chartIndex);
+    XYSeries series = new XYSeries("Conversion function");
+    for (int i = conv.getMinX(); i <= conv.getMaxX(); i += conv.getIncrement()) {
+      series.add(conv.getX(i), conv.f(i));
+    }
+    dataset.addSeries(series);   
   }
   
   private ChartPanel createChart(String sensorId) {
@@ -292,7 +306,8 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
       series.add(conv.getX(i), conv.f(i));
     }
 
-    XYSeriesCollection dataset = new XYSeriesCollection();
+    dataset = new XYSeriesCollection();
+    seriesList.add(dataset);
     dataset.addSeries(series);
     chart = ChartFactory.createXYLineChart("Conversion function", // Title
         conv.getxTag(), // x-axis Label
@@ -325,26 +340,27 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
   
   private class ButtonResetAction implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      String sensor = ((Component) e.getSource()).getName();
+      String buttonName = ((Component) e.getSource()).getName();
+      StringTokenizer tokens = new StringTokenizer(buttonName, delim);
+      String sensor = tokens.nextToken();
+      String index = tokens.nextToken();
+      
       selectedNode.setDefaultValues(sensor);
 
-      JPanel fieldPaneVars = fieldsTable.get(sensor);
-      Component[] cArray = fieldPaneVars.getComponents();
-      for (int i = 0; i < cArray.length; i++) {
-        reset(cArray[i]);
+      ArrayList<JFormattedTextField> TextFields = fieldsTable.get(sensor);
+      ListIterator<JFormattedTextField> it=TextFields.listIterator();
+      while (it.hasNext()){
+        reset(it.next());
       }
-      for (int i = 0; i < sensors.length; i++)
-        if (sensors[i].getId().equals(sensor))
-          updateChart(i);
+
+      updateChart(Integer.parseInt(index));
     }
 
-    public void reset(Component field) {
-      if (!(field instanceof JFormattedTextField))
-        return;
+    public void reset(JFormattedTextField field) {
       String fieldName = field.getName();
       if (fieldName == "" || fieldName == null)
         return;
-      StringTokenizer tokens = new StringTokenizer(field.getName(), delim + "");
+      StringTokenizer tokens = new StringTokenizer(field.getName(), delim);
       String sensorStr = tokens.nextToken();
       String varStr = tokens.nextToken();
       Variable var;
@@ -367,7 +383,6 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
       imgFrame.pack();
       imgFrame.setVisible(true);
     }
-
   }
 
   public void updateConfig(String sensor, String var, double newVal) {
@@ -375,7 +390,6 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
         "var," + selectedNode.getID() + "," + sensor + "," + "" + var,
         String.valueOf(newVal));
   }
-
 
   private abstract class Function {
     protected Sensor sensor;

@@ -279,7 +279,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
 
   @Override
   public void nodesSelected(Node[] node) {
-    // ignore
+    // ignore for now
   }
 
   public void deleteSelectedRows() {
@@ -322,7 +322,9 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
 
   /**
    * Configuration line format (key=value)
-   * feedsense,<feedId> = <node>,<sensor>,<conv>,<send>
+   * 
+   * feedsense,<feedId> = <node>,<sensor>,<conv>,<send> 
+   * 
    */
   public void updateConfig(Properties config) {
     ListIterator<SenseRow> li = ((SenseTableModel) senseTableGUI.getModel())
@@ -339,18 +341,14 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
     }
   }
 
-  /**
-   * Configuration line format (key=value)
-   * feedsense,<feedId> = <node>,<sensor>,<conv>,<send>
-   */
   public void loadConfig(Properties config) {
     for (Object k : config.keySet()) {
-      String key = k.toString();
+      String key=k.toString();
       if (((String) key).startsWith("feedsense")) {
-        String[] SKey = key.split(",");
-        String[] values = config.getProperty(key).split(",");
-        boolean send = Boolean.parseBoolean(values[3]);
-        senseTableModel.addRow(values[0], values[1], SKey[1], values[2], send);
+        String[] SKey=key.split(",");
+        String[] SVal=config.getProperty(key).split(",");
+        boolean send=Boolean.parseBoolean(SVal[3]);
+        senseTableModel.addRow(SVal[0], SVal[1], SKey[1], SVal[2], send);
       }
     }
   }
