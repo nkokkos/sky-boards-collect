@@ -267,7 +267,7 @@ public class CollectServer implements SerialConnectionListener,
     NodeControl nodeControl = new NodeControl(this, MAIN);
     dataFeederSense = new DataFeederSense(MAIN, configTable);
     dataFeederCosm = new DataFeederCosm(MAIN, configTable);
-    ConvPanel ConvPanel = new ConvPanel(this, MAIN, "Conversions");
+    ConvPanel ConvPanel = new ConvPanel(this, MAIN, "Conversions",configTable);
 
     visualizers = new Visualizer[] {
         ConvPanel,
