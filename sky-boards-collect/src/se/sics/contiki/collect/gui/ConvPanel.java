@@ -1,3 +1,9 @@
+/*
+ * NodeCalibrationDialog
+ *
+ * Author  : Eloy Díaz <eldial@gmail.com>
+ * Created : 23 jul 2012
+ */
 package se.sics.contiki.collect.gui;
 
 import java.awt.BorderLayout;
@@ -42,32 +48,35 @@ import se.sics.contiki.collect.Visualizer;
 
 public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListener {
   private static final long serialVersionUID = 1L;
-  boolean active;
-  String title;
-  String category;
+  private boolean active;
+  private String title;
+  private String category;
   
-  Node selectedNode;
-  Sensor[] sensors;
-  SensorData data;
-  ArrayList<XYSeriesCollection> seriesList;
-  ArrayList<Function> functions;
+  private Node selectedNode;
+  private Sensor[] sensors;
+  private SensorData data;
+  private ArrayList<XYSeriesCollection> seriesList;
+  private ArrayList<Function> functions;
   private Hashtable<String, ArrayList<JFormattedTextField>> fieldsTable;
-  Properties calibrationConfig;
+  private Properties calibrationConfig;
 
-  JTabbedPane tabbedPane; // tabbedPanel
-  JPanel mainPanel; // main Panel for each tab
-  JFreeChart chart;
-  ChartPanel chartPanel;
-  XYSeriesCollection dataset;
+  private JTabbedPane tabbedPane; // tabbedPanel
+  private JPanel mainPanel; // main Panel for each tab
+  private JFreeChart chart;
+  private ChartPanel chartPanel;
+  private XYSeriesCollection dataset;
   
-  JButton buttonReset;
-  JButton buttonFormula;
-  JComboBox<String> comboBoxXOpt;
-  GridBagConstraints c;
+  private JButton buttonReset;
+  private JButton buttonFormula;
+  private JComboBox<String> comboBoxXOpt;
+  private GridBagConstraints c;
   public static final String delim = "\n";
   public final int DEF_MIN_X = 1;
   public final int DEF_MAX_X = 4096;
   public final int DEF_INC_X = 5;
+  public final String TOOL_TIP_RESET_BT = "Reset to default values.";
+  public final String TOOL_TIP_SAVE_BT = "Confirm changes and update charts.";
+  public final String TOOL_TIP_FORM_BT = "Display sensor conversions expressions.";
   
   public ConvPanel(CollectServer server, String category, String title,Properties config){
     super(new BorderLayout());
@@ -76,9 +85,6 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
     calibrationConfig=config;
     active=true;
     tabbedPane = new JTabbedPane();
-    
-    
-    //fieldsTable.
   }
 
   public String getCategory() {
@@ -94,7 +100,7 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
   }
 
   public void nodesSelected(Node[] node) {
-    if (node.length>1) return;
+    if (node==null || node.length>1) return;
     if (!active) return;
     
     selectedNode=node[0];
@@ -151,28 +157,12 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
       fieldsTable.put(sensorId, fieldList);
       
       // Add buttons/combobox
-      createComboBoxXOpt(sensors[i].getId());
-      c.gridx=0;
-      c.gridwidth=2;
-      c.gridy++;
-      height++;
-      mainPanel.add(comboBoxXOpt,c);
-
-      buttonReset = new JButton("Reset values");
-      buttonReset.setName(sensorId+delim+i);
-      buttonReset.addActionListener(new ButtonResetAction());
-      c.gridy++;
-      height++;
-      //c.fill=GridBagConstraints.NONE;
-      c.anchor=GridBagConstraints.CENTER;
-      mainPanel.add(buttonReset,c);
-
-      c.gridy++;
-      height++;
-      buttonFormula = new JButton("Show formulas");
-      buttonFormula.setName(sensorId);
-      buttonFormula.addActionListener(new ButtonFormulaAction());
-      mainPanel.add(buttonFormula,c);
+      createComboBoxXOpt(sensors[i].getId(),c);
+      createButton(buttonReset, "Reset values", TOOL_TIP_RESET_BT, 
+          sensorId+delim+i, new ButtonResetAction(), c);
+      createButton(buttonFormula, "Show formulas", TOOL_TIP_FORM_BT, 
+          sensorId, new ButtonFormulaAction(), c);
+      height+=3;
       
       // Add chart
       c.fill=GridBagConstraints.BOTH;
@@ -212,7 +202,17 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
     return valueField;
   }
   
-  void createComboBoxXOpt(String sensorId) {
+  void createButton(JButton b, String text, String tip,String name,ActionListener Listener, GridBagConstraints c){
+    b = new JButton(text);
+    b.setToolTipText(tip);
+    b.setName(name);
+    b.addActionListener(Listener);
+    c.gridy++;
+    c.fill=GridBagConstraints.HORIZONTAL;
+    mainPanel.add(b,c);
+  }
+  
+  void createComboBoxXOpt(String sensorId,GridBagConstraints c) {
     String[] opt = {"adc value", "Sensor voltage(Vs)"};
     comboBoxXOpt = new JComboBox<String>();
     comboBoxXOpt.setModel(new DefaultComboBoxModel<String>(opt));
@@ -238,6 +238,10 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
         }
       }
     });
+    c.gridx=0;
+    c.gridwidth=2;
+    c.gridy++;
+    mainPanel.add(comboBoxXOpt,c);
   }
 
   @Override
@@ -281,9 +285,7 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
     dataset.removeAllSeries();
     Function conv=functions.get(chartIndex);
     XYSeries series = new XYSeries("Conversion function");
-    for (int i = conv.getMinX(); i <= conv.getMaxX(); i += conv.getIncrement()) {
-      series.add(conv.getX(i), conv.f(i));
-    }
+    genSerie(conv,series);
     dataset.addSeries(series);   
   }
   
@@ -302,10 +304,7 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
   
   private ChartPanel paintChart(Function conv) {
     XYSeries series = new XYSeries("Conversion function");
-    for (int i = conv.getMinX(); i <= conv.getMaxX(); i += conv.getIncrement()) {
-      series.add(conv.getX(i), conv.f(i));
-    }
-
+    genSerie(conv,series);
     dataset = new XYSeriesCollection();
     seriesList.add(dataset);
     dataset.addSeries(series);
@@ -319,6 +318,12 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
         false // Configure chart to generate URLs?
         );
     return (chartPanel = new ChartPanel(chart));
+  }
+  
+  private void genSerie(Function conv, XYSeries series){
+    for (int i = conv.getMinX(); i <= conv.getMaxX(); i += conv.getIncrement()) {
+      series.add(conv.getX(i), conv.f(i));
+    }
   }
   
   String getLastADCValue(String sensor) {
@@ -352,7 +357,6 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
       while (it.hasNext()){
         reset(it.next());
       }
-
       updateChart(Integer.parseInt(index));
     }
 
@@ -368,7 +372,8 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
       Sensor sensor = selectedNode.getNodeSensor(sensorStr);
       if ((var = sensor.getVar(varStr)) != null) {
         ((JFormattedTextField) field).setValue(var.getValue());
-        updateConfig(sensorStr, varStr, var.getValue());
+        // default values do not need to be stored
+        removeFromConfig(sensorStr, varStr, var.getValue());
       }
     }
   }
@@ -380,15 +385,27 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
       JFrame imgFrame = new JFrame();
       imgFrame.add(getConversionImage(sensor));
       imgFrame.setTitle("Datasheet formulas");
+      imgFrame.setLocationRelativeTo((Component) e.getSource());
       imgFrame.pack();
       imgFrame.setVisible(true);
     }
   }
 
   public void updateConfig(String sensor, String var, double newVal) {
-    calibrationConfig.put(
-        "var," + selectedNode.getID() + "," + sensor + "," + "" + var,
-        String.valueOf(newVal));
+    String key="var," + selectedNode.getID() + "," + sensor + "," + "" + var;
+    String value=calibrationConfig.getProperty(key);
+    String newValue=String.valueOf(newVal);
+    if (newValue.equals(value)) return;
+    calibrationConfig.put(key,newValue);
+  }
+  
+  /**
+   * This method is called when resetting default constants values, as
+   * default values do not need to be stored.
+   */
+  public void removeFromConfig(String sensor, String var, double newVal){
+    String key="var," + selectedNode.getID() + "," + sensor + "," + "" + var;
+    calibrationConfig.remove(key);
   }
 
   private abstract class Function {
@@ -397,16 +414,16 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
     private String yLabel;
     private int minX = 1;
     private int maxX = 4096;
-    private int increment = 5;
+    private int increment = 5;//increase for better GUI performance
     private boolean hasVs = false;
     private String sensorId;
     private boolean showVs = false;
 
     Function(Sensor sensor) {
       this.sensor = sensor;
-      this.yLabel = sensor.getUnits();
-      this.sensorId = sensor.getId();
-      this.hasVs = sensor.ADC12();
+      yLabel = sensor.getUnits();
+      sensorId = sensor.getId();
+      hasVs = sensor.ADC12();
     }
 
     public Number getX(int i) {
@@ -471,8 +488,7 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
       return sensorId;
     }
   }
-  public void nodeAdded(Node node) {}
-  public void nodeDataReceived(SensorData sensorData) {}
-  public void clearNodeData() {}
-
+  public void nodeAdded(Node node) {/*ignore*/}
+  public void nodeDataReceived(SensorData sensorData) {/*ignore*/}
+  public void clearNodeData() {/*ignore*/}
 }
