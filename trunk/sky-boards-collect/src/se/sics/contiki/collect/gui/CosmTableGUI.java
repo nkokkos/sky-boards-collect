@@ -1,8 +1,8 @@
 /*
- * SenseTableGUI
+ * CosmTableGUI
  *
  * Author  : Eloy Díaz <eldial@gmail.com>
- * Created : 03 Oct 2012
+ * Created : 14 Oct 2012
  */
 
 package se.sics.contiki.collect.gui;
@@ -17,13 +17,14 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
-public class SenseTableGUI extends JTable {
+public class CosmTableGUI extends JTable {
   private static final long serialVersionUID = 1L;
   private int[] selectedRows;
 
-  public SenseTableGUI(SenseTableModel tableModel) {
+  public CosmTableGUI(CosmTableModel tableModel) {
     super(tableModel);
     setUpValuesColumn();
+    setUpDataStreamsColumn();
     setPreferredScrollableViewportSize(new Dimension(400, 250));
     setFillsViewportHeight(true);
     setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -34,11 +35,21 @@ public class SenseTableGUI extends JTable {
     getSelectionModel().addListSelectionListener(new RowListener());
   }
 
+  public void setUpDataStreamsColumn() {
+    JComboBox<String> comboBox = new JComboBox<String>();
+    comboBox.addItem("Default");
+    comboBox.addItem("Custom");
+    TableColumn valuesCol = getColumnModel().getColumn(1);
+    valuesCol.setCellEditor(new DefaultCellEditor(comboBox));
+    DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
+    valuesCol.setCellRenderer(renderer);
+  }
+  
   public void setUpValuesColumn() {
     JComboBox<String> comboBox = new JComboBox<String>();
     comboBox.addItem("Raw");
     comboBox.addItem("Converted");
-    TableColumn valuesCol = getColumnModel().getColumn(3);
+    TableColumn valuesCol = getColumnModel().getColumn(4);
     valuesCol.setCellEditor(new DefaultCellEditor(comboBox));
     DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
     valuesCol.setCellRenderer(renderer);

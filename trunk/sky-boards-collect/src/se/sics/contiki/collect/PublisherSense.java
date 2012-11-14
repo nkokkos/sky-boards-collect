@@ -22,7 +22,6 @@ import java.io.InputStreamReader;
 import se.sics.contiki.collect.gui.DataFeederSense;
 
 public class PublisherSense extends Thread {
-
   final static String SenseServer = "http://api.sen.se/events/";
 
   private String APIkey;

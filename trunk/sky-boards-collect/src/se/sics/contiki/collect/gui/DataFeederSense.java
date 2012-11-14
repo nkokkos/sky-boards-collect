@@ -95,7 +95,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
       public void actionPerformed(ActionEvent e) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
           public void run() {
-            (new addButtonDialog(nodes)).setLocationRelativeTo(addButton);
+            (new DialogAdd(nodes)).setLocationRelativeTo(addButton);
           }
         });
       }
@@ -109,7 +109,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
     });
 
     senseTableModel = new SenseTableModel();
-    senseTableGUI = new SenseTableGUI(this, senseTableModel);
+    senseTableGUI = new SenseTableGUI(senseTableModel);
 
     logArea = new JTextArea();
     logArea.setEditable(false);
@@ -353,7 +353,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
     }
   }
 
-  private class addButtonDialog extends JFrame {
+  private class DialogAdd extends JFrame {
     private static final long serialVersionUID = 1L;
     private JComboBox<String> comboBoxNode;
     private JComboBox<String> comboBoxSensor;
@@ -365,7 +365,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
     JButton OKbutton;
     JPanel pane;
 
-    public addButtonDialog(final Hashtable<String, Node> nodes) {
+    public DialogAdd(final Hashtable<String, Node> nodes) {
       super();
       pane = new JPanel();
       pane.setLayout(new GridBagLayout());
