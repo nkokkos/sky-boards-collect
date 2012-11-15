@@ -20,6 +20,7 @@ import javax.swing.table.TableColumn;
 public class SenseTableGUI extends JTable {
   private static final long serialVersionUID = 1L;
   private int[] selectedRows;
+  protected static final int VALUES_TYPE_COL = 3;
 
   public SenseTableGUI(SenseTableModel tableModel) {
     super(tableModel);
@@ -38,7 +39,7 @@ public class SenseTableGUI extends JTable {
     JComboBox<String> comboBox = new JComboBox<String>();
     comboBox.addItem("Raw");
     comboBox.addItem("Converted");
-    TableColumn valuesCol = getColumnModel().getColumn(3);
+    TableColumn valuesCol = getColumnModel().getColumn(VALUES_TYPE_COL);
     valuesCol.setCellEditor(new DefaultCellEditor(comboBox));
     DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
     valuesCol.setCellRenderer(renderer);
