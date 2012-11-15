@@ -17,14 +17,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Hashtable;
-import java.util.ListIterator;
 import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -353,7 +352,7 @@ public class DataFeederCosm extends JPanel implements Visualizer, Configurable {
     }
   */}
 
-  private class DialogAdd extends JFrame {
+  private class DialogAdd extends JDialog {
     private static final long serialVersionUID = 1L;
     private JComboBox<String> comboBoxNode;
     private JComboBox<String> comboBoxRaw;
@@ -392,7 +391,6 @@ public class DataFeederCosm extends JPanel implements Visualizer, Configurable {
       cancelButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           /* DEBUG LINES */
-
           /* DEBUG LINES */
           closeWindow();
         }
@@ -408,6 +406,7 @@ public class DataFeederCosm extends JPanel implements Visualizer, Configurable {
           feedingNode = comboBoxNode.getItemAt(idx).toString();
           Node n = nodes.get(feedingNode);
           Sensor[] sensors = n.getSensors();
+          dataStreams.clear();
           for (int i = 0; i < sensors.length; i++){
             String sensorId=sensors[i].getId();
             dataStreams.put(sensorId, sensorId);
@@ -491,11 +490,10 @@ public class DataFeederCosm extends JPanel implements Visualizer, Configurable {
       pane.add(groupPanel, c);
 
       setContentPane(pane);
-      setPreferredSize(new Dimension(300, 250));
-      // this.setDefaultCloseOperation();
-      setVisible(true);
-      setTitle("Feed configuration");
       pack();
+      setTitle("Feed configuration");
+      setVisible(true);
+      setModalityType(ModalityType.APPLICATION_MODAL);
 
       if (comboBoxNode.getItemCount() > 0)
         comboBoxNode.setSelectedIndex(0);

@@ -24,7 +24,7 @@ import java.util.Vector;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -353,7 +353,7 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
     }
   }
 
-  private class DialogAdd extends JFrame {
+  private class DialogAdd extends JDialog {
     private static final long serialVersionUID = 1L;
     private JComboBox<String> comboBoxNode;
     private JComboBox<String> comboBoxSensor;
@@ -511,11 +511,10 @@ public class DataFeederSense extends JPanel implements Visualizer, Configurable 
       pane.add(groupPanel, c);
 
       setContentPane(pane);
-      setPreferredSize(new Dimension(300, 250));
-      // this.setDefaultCloseOperation();
-      setVisible(true);
-      setTitle("Feed configuration");
       pack();
+      setTitle("Feed configuration");
+      setVisible(true);
+      setModalityType(ModalityType.APPLICATION_MODAL);
 
       if (comboBoxNode.getItemCount() > 0)
         comboBoxNode.setSelectedIndex(0);

@@ -27,12 +27,14 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -46,7 +48,7 @@ import se.sics.contiki.collect.Sensor;
 import se.sics.contiki.collect.SensorData;
 import se.sics.contiki.collect.Variable;
 
-public class NodeCalibrationDialog extends JFrame
+public class NodeCalibrationDialog extends JDialog
     implements
       PropertyChangeListener,
       WindowListener{
@@ -84,7 +86,8 @@ public class NodeCalibrationDialog extends JFrame
 
   public NodeCalibrationDialog(CollectServer server, String title,
       final Node node, Properties config) {
-    super(title);
+    super();
+    setTitle(title);
     fieldsTable = new Hashtable<String, JPanel>();
     this.server=server;
     calibrationConfig = config;
