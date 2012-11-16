@@ -19,16 +19,16 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 
-import se.sics.contiki.collect.gui.DataFeederSense;
+import se.sics.contiki.collect.gui.SenseDataFeeder;
 
 public class PublisherSense extends Thread {
   final static String SenseServer = "http://api.sen.se/events/";
 
   private String APIkey;
   private Hashtable<String, String> feedTable;
-  private DataFeederSense guiSense;
+  private SenseDataFeeder guiSense;
 
-  public PublisherSense(Hashtable<String, String> feedTable, String key, DataFeederSense guiSense) {
+  public PublisherSense(Hashtable<String, String> feedTable, String key, SenseDataFeeder guiSense) {
     APIkey = key;
     this.feedTable = feedTable;
     this.guiSense = guiSense;

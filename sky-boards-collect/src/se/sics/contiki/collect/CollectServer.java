@@ -91,8 +91,8 @@ import org.jfree.chart.axis.ValueAxis;
 import se.sics.contiki.collect.gui.AggregatedTimeChartPanel;
 import se.sics.contiki.collect.gui.BarChartPanel;
 import se.sics.contiki.collect.gui.ConvPanel;
-import se.sics.contiki.collect.gui.DataFeederCosm;
-import se.sics.contiki.collect.gui.DataFeederSense;
+import se.sics.contiki.collect.gui.CosmDataFeeder;
+import se.sics.contiki.collect.gui.SenseDataFeeder;
 import se.sics.contiki.collect.gui.FirmwareDialog;
 import se.sics.contiki.collect.gui.MapPanel;
 import se.sics.contiki.collect.gui.NodeCalibrationDialog;
@@ -168,8 +168,8 @@ public class CollectServer implements SerialConnectionListener,
   private int defaultMaxItemCount = 250;
   private long nodeTimeDelta;
 
-  private DataFeederSense dataFeederSense;
-  private DataFeederCosm dataFeederCosm;
+  private SenseDataFeeder dataFeederSense;
+  private CosmDataFeeder dataFeederCosm;
 
   public CollectServer() {
     loadConfig(config, CONFIG_FILE);
@@ -265,8 +265,8 @@ public class CollectServer implements SerialConnectionListener,
       mapPanel.setMapBackground(image);
     }
     NodeControl nodeControl = new NodeControl(this, MAIN);
-    dataFeederSense = new DataFeederSense(MAIN, configTable);
-    dataFeederCosm = new DataFeederCosm(MAIN, configTable);
+    dataFeederSense = new SenseDataFeeder(MAIN, configTable);
+    dataFeederCosm = new CosmDataFeeder(MAIN, configTable);
     ConvPanel ConvPanel = new ConvPanel(this, MAIN, "Conversions",configTable);
 
     visualizers = new Visualizer[] {

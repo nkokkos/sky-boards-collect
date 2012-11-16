@@ -19,7 +19,7 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 
-import se.sics.contiki.collect.gui.DataFeederCosm;
+import se.sics.contiki.collect.gui.CosmDataFeeder;
 
 public class PublisherCosm extends Thread {
   final static String CosmServer = "http://api.cosm.com/v2/feeds/";
@@ -29,10 +29,10 @@ public class PublisherCosm extends Thread {
   private String cosmTitle = "Default Title";
   private final String cosmVersion = "1.0.0";
   private Hashtable<String, String> feedTable;
-  private DataFeederCosm guiCosm;
+  private CosmDataFeeder guiCosm;
 
   public PublisherCosm(Hashtable<String, String> feedTable, String key,
-      String cosmFeed, DataFeederCosm guiCosm) {
+      String cosmFeed, CosmDataFeeder guiCosm) {
     APIkey = key;
     this.feedTable = feedTable;
     this.cosmFeed = cosmFeed;

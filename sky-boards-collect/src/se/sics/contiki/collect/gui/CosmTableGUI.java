@@ -32,6 +32,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
 public class CosmTableGUI extends JTable {
@@ -39,6 +40,7 @@ public class CosmTableGUI extends JTable {
   private int[] selectedRows;
   protected static final int DATASTREAMS_COL = 1;
   protected static final int VALUES_TYPE_COL = 4;
+  protected static final int FEED_TITLE_COL = 3;
 
   public CosmTableGUI(CosmTableModel tableModel) {
     super(tableModel);
@@ -55,8 +57,16 @@ public class CosmTableGUI extends JTable {
   }
 
   public void setUpDataStreamsColumn() {
-    TableColumn valuesCol = getColumnModel().getColumn(DATASTREAMS_COL);
-    valuesCol.setCellEditor(new DataStreamCellEditor());
+    TableColumn col = getColumnModel().getColumn(DATASTREAMS_COL);
+    col.setCellEditor(new DataStreamCellEditor());
+    col.setCellRenderer(new DataStreamsCellRenderer());
+    col.setPreferredWidth(150);
+  }
+  
+  public void setUpFeedTitleColumn(){
+    TableColumn col = getColumnModel().getColumn(DATASTREAMS_COL);
+    col.setCellRenderer(new DataStreamsCellRenderer());
+    col.setPreferredWidth(150);
   }
 
   public void setUpValuesColumn() {
@@ -75,41 +85,6 @@ public class CosmTableGUI extends JTable {
       selectedRows[i] = convertRowIndexToModel(selectedRows[i]);
     }
   }
-  
-  public String getToolTipText(MouseEvent e) {
-    //TODO 
-    /*
-     * NO API TO SET TOOLTIP DURATION. TRY THIS:
-     * http://www.eclipsezone.com/eclipse/forums/t65353.html
-     */
-    String tip = null;
-    java.awt.Point p = e.getPoint();
-    int rowIndex = rowAtPoint(p);
-    int colIndex = columnAtPoint(p);
-    
-    if (rowIndex<0 || colIndex<0) return null;
-    
-    int col = convertColumnIndexToModel(colIndex);
-    int row = convertRowIndexToModel(rowIndex);
-
-    if (col == DATASTREAMS_COL) {
-      @SuppressWarnings("unchecked")
-      Hashtable<String, String> dataStreams=(Hashtable<String, String>)getValueAt(row, col);
-      StringBuilder tipText = new StringBuilder();
-      tipText.append("<html>"); 
-      tipText.append("Current Datastreams IDs:<br>"); 
-      for (Object key:dataStreams.keySet()){
-        String sensor=(String)key;
-        tipText.append(sensor+" sensor: "+dataStreams.get(key)+"<br>");
-      }
-      tipText.append("</html>");
-      tip=tipText.toString();
-    } else {
-        //Just in case
-        tip = super.getToolTipText(e);
-    }
-    return tip;
-}
 
   private class RowListener implements ListSelectionListener {
     public void valueChanged(ListSelectionEvent event) {
@@ -119,20 +94,95 @@ public class CosmTableGUI extends JTable {
       HandleSelectionEvent();
     }
   }
+  
+  
+  @SuppressWarnings("unchecked")
+  public String getToolTipText(MouseEvent e) {
+    java.awt.Point p = e.getPoint();
+    int rowIndex = rowAtPoint(p);
+    int colIndex = columnAtPoint(p);
 
-  private class DataStreamCellEditor extends AbstractCellEditor
-  implements TableCellEditor, ActionListener {
-    private static final long serialVersionUID = 1L;
+    if (rowIndex < 0 || colIndex < 0)
+      return null;
+
+    int col = convertColumnIndexToModel(colIndex);
+    int row = convertRowIndexToModel(rowIndex);
     
-    Hashtable<String,String> dataStreams;
+    switch(col){
+    case CosmRow.IDX_NODE:
+      return (String) getValueAt(row, col);
+    case CosmRow.IDX_DATASTREAMS:
+      return consDatastreamsToolTip((Hashtable<String, String>) getValueAt(row, col));
+    case CosmRow.IDX_FEEDID:
+      return (String) getValueAt(row, col);
+    case CosmRow.IDX_FEEDTITLE:
+      return (String) getValueAt(row, col);
+    case CosmRow.IDX_CONV:
+      return (String) getValueAt(row, col);
+    }
+    return null;
+  }
+  
+  private String consDatastreamsToolTip(Hashtable<String,String> dataStreams){
+    StringBuilder tipText = new StringBuilder();
+    tipText
+        .append("<html><table><caption><u>Current Datastream ID's</u></caption>"
+            + "<tr><th>Sensor      </th><th>Datastream ID</th></tr>");
+    for (Object key : ((Hashtable<String, String>) dataStreams).keySet()) {
+      String sensor = (String) key;
+      String dstrm = ((Hashtable<String, String>) dataStreams).get(key);
+      tipText
+          .append("<tr><td>" + sensor + "</td><td>" + dstrm + "</td></tr>");
+    }
+    tipText.append("</table></html>");
+    return tipText.toString();
+  }
+  
+
+  private class DataStreamsCellRenderer extends JButton implements
+      TableCellRenderer {
+    private static final long serialVersionUID = 1L;
+
+    public DataStreamsCellRenderer() {
+      super("View/Edit");
+    }
+
+    public Component getTableCellRendererComponent(JTable table,
+        Object dataStreams, boolean isSelected, boolean hasFocus, int row,
+        int col) {
+      /*
+      StringBuilder tipText = new StringBuilder();
+      tipText
+          .append("<html><table><caption><u>Current Datastream ID's</u></caption>"
+              + "<tr><th>Sensor      </th><th>Datastream ID</th></tr>");
+      for (Object key : ((Hashtable<String, String>) dataStreams).keySet()) {
+        String sensor = (String) key;
+        String dstrm = ((Hashtable<String, String>) dataStreams).get(key);
+        tipText
+            .append("<tr><td>" + sensor + "</td><td>" + dstrm + "</td></tr>");
+      }
+      tipText.append("</table></html>");
+
+      setToolTipText(tipText.toString());
+      */
+      return this;
+    }
+  }
+  
+  private class DataStreamCellEditor extends AbstractCellEditor implements
+      TableCellEditor, ActionListener {
+    private static final long serialVersionUID = 1L;
+
+    Hashtable<String, String> dataStreams;
     JButton button;
     ArrayList<JTextField> textFields;
-    
+    JDialog dialog;
+
     protected static final String EDIT = "edit";
     protected static final String CANCEL = "cancel";
     protected static final String OK = "ok";
 
-    public DataStreamCellEditor(){
+    public DataStreamCellEditor() {
       super();
       button = new JButton();
       button.setActionCommand(EDIT);
@@ -147,65 +197,75 @@ public class CosmTableGUI extends JTable {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      if (e.getActionCommand().equals(EDIT)){
-        createDatastreamsDialog().setVisible(true);
+      if (e.getActionCommand().equals(EDIT)) {
+        dialog = createDatastreamsDialog();
+        dialog.setVisible(true);
         fireEditingStopped();
+        return;
+      } else if (e.getActionCommand().equals(OK)) {
+        int i = 0;
+        for (Object key : dataStreams.keySet()) {
+          dataStreams.put((String) key, textFields.get(i).getText());
+          i++;
+        }
       }
+      dialog.dispose();
     }
-    
-    private JDialog createDatastreamsDialog(){
+
+    private JDialog createDatastreamsDialog() {
       JDialog dialog = new JDialog();
       dialog.setModalityType(ModalityType.APPLICATION_MODAL);
       dialog.setTitle("Datastreams configuration");
       JPanel pane = new JPanel(new GridBagLayout());
       GridBagConstraints c = new GridBagConstraints();
       textFields = new ArrayList<JTextField>();
-      c.weightx=0.1;
-      c.weighty=0.1;
-      c.gridy=0;
-      
-      for (Object key: dataStreams.keySet()){
-        String sensor=key.toString();
-        c.gridx=0;
-        c.weightx=0;
+      c.weightx = 0.1;
+      c.weighty = 0.1;
+      c.gridy = 0;
+
+      for (Object key : dataStreams.keySet()) {
+        String sensor = key.toString();
+        c.gridx = 0;
+        c.weightx = 0;
         c.fill = GridBagConstraints.NONE;
         c.anchor = GridBagConstraints.LINE_END;
-        pane.add(new JLabel(sensor),c);
-        c.gridx=1;
-        c.weightx=0.1;
+        pane.add(new JLabel(sensor), c);
+        c.gridx = 1;
+        c.weightx = 0.1;
         c.fill = GridBagConstraints.HORIZONTAL;
         JTextField textField = new JTextField();
         textField.setText(dataStreams.get(sensor));
-        pane.add(textField,c);
+        pane.add(textField, c);
         textFields.add(textField);
         c.gridy++;
       }
-      JButton cancel=new JButton("Cancel");
+
+      JButton cancel = new JButton("Cancel");
       cancel.addActionListener(this);
       cancel.setActionCommand(CANCEL);
-      JButton ok = new JButton ("OK");
+      JButton ok = new JButton("OK");
       ok.addActionListener(this);
       ok.setActionCommand(OK);
-      JPanel buttonPanel=new JPanel();
+      JPanel buttonPanel = new JPanel();
       buttonPanel.add(ok);
       buttonPanel.add(cancel);
-      c.gridx=0;
-      c.gridwidth=2;
+      c.gridx = 0;
+      c.gridwidth = 2;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.CENTER;
-      pane.add(buttonPanel,c); 
+      pane.add(buttonPanel, c);
       dialog.setContentPane(pane);
       dialog.pack();
       dialog.setLocationRelativeTo(button);
+      dialog.setModalityType(ModalityType.APPLICATION_MODAL);
       return dialog;
     }
-    
+
     @SuppressWarnings("unchecked")
     public Component getTableCellEditorComponent(JTable table, Object value,
         boolean isSelected, int row, int column) {
-      dataStreams=(Hashtable<String, String>) value;
+      dataStreams = (Hashtable<String, String>) value;
       return button;
     }
   }
- 
 }

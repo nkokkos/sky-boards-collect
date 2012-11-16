@@ -18,7 +18,7 @@ public class CosmTableModel extends AbstractTableModel {
   public final int defInitialCapacity = 20;
   private int keyCol = 2;
 
-  private String[] columnNames = { "Node", "Datastreams Id.", "Feed Id.", "Feed title", "Values",
+  private String[] columnNames = { "Node", "Datastream ID's", "Feed ID", "Feed title", "Values",
       "Send" };
 
   private ArrayList<CosmRow> data = new ArrayList<CosmRow>(defInitialCapacity);
