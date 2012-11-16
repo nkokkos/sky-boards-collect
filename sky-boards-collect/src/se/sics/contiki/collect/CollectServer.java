@@ -1158,6 +1158,7 @@ public class CollectServer implements SerialConnectionListener,
         break;
       case SensorInfo.SINK:
         node = new NodeSink(nodeID);
+        break;
       default:
         node = new NodeTmoteSky(nodeID);
       }

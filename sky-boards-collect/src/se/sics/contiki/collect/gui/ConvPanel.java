@@ -291,7 +291,7 @@ public class ConvPanel extends JPanel implements Visualizer, PropertyChangeListe
   
   private ChartPanel createChart(String sensorId) {
     if (selectedNode.getSensorDataCount() == 0)
-      return null;
+      return new ChartPanel(null);
     data = selectedNode.getSensorData(selectedNode.getSensorDataCount() - 1);
     Function conv = new Function(selectedNode.getNodeSensor(sensorId)) {
       protected double f(int value) {
