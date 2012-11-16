@@ -17,7 +17,7 @@ public class SenseTableModel extends AbstractTableModel {
   public final int defInitialCapacity = 20;
   private int keyCol = 2;
 
-  private String[] columnNames = { "Node", "Sensor", "Feed Id.", "Values",
+  private String[] columnNames = { "Node", "Sensor", "Feed ID", "Values",
       "Send" };
 
   private Vector<SenseRow> data = new Vector<SenseRow>(defInitialCapacity);
