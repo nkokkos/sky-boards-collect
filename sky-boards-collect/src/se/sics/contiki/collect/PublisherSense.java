@@ -109,7 +109,7 @@ public class PublisherSense extends Thread {
 
     urlConn.setRequestProperty("Content-Type", "application/json");
     urlConn.setRequestProperty("sense_key", APIkey);
-    urlConn.setRequestProperty("User-Agent", "Contiki collect-view");
+    urlConn.setRequestProperty("User-Agent", "Contiki CollectView");
 
     try {
       urlConn.connect();

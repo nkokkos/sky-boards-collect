@@ -15,6 +15,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.ListIterator;
@@ -93,10 +94,10 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     addButton = new JButton("Add");
     addButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-            JDialog dialog = new DialogAdd(nodes);
-            dialog.setLocationRelativeTo(addButton);
-            dialog.setVisible(true);
-          }
+        JDialog dialog = new DialogAdd(nodes);
+        dialog.setLocationRelativeTo(addButton);
+        dialog.setVisible(true);
+      }
     });
 
     deleteButton = new JButton("Delete");
@@ -249,35 +250,44 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
   public void nodeDataReceived(SensorData sensorData) {
     if (!isVisible())
       return;
-    Hashtable<String, String> feedTable = new Hashtable<String, String>();
+
     if (nodes.get(sensorData.getNodeID()) == null) {
       nodeAdded(sensorData.getNode());
       return;
     }
 
-    if (doFeed) {
-      Node n = sensorData.getNode();
-      fillFeedTable(n, sensorData, feedTable);
-      String key = arrayToString(keyField.getPassword());
-      PublisherSense publisher = new PublisherSense(feedTable, key, this);
-      publisher.start();
+    SenseRow row;
+    Hashtable<String, String> feedTable = new Hashtable<String, String>();
+    Node node = sensorData.getNode();
+    String APIkey = arrayToString(keyField.getPassword());
+    ArrayList<SenseRow> FeedRows = senseTableModel.getRows(node.getID());
+    ListIterator<SenseRow> it = FeedRows.listIterator();
+
+    while (it.hasNext()) {
+      row = (SenseRow) it.next();
+      if ((boolean) row.getField(SenseRow.IDX_SEND)) {
+        putValue(node, row, feedTable);
+      }
     }
+    (new PublisherSense(feedTable, APIkey, this)).start();
   }
 
-  void fillFeedTable(Node n, SensorData sd, Hashtable<String, String> feedTable) {
-    Sensor[] sensors = n.getSensors();
-    for (int i = 0; i < sensors.length; i++) {
-      putValue(sensors[i].getId(), n, sd, feedTable);
-    }
-  }
-
-  private void putValue(String sensorId, Node n, SensorData sd,
+  private void putValue(Node node, SenseRow row,
       Hashtable<String, String> feedTable) {
+    String value = "";
+    String sensorId = (String) row.getField(SenseRow.IDX_SENSOR);
+
+    if (row.getField(SenseRow.IDX_CONV).equals("Converted")) {
+      value = Integer.toString(node.getLastValueOf(sensorId));
+    } else if (row.getField(SenseRow.IDX_CONV).equals("Raw")) {
+      value = node.getRoundedConvOf(sensorId);
+    }
+    feedTable.put((String) row.getField(SenseRow.IDX_FEEDID), value);
   }
 
   @Override
   public void nodesSelected(Node[] node) {
-    // ignore for now
+    senseTableGUI.selectRows(node);
   }
 
   public void deleteSelectedRows() {
@@ -288,7 +298,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
         + selectedRows.length + " row(s)?", "Confirm delete",
         JOptionPane.YES_NO_OPTION);
     if (opt == JOptionPane.YES_OPTION) {
-      senseTableModel.deleteRow(selectedRows);
+      senseTableModel.deleteRows(selectedRows);
     }
   }
 
@@ -387,16 +397,16 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       cancelButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           /* DEBUG LINES */
-          senseTableModel.addRow("13", "Temperature", "111", "Raw", true);
-          senseTableModel.addRow("13", "Temperature", "222", "Raw", true);
-          senseTableModel.addRow("13", "Temperature", "333", "Raw", true);
-          senseTableModel.addRow("13", "Temperature", "444", "Raw", true);
-          senseTableModel.addRow("13", "Temperature", "555", "Raw", true);
-          senseTableModel.addRow("13", "Temperature", "666", "Raw", true);
-          senseTableModel.addRow("13", "Temperature", "777", "Raw", true);
-          senseTableModel.addRow("13", "Temperature", "888", "Raw", true);
-          senseTableModel.addRow("13", "Temperature", "999", "Raw", true);
-          senseTableModel.addRow("13", "Temperature", "000", "Raw", true);
+          senseTableModel.addRow("1.0", "Temperature", "111", "Raw", true);
+          senseTableModel.addRow("2.0", "Temperature", "222", "Raw", true);
+          senseTableModel.addRow("3.0", "Temperature", "333", "Raw", true);
+          senseTableModel.addRow("4.0", "Temperature", "444", "Raw", true);
+          senseTableModel.addRow("4.0", "Temperature", "555", "Raw", true);
+          senseTableModel.addRow("5.0", "Temperature", "666", "Raw", true);
+          senseTableModel.addRow("5.0", "Temperature", "777", "Raw", true);
+          senseTableModel.addRow("6.0", "Temperature", "888", "Raw", true);
+          senseTableModel.addRow("8.0", "Temperature", "999", "Raw", true);
+          senseTableModel.addRow("9.0", "Temperature", "000", "Raw", true);
           /* DEBUG LINES */
           closeWindow();
         }

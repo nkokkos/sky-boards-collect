@@ -135,7 +135,7 @@ public class PublisherCosm extends Thread {
 
     urlConn.setRequestProperty("Content-Type", "application/json");
     urlConn.setRequestProperty("X-ApiKey", APIkey);
-    urlConn.setRequestProperty("User-Agent", "Contiki collect-view");
+    urlConn.setRequestProperty("User-Agent", "Contiki CollectView");
 
     try {
       urlConn.connect();

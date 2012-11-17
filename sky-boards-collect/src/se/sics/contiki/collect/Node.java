@@ -336,16 +336,6 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
   public abstract void addSensors();
   public abstract void mapMsgFormat();
   public abstract void setNodeType();
-  
-
-  // Cosm
-  public void setFeedID(String feedID) {
-    this.feedID = feedID;
-  }
-
-  public String getFeedID() {
-    return feedID;
-  }
 
   public void setFeedTitle(String feedTitle) {
     this.feedTitle = feedTitle;
