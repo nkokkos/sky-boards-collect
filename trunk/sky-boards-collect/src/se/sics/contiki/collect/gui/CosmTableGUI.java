@@ -17,6 +17,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.ListIterator;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.DefaultCellEditor;
@@ -35,12 +36,11 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import se.sics.contiki.collect.Node;
+
 public class CosmTableGUI extends JTable {
   private static final long serialVersionUID = 1L;
   private int[] selectedRows;
-  protected static final int DATASTREAMS_COL = 1;
-  protected static final int VALUES_TYPE_COL = 4;
-  protected static final int FEED_TITLE_COL = 3;
 
   public CosmTableGUI(CosmTableModel tableModel) {
     super(tableModel);
@@ -57,14 +57,8 @@ public class CosmTableGUI extends JTable {
   }
 
   public void setUpDataStreamsColumn() {
-    TableColumn col = getColumnModel().getColumn(DATASTREAMS_COL);
+    TableColumn col = getColumnModel().getColumn(CosmRow.IDX_DATASTREAMS);
     col.setCellEditor(new DataStreamCellEditor());
-    col.setCellRenderer(new DataStreamsCellRenderer());
-    col.setPreferredWidth(150);
-  }
-  
-  public void setUpFeedTitleColumn(){
-    TableColumn col = getColumnModel().getColumn(DATASTREAMS_COL);
     col.setCellRenderer(new DataStreamsCellRenderer());
     col.setPreferredWidth(150);
   }
@@ -73,29 +67,12 @@ public class CosmTableGUI extends JTable {
     JComboBox<String> comboBox = new JComboBox<String>();
     comboBox.addItem("Raw");
     comboBox.addItem("Converted");
-    TableColumn valuesCol = getColumnModel().getColumn(VALUES_TYPE_COL);
+    TableColumn valuesCol = getColumnModel().getColumn(CosmRow.IDX_CONV);
     valuesCol.setCellEditor(new DefaultCellEditor(comboBox));
     DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
     valuesCol.setCellRenderer(renderer);
   }
 
-  public void HandleSelectionEvent() {
-    selectedRows = getSelectedRows();
-    for (int i = 0; i < selectedRows.length; i++) {
-      selectedRows[i] = convertRowIndexToModel(selectedRows[i]);
-    }
-  }
-
-  private class RowListener implements ListSelectionListener {
-    public void valueChanged(ListSelectionEvent event) {
-      if (event.getValueIsAdjusting()) {
-        return;
-      }
-      HandleSelectionEvent();
-    }
-  }
-  
-  
   @SuppressWarnings("unchecked")
   public String getToolTipText(MouseEvent e) {
     java.awt.Point p = e.getPoint();
@@ -107,12 +84,13 @@ public class CosmTableGUI extends JTable {
 
     int col = convertColumnIndexToModel(colIndex);
     int row = convertRowIndexToModel(rowIndex);
-    
-    switch(col){
+
+    switch (col) {
     case CosmRow.IDX_NODE:
       return (String) getValueAt(row, col);
     case CosmRow.IDX_DATASTREAMS:
-      return consDatastreamsToolTip((Hashtable<String, String>) getValueAt(row, col));
+      return consDatastreamsToolTip((Hashtable<String, String>) getValueAt(row,
+          col));
     case CosmRow.IDX_FEEDID:
       return (String) getValueAt(row, col);
     case CosmRow.IDX_FEEDTITLE:
@@ -122,22 +100,55 @@ public class CosmTableGUI extends JTable {
     }
     return null;
   }
-  
-  private String consDatastreamsToolTip(Hashtable<String,String> dataStreams){
+
+  private String consDatastreamsToolTip(Hashtable<String, String> dataStreams) {
     StringBuilder tipText = new StringBuilder();
     tipText
-        .append("<html><table><caption><u>Current Datastream ID's</u></caption>"
-            + "<tr><th>Sensor      </th><th>Datastream ID</th></tr>");
+        .append("<html><table>"
+            + "<tr><th><u>Sensor</u></th><th><u>Datastream ID</u></th></tr>");
     for (Object key : ((Hashtable<String, String>) dataStreams).keySet()) {
       String sensor = (String) key;
       String dstrm = ((Hashtable<String, String>) dataStreams).get(key);
-      tipText
-          .append("<tr><td>" + sensor + "</td><td>" + dstrm + "</td></tr>");
+      tipText.append("<tr><td>" + sensor + "</td><td>" + dstrm + "</td></tr>");
     }
     tipText.append("</table></html>");
     return tipText.toString();
   }
+
+  private class RowListener implements ListSelectionListener {
+    public void valueChanged(ListSelectionEvent event) {
+      if (event.getValueIsAdjusting()) {
+        return;
+      }
+      HandleSelectionEvent();
+    }
+  }
+
+  public void HandleSelectionEvent() {
+    selectedRows = getSelectedRows();
+    for (int i = 0; i < selectedRows.length; i++) {
+      selectedRows[i] = convertRowIndexToModel(selectedRows[i]);
+    }
+  }
   
+  public void selectRows(Node[] node) {
+    if (node==null)
+      return;
+    CosmTableModel model = (CosmTableModel) getModel();
+    ArrayList<Integer> rows;
+    ListIterator<Integer> rowsIt;
+    removeRowSelectionInterval(0, model.getRowCount()-1);
+
+    for (int i = 0; i < node.length; i++) {
+      if ((rows = model.getRowsOfIndex(node[i].getID())) != null) {
+        rowsIt = rows.listIterator();
+        while (rowsIt.hasNext()) {
+          int row = convertRowIndexToView((int) rowsIt.next());
+          addRowSelectionInterval(row, row);
+        }
+      }
+    }
+  }
 
   private class DataStreamsCellRenderer extends JButton implements
       TableCellRenderer {
@@ -150,25 +161,10 @@ public class CosmTableGUI extends JTable {
     public Component getTableCellRendererComponent(JTable table,
         Object dataStreams, boolean isSelected, boolean hasFocus, int row,
         int col) {
-      /*
-      StringBuilder tipText = new StringBuilder();
-      tipText
-          .append("<html><table><caption><u>Current Datastream ID's</u></caption>"
-              + "<tr><th>Sensor      </th><th>Datastream ID</th></tr>");
-      for (Object key : ((Hashtable<String, String>) dataStreams).keySet()) {
-        String sensor = (String) key;
-        String dstrm = ((Hashtable<String, String>) dataStreams).get(key);
-        tipText
-            .append("<tr><td>" + sensor + "</td><td>" + dstrm + "</td></tr>");
-      }
-      tipText.append("</table></html>");
-
-      setToolTipText(tipText.toString());
-      */
       return this;
     }
   }
-  
+
   private class DataStreamCellEditor extends AbstractCellEditor implements
       TableCellEditor, ActionListener {
     private static final long serialVersionUID = 1L;

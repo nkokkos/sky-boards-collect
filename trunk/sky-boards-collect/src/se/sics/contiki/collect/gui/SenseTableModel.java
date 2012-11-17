@@ -6,7 +6,9 @@
  */
 package se.sics.contiki.collect.gui;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -24,6 +26,8 @@ public class SenseTableModel extends AbstractTableModel {
 
   // Unique key: feed Id
   private HashSet<String> keySet = new HashSet<String>();
+
+  private Hashtable<String, ArrayList<Integer>> nodeRowIndex = new Hashtable<String, ArrayList<Integer>>();
 
   public ListIterator<SenseRow> getListIterator() {
     return data.listIterator();
@@ -72,24 +76,59 @@ public class SenseTableModel extends AbstractTableModel {
     fireTableCellUpdated(row, col);
   }
 
-  public void addRow(String node, String sensor, String feedId, String conv,
+  public void addRow(String nodeId, String sensor, String feedId, String conv,
       boolean send) {
-    if (!keySet.contains(feedId)) {
-      int row = data.size();
-      data.add(new SenseRow(node, sensor, feedId, conv, send));
-      keySet.add(feedId);
-      fireTableRowsInserted(row, row);
-    }
+    if (keySet.contains(feedId))
+      return;
+
+    int row = data.size();
+    data.add(new SenseRow(nodeId, sensor, feedId, conv, send));
+    keySet.add(feedId);
+    addToNodeRowIndex(nodeId, row);
+    fireTableRowsInserted(row, row);
   }
 
-  public void deleteRow(int[] rows) {
-    for (int i=rows.length-1;i>=0;i--) {
-      int row=rows[i];
-      String key=(String) (data.get(row).getField(SenseRow.IDX_FEEDID));
+  private void addToNodeRowIndex(String nodeId, int rowIndex) {
+    ArrayList<Integer> nodeRows;
+
+    if ((nodeRows = nodeRowIndex.get(nodeId)) == null) {
+      nodeRows = new ArrayList<Integer>();
+      nodeRowIndex.put(nodeId, nodeRows);
+    }
+    nodeRows.add(rowIndex);
+  }
+
+  public void deleteRows(int[] rows) {
+    for (int i = rows.length - 1; i >= 0; i--) {
+      int row = rows[i];
+      String key = (String) (data.get(row).getField(SenseRow.IDX_FEEDID));
       keySet.remove(key);
       data.remove(row);
     }
-    fireTableRowsDeleted(rows[0],rows[rows.length-1]);
+    remakeNodeRowIndex();
+    fireTableRowsDeleted(rows[0], rows[rows.length - 1]);
+  }
+
+  private void remakeNodeRowIndex() {
+    nodeRowIndex.clear();
+    SenseRow row;
+    for (int i = 0; i < data.size(); i++) {
+      row = data.get(i);
+      addToNodeRowIndex((String) row.getField(SenseRow.IDX_NODE), i);
+    }
+  }
+
+  public ArrayList<SenseRow> getRows(String nodeId) {
+    ArrayList<Integer> nodeRows = nodeRowIndex.get(nodeId);
+    ArrayList<SenseRow> rows = new ArrayList<SenseRow>();
+    for (int i = 0; i < nodeRows.size(); i++) {
+      rows.add(data.get(nodeRows.indexOf(i)));
+    }
+    return rows;
+  }
+
+  public ArrayList<Integer> getRowsOfIndex(String nodeId) {
+    return nodeRowIndex.get(nodeId);
   }
 }
 

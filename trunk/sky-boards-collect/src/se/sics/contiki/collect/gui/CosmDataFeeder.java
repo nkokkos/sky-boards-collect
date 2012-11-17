@@ -15,8 +15,10 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.ListIterator;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -252,35 +254,52 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
   public void nodeDataReceived(SensorData sensorData) {
     if (!isVisible())
       return;
-    Hashtable<String, String> feedTable = new Hashtable<String, String>();
+
     if (nodes.get(sensorData.getNodeID()) == null) {
       nodeAdded(sensorData.getNode());
       return;
     }
 
-    if (doFeed) {
-      Node n = sensorData.getNode();
-      fillFeedTable(n, sensorData, feedTable);
-      String key = arrayToString(keyField.getPassword());
-      PublisherCosm publisher = new PublisherCosm(feedTable, key, n.getFeedID(),this);
-      publisher.start();
+    CosmRow row;
+    Hashtable<String, String> feedTable = new Hashtable<String, String>();
+    Node node = sensorData.getNode();
+    String APIkey = arrayToString(keyField.getPassword());
+    ArrayList<CosmRow> FeedRows = cosmTableModel.getRows(node.getID());
+    
+    ListIterator<CosmRow> it = FeedRows.listIterator();
+    PublisherCosm publisher;
+    
+    while (it.hasNext()){
+      row = (CosmRow) it.next();
+      if ((boolean)row.getField(CosmRow.IDX_SEND)){
+        putValues(node,row,feedTable);
+        publisher=new PublisherCosm(feedTable, APIkey, 
+            (String) row.getField(CosmRow.IDX_FEEDID), this);
+        publisher.setCosmTitle((String) row.getField(CosmRow.IDX_FEEDTITLE));
+        publisher.start();
+      }
     }
   }
 
-  void fillFeedTable(Node n, SensorData sd, Hashtable<String, String> feedTable) {
-    Sensor[] sensors = n.getSensors();
-    for (int i = 0; i < sensors.length; i++) {
-      putValue(sensors[i].getId(), n, sd, feedTable);
-    }
-  }
-
-  private void putValue(String sensorId, Node n, SensorData sd,
+  private void putValues(Node node, CosmRow row,
       Hashtable<String, String> feedTable) {
+    String value="";
+    @SuppressWarnings("unchecked")
+    Hashtable<String, String> dataStreams=
+        (Hashtable<String, String>) row.getField(CosmRow.IDX_DATASTREAMS);
+    for (Object sensor:dataStreams.keySet()){
+      if (row.getField(CosmRow.IDX_CONV).equals("Converted")) {
+        value = Integer.toString(node.getLastValueOf((String)sensor));
+      } else if (row.getField(CosmRow.IDX_CONV).equals("Raw")) {
+        value = node.getRoundedConvOf((String)sensor);
+      }
+      feedTable.put(dataStreams.get(sensor), value);
+    }
   }
 
   @Override
   public void nodesSelected(Node[] node) {
-    // ignore for now
+    cosmTableGUI.selectRows(node);
   }
 
   public void deleteSelectedRows() {
@@ -291,7 +310,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
         + selectedRows.length + " row(s)?", "Confirm delete",
         JOptionPane.YES_NO_OPTION);
     if (opt == JOptionPane.YES_OPTION) {
-      cosmTableModel.deleteRow(selectedRows);
+      cosmTableModel.deleteRows(selectedRows);
     }
   }
 
