@@ -52,14 +52,11 @@ public class SenseTableGUI extends JTable {
 
   public String getToolTipText(MouseEvent e) {
     java.awt.Point p = e.getPoint();
-    int rowIndex = rowAtPoint(p);
-    int colIndex = columnAtPoint(p);
+    int row = rowAtPoint(p);
+    int col = columnAtPoint(p);
 
-    if (rowIndex < 0 || colIndex < 0)
+    if (row < 0 || col < 0)
       return null;
-
-    int col = convertColumnIndexToModel(colIndex);
-    int row = convertRowIndexToModel(rowIndex);
 
     switch (col) {
     case SenseRow.IDX_NODE:
@@ -91,7 +88,7 @@ public class SenseTableGUI extends JTable {
   }
 
   public void selectRows(Node[] node) {
-    if (node==null)
+    if (node==null||getRowCount()==0)
       return;
     SenseTableModel model = (SenseTableModel) getModel();
     ArrayList<Integer> rows;

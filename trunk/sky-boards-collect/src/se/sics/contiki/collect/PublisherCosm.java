@@ -19,6 +19,8 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 
+import javax.swing.SwingUtilities;
+
 import se.sics.contiki.collect.gui.CosmDataFeeder;
 
 public class PublisherCosm extends Thread {
@@ -30,13 +32,14 @@ public class PublisherCosm extends Thread {
   private final String cosmVersion = "1.0.0";
   private Hashtable<String, String> feedTable;
   private CosmDataFeeder guiCosm;
+  private int feedingNode;
 
   public PublisherCosm(Hashtable<String, String> feedTable, String key,
       String cosmFeed, CosmDataFeeder guiCosm) {
     APIkey = key;
     this.feedTable = feedTable;
     this.cosmFeed = cosmFeed;
-    this.guiCosm=guiCosm;
+    this.guiCosm = guiCosm;
   }
 
   public String getAPIkey() {
@@ -52,7 +55,7 @@ public class PublisherCosm extends Thread {
   }
 
   public String constructMsgCosm(Hashtable<String, String> feedTable) {
-    StringBuffer msg = new StringBuffer();
+    StringBuilder msg = new StringBuilder();
     char separator = ',';
     String value;
     for (Object key : feedTable.keySet()) {
@@ -89,12 +92,17 @@ public class PublisherCosm extends Thread {
       e.printStackTrace();
     }
   }
-  
-  public void addResponseToGUI(String r){
-    Calendar cal = Calendar.getInstance();
-    cal.getTime();
-    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-	guiCosm.addResponseLine(sdf.format(cal.getTime())+" Cosm> "+r);
+
+  public void addResponseToGUI(final String r) {
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        Calendar cal = Calendar.getInstance();
+        cal.getTime();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        guiCosm.addResponseLine(sdf.format(cal.getTime()) + " Cosm> Node "
+            + feedingNode + ", Feed" + cosmFeed + ": " + r);
+      }
+    });
   }
 
   public void run() {
@@ -167,10 +175,10 @@ public class PublisherCosm extends Thread {
 
     String str = null;
     try {
-      String shortline=urlConn.getResponseCode()+ " " +
-    		  urlConn.getResponseMessage(); 
+      String shortline = urlConn.getResponseCode() + " "
+          + urlConn.getResponseMessage();
       addResponseToGUI(shortline);
-      System.out.println("Cosm Publisher@ "+shortline);
+      System.out.println("Cosm Publisher@ " + shortline);
       input = new BufferedReader(
           new InputStreamReader(urlConn.getInputStream()));
       while (null != ((str = input.readLine()))) {
@@ -180,5 +188,9 @@ public class PublisherCosm extends Thread {
     } catch (IOException ex) {
       logLine("Something went wrong", false, ex);
     }
+  }
+
+  public void setFeedingNode(int feedingNode) {
+    this.feedingNode = feedingNode;
   }
 }

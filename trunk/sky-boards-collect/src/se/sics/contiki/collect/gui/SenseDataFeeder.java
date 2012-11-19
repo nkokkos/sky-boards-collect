@@ -262,6 +262,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     String APIkey = arrayToString(keyField.getPassword());
     ArrayList<SenseRow> FeedRows = senseTableModel.getRows(node.getID());
     ListIterator<SenseRow> it = FeedRows.listIterator();
+    PublisherSense publisher;
 
     while (it.hasNext()) {
       row = (SenseRow) it.next();
@@ -269,7 +270,8 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
         putValue(node, row, feedTable);
       }
     }
-    (new PublisherSense(feedTable, APIkey, this)).start();
+    publisher = new PublisherSense(feedTable, APIkey, this);
+    publisher.start();
   }
 
   private void putValue(Node node, SenseRow row,
@@ -460,6 +462,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       c.weighty = 0.1;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_START;
+      c.insets = new Insets(5, 5, 0, 5);
       pane.add(new JLabel("Node"), c);
 
       c.gridx = 1;
@@ -516,6 +519,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       JPanel groupPanel = new JPanel();
       groupPanel.add(OKbutton);
       groupPanel.add(cancelButton);
+      c.insets = new Insets(0, 0, 0, 0);
       pane.add(groupPanel, c);
 
       setContentPane(pane);

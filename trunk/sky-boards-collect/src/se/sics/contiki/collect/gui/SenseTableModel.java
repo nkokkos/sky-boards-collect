@@ -19,7 +19,7 @@ public class SenseTableModel extends AbstractTableModel {
   public final int defInitialCapacity = 20;
   private int keyCol = 2;
 
-  private String[] columnNames = { "Node", "Sensor", "Feed ID", "Values",
+  private String[] columnNames = { "Node", "Sensor", "Feed ID", "Value",
       "Send" };
 
   private Vector<SenseRow> data = new Vector<SenseRow>(defInitialCapacity);
@@ -66,8 +66,10 @@ public class SenseTableModel extends AbstractTableModel {
 
   public void setValueAt(Object value, int row, int col) {
     if (col == keyCol) {
+      if (keySet.contains(value)) 
+        return;
       String oldValue = (String) data.get(row).getField(col);
-      if (oldValue != value) {
+      if (!oldValue.equals(value)) {
         keySet.remove(oldValue);
         keySet.add((String) value);
       }
