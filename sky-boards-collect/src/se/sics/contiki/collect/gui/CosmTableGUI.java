@@ -12,6 +12,7 @@ import java.awt.Dialog.ModalityType;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -76,21 +77,18 @@ public class CosmTableGUI extends JTable {
   @SuppressWarnings("unchecked")
   public String getToolTipText(MouseEvent e) {
     java.awt.Point p = e.getPoint();
-    int rowIndex = rowAtPoint(p);
-    int colIndex = columnAtPoint(p);
+    int row = rowAtPoint(p);
+    int col = columnAtPoint(p);
 
-    if (rowIndex < 0 || colIndex < 0)
+    if (row < 0 || col < 0)
       return null;
-
-    int col = convertColumnIndexToModel(colIndex);
-    int row = convertRowIndexToModel(rowIndex);
 
     switch (col) {
     case CosmRow.IDX_NODE:
       return (String) getValueAt(row, col);
     case CosmRow.IDX_DATASTREAMS:
-      return consDatastreamsToolTip((Hashtable<String, String>) getValueAt(row,
-          col));
+      return consDatastreamsToolTip((Hashtable<String, String>) 
+          getValueAt(row,col));
     case CosmRow.IDX_FEEDID:
       return (String) getValueAt(row, col);
     case CosmRow.IDX_FEEDTITLE:
@@ -132,11 +130,12 @@ public class CosmTableGUI extends JTable {
   }
   
   public void selectRows(Node[] node) {
-    if (node==null)
+    if (node==null||getRowCount()==0)
       return;
     CosmTableModel model = (CosmTableModel) getModel();
     ArrayList<Integer> rows;
     ListIterator<Integer> rowsIt;
+    
     removeRowSelectionInterval(0, model.getRowCount()-1);
 
     for (int i = 0; i < node.length; i++) {
@@ -218,13 +217,13 @@ public class CosmTableGUI extends JTable {
       c.weightx = 0.1;
       c.weighty = 0.1;
       c.gridy = 0;
-
+      c.insets = new Insets(5, 5, 0, 5);
       for (Object key : dataStreams.keySet()) {
         String sensor = key.toString();
         c.gridx = 0;
         c.weightx = 0;
         c.fill = GridBagConstraints.NONE;
-        c.anchor = GridBagConstraints.LINE_END;
+        c.anchor = GridBagConstraints.LINE_START;
         pane.add(new JLabel(sensor), c);
         c.gridx = 1;
         c.weightx = 0.1;
@@ -249,6 +248,7 @@ public class CosmTableGUI extends JTable {
       c.gridwidth = 2;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.CENTER;
+      c.insets = new Insets(0, 0, 0, 0);
       pane.add(buttonPanel, c);
       dialog.setContentPane(pane);
       dialog.pack();

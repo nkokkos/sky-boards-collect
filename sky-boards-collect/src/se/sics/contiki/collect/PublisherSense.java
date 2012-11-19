@@ -7,7 +7,10 @@
 
 package se.sics.contiki.collect;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -15,9 +18,8 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Hashtable;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
+
+import javax.swing.SwingUtilities;
 
 import se.sics.contiki.collect.gui.SenseDataFeeder;
 
@@ -27,11 +29,15 @@ public class PublisherSense extends Thread {
   private String APIkey;
   private Hashtable<String, String> feedTable;
   private SenseDataFeeder guiSense;
+  private int feedingNode;
+  private String keysString;
 
-  public PublisherSense(Hashtable<String, String> feedTable, String key, SenseDataFeeder guiSense) {
+  public PublisherSense(Hashtable<String, String> feedTable, String key,
+      SenseDataFeeder guiSense) {
     APIkey = key;
     this.feedTable = feedTable;
     this.guiSense = guiSense;
+    keysString = "";
   }
 
   public String getAPIkey() {
@@ -43,13 +49,14 @@ public class PublisherSense extends Thread {
   }
 
   public String constructMsgOpenSense(Hashtable<String, String> feedTable) {
-    StringBuffer msg = new StringBuffer();
+    StringBuilder msg = new StringBuilder();
     char separator = ',';
     String value;
     for (Object key : feedTable.keySet()) {
       value = feedTable.get(key).replace(",", ".");// Set "." as decimal mark
       msg.append("{\"feed_id\" : " + key + ", " + "\"value\" : \"" + value
           + "\"}" + separator);
+      keysString += " " + key + ",";
     }
     // remove last separator
     String msgbody = msg.toString();
@@ -67,12 +74,19 @@ public class PublisherSense extends Thread {
       e.printStackTrace();
     }
   }
-  
-  public void addResponseToGUI(String r){
-    Calendar cal = Calendar.getInstance();
-    cal.getTime();
-    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-	guiSense.addResponseLine(sdf.format(cal.getTime())+" Sense> "+r);
+
+  public void addResponseToGUI(final String r) {
+
+    SwingUtilities.invokeLater(new Runnable() {
+      public void run() {
+        Calendar cal = Calendar.getInstance();
+        cal.getTime();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        keysString = keysString.substring(0, keysString.length() - 1);
+        guiSense.addResponseLine(sdf.format(cal.getTime()) + " Sense> Node "
+            + feedingNode + ", Feed" + keysString + ": " + r);
+      }
+    });
   }
 
   public void run() {
@@ -141,10 +155,10 @@ public class PublisherSense extends Thread {
 
     String str = null;
     try {
-      String shortline=urlConn.getResponseCode()+ " " +
-    		  urlConn.getResponseMessage(); 
+      String shortline = urlConn.getResponseCode() + " "
+          + urlConn.getResponseMessage();
       addResponseToGUI(shortline);
-      System.out.println("sen.se Publisher@ "+shortline);
+      System.out.println("sen.se Publisher@ " + shortline);
       input = new BufferedReader(
           new InputStreamReader(urlConn.getInputStream()));
       while (null != ((str = input.readLine()))) {
@@ -154,5 +168,9 @@ public class PublisherSense extends Thread {
     } catch (IOException ex) {
       logLine("Something went wrong", false, ex);
     }
+  }
+
+  public void setFeedingNode(int feedingNode) {
+    this.feedingNode = feedingNode;
   }
 }

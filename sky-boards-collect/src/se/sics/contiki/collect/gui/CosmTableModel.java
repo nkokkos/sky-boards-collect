@@ -64,8 +64,10 @@ public class CosmTableModel extends AbstractTableModel {
 
   public void setValueAt(Object value, int row, int col) {
     if (col == keyCol) {
+      if (keySet.contains(value)) 
+        return;
       String oldValue = (String) data.get(row).getField(col);
-      if (oldValue != value) {
+      if (!oldValue.equals(value)) {
         keySet.remove(oldValue);
         keySet.add((String) value);
       }

@@ -96,7 +96,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       public void actionPerformed(ActionEvent e) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
           public void run() {
-            JDialog dialog=new DialogAdd(nodes);
+            JDialog dialog = new DialogAdd(nodes);
             dialog.setLocationRelativeTo(addButton);
             dialog.setVisible(true);
           }
@@ -265,15 +265,14 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
     Node node = sensorData.getNode();
     String APIkey = arrayToString(keyField.getPassword());
     ArrayList<CosmRow> FeedRows = cosmTableModel.getRows(node.getID());
-    
     ListIterator<CosmRow> it = FeedRows.listIterator();
     PublisherCosm publisher;
-    
-    while (it.hasNext()){
+
+    while (it.hasNext()) {
       row = (CosmRow) it.next();
-      if ((boolean)row.getField(CosmRow.IDX_SEND)){
-        putValues(node,row,feedTable);
-        publisher=new PublisherCosm(feedTable, APIkey, 
+      if ((boolean) row.getField(CosmRow.IDX_SEND)) {
+        putValues(node, row, feedTable);
+        publisher = new PublisherCosm(feedTable, APIkey,
             (String) row.getField(CosmRow.IDX_FEEDID), this);
         publisher.setCosmTitle((String) row.getField(CosmRow.IDX_FEEDTITLE));
         publisher.start();
@@ -283,15 +282,15 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
 
   private void putValues(Node node, CosmRow row,
       Hashtable<String, String> feedTable) {
-    String value="";
+    String value = "";
     @SuppressWarnings("unchecked")
-    Hashtable<String, String> dataStreams=
-        (Hashtable<String, String>) row.getField(CosmRow.IDX_DATASTREAMS);
-    for (Object sensor:dataStreams.keySet()){
+    Hashtable<String, String> dataStreams = (Hashtable<String, String>) row
+        .getField(CosmRow.IDX_DATASTREAMS);
+    for (Object sensor : dataStreams.keySet()) {
       if (row.getField(CosmRow.IDX_CONV).equals("Converted")) {
-        value = Integer.toString(node.getLastValueOf((String)sensor));
+        value = Integer.toString(node.getLastValueOf((String) sensor));
       } else if (row.getField(CosmRow.IDX_CONV).equals("Raw")) {
-        value = node.getRoundedConvOf((String)sensor);
+        value = node.getRoundedConvOf((String) sensor);
       }
       feedTable.put(dataStreams.get(sensor), value);
     }
@@ -343,41 +342,61 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
   /**
    * Configuration line format (key=value)
    * 
-   * feedcosm,<feedId>,<datastream> = <node>,<feedTitle>,<conv>,<send>
+   * feedcosm,<feedId> =
+   * <node>,<feedTitle>,<conv>,<send>,{<dataStreams>}
    * 
    */
-  public void updateConfig(Properties config) {/*
+  public void updateConfig(Properties config) {
     ListIterator<CosmRow> li = ((CosmTableModel) cosmTableGUI.getModel())
         .getListIterator();
     while (li.hasNext()) {
       CosmRow sr = li.next();
       StringBuilder value = new StringBuilder();
-      String key = "feedcosm," + (String) sr.getField(CosmRow.IDX_FEEDID);
+      @SuppressWarnings("unchecked")
+      Hashtable<String, String> dataStreams = (Hashtable<String, String>) 
+      sr.getField(CosmRow.IDX_DATASTREAMS);
+      String key = "feedcosm," + sr.getField(CosmRow.IDX_FEEDID);
       value.append(sr.getField(CosmRow.IDX_NODE) + ","
-          + sr.getField(CosmRow.IDX_SENSOR) + ","
+          + sr.getField(CosmRow.IDX_FEEDTITLE) + ","
           + sr.getField(CosmRow.IDX_CONV) + ","
           + sr.getField(CosmRow.IDX_SEND));
+      //for (int i = 0; i < dataStreams.size(); i++) {
+        value.append(","+dataStreams.toString());
+      //} 
       config.setProperty(key, value.toString());
     }
-  */}
+  }
 
-  public void loadConfig(Properties config) {/*
+  public void loadConfig(Properties config) {
+    Hashtable<String,String> dataStreams;
     for (Object k : config.keySet()) {
-      String key=k.toString();
+      String key = k.toString();
       if (((String) key).startsWith("feedcosm")) {
-        String[] SKey=key.split(",");
-        String[] SVal=config.getProperty(key).split(",");
-        boolean send=Boolean.parseBoolean(SVal[3]);
-        cosmTableModel.addRow(SVal[0], SVal[1], SKey[1], SVal[2], send);
+        dataStreams = new Hashtable<String, String>();
+        String[] SKey = key.split(",");
+        String[] SVal = config.getProperty(key).split(",",5);
+        boolean send = Boolean.parseBoolean(SVal[3]);
+        parseDataStreams(dataStreams, SVal[4]);
+        cosmTableModel.addRow(SVal[0], dataStreams, SKey[1], SVal[1], SVal[2], send);
       }
     }
-  */}
+  }
+
+  private void parseDataStreams(Hashtable<String, String> dataStreams, String strds) {
+    strds=strds.substring(0, strds.length()-1);
+    strds=strds.substring(1);
+    String splited[]=strds.split(",");
+    for (int i=0;i<splited.length;i++){
+      String val[]=splited[i].trim().split("=");
+      dataStreams.put(val[0], val[1]); 
+    }
+  }
 
   private class DialogAdd extends JDialog {
     private static final long serialVersionUID = 1L;
     private JComboBox<String> comboBoxNode;
     private JComboBox<String> comboBoxRaw;
-    private Hashtable<String,String> dataStreams;
+    private Hashtable<String, String> dataStreams;
     JTextField feedIdField;
     JTextField feedTitleField;
     String feedConv = "Converted";
@@ -392,15 +411,15 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
 
       feedIdField = new JTextField();
       feedTitleField = new JTextField();
-      dataStreams = new Hashtable<String,String>();
+      dataStreams = new Hashtable<String, String>();
       OKbutton = new JButton("Add");
       OKbutton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           String id = feedIdField.getText();
-          String title= feedTitleField.getText();
+          String title = feedTitleField.getText();
           if (isValidFeedID(id)) {
-            cosmTableModel.addRow(feedingNode, dataStreams, id, title,feedConv,
-                true);
+            cosmTableModel.addRow(feedingNode, dataStreams, id, title,
+                feedConv, true);
             closeWindow();
           } else
             JOptionPane.showMessageDialog(pane, "Invalid feed ID", "Error",
@@ -427,8 +446,8 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
           Node n = nodes.get(feedingNode);
           Sensor[] sensors = n.getSensors();
           dataStreams.clear();
-          for (int i = 0; i < sensors.length; i++){
-            String sensorId=sensors[i].getId();
+          for (int i = 0; i < sensors.length; i++) {
+            String sensorId = sensors[i].getId();
             dataStreams.put(sensorId, sensorId);
           }
         }
@@ -451,6 +470,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.weighty = 0.1;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_START;
+      c.insets = new Insets(5, 5, 0, 5);
       pane.add(new JLabel("Node"), c);
 
       c.gridx = 1;
@@ -458,7 +478,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
       pane.add(comboBoxNode, c);
-      
+
       c.gridx = 0;
       c.gridy = 1;
       c.weightx = 0;
@@ -471,7 +491,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
       pane.add(feedIdField, c);
-      
+
       c.gridx = 0;
       c.gridy = 2;
       c.weightx = 0;
@@ -484,7 +504,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
       pane.add(feedTitleField, c);
-      
+
       c.gridx = 0;
       c.gridy = 3;
       c.weightx = 0;
@@ -507,6 +527,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       JPanel groupPanel = new JPanel();
       groupPanel.add(OKbutton);
       groupPanel.add(cancelButton);
+      c.insets = new Insets(0, 0, 0, 0);
       pane.add(groupPanel, c);
 
       setContentPane(pane);

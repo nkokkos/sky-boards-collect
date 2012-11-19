@@ -71,7 +71,6 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
   public Node(String nodeID, String nodeName) {
     this.id = nodeID;
     this.name = nodeName;
-    feedID = null;
     sensorDataAggregator = new SensorDataAggregator(this);
     sensors = new Hashtable<String, Sensor>();
   }
@@ -231,7 +230,6 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
   // -------------------------------------------------------------------
   protected Hashtable<String, Sensor> sensors = new Hashtable<String, Sensor>();
   protected Hashtable<String, Integer> dataMsgMapping = new Hashtable<String, Integer>();
-  private String feedID;
   private String feedTitle;
   public String type;
   
