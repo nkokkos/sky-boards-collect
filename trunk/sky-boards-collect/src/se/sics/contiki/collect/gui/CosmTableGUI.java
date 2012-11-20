@@ -61,7 +61,6 @@ public class CosmTableGUI extends JTable {
     TableColumn col = getColumnModel().getColumn(CosmRow.IDX_DATASTREAMS);
     col.setCellEditor(new DataStreamCellEditor());
     col.setCellRenderer(new DataStreamsCellRenderer());
-    col.setPreferredWidth(150);
   }
 
   public void setUpValuesColumn() {
@@ -154,7 +153,7 @@ public class CosmTableGUI extends JTable {
     private static final long serialVersionUID = 1L;
 
     public DataStreamsCellRenderer() {
-      super("View/Edit");
+      super("Edit");
     }
 
     public Component getTableCellRendererComponent(JTable table,

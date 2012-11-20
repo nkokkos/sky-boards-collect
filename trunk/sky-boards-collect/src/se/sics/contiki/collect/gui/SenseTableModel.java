@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.ListIterator;
+import java.util.Properties;
 import java.util.Vector;
 
 import javax.swing.table.AbstractTableModel;
@@ -18,16 +19,16 @@ public class SenseTableModel extends AbstractTableModel {
   private static final long serialVersionUID = 1L;
   public final int defInitialCapacity = 20;
   private int keyCol = 2;
-
-  private String[] columnNames = { "Node", "Sensor", "Feed ID", "Value",
-      "Send" };
-
+  private String[] columnNames = { "Node", "Sensor", "Feed ID", "Value", "Send" };
   private Vector<SenseRow> data = new Vector<SenseRow>(defInitialCapacity);
-
   // Unique key: feed Id
   private HashSet<String> keySet = new HashSet<String>();
-
+  Properties configFile;
   private Hashtable<String, ArrayList<Integer>> nodeRowIndex = new Hashtable<String, ArrayList<Integer>>();
+
+  public SenseTableModel(Properties configFile) {
+    this.configFile = configFile;
+  }
 
   public ListIterator<SenseRow> getListIterator() {
     return data.listIterator();
@@ -66,16 +67,23 @@ public class SenseTableModel extends AbstractTableModel {
 
   public void setValueAt(Object value, int row, int col) {
     if (col == keyCol) {
-      if (keySet.contains(value)) 
+      if (keySet.contains(value))
+        return;
+      if (!SenseDataFeeder.isValidFeedID((String) value))
         return;
       String oldValue = (String) data.get(row).getField(col);
       if (!oldValue.equals(value)) {
         keySet.remove(oldValue);
+        deleteFromConfigFile(oldValue);
         keySet.add((String) value);
       }
     }
     data.get(row).setField(col, value);
     fireTableCellUpdated(row, col);
+  }
+
+  private void deleteFromConfigFile(String key) {
+    configFile.remove("feedsense," + key);
   }
 
   public void addRow(String nodeId, String sensor, String feedId, String conv,
@@ -100,15 +108,18 @@ public class SenseTableModel extends AbstractTableModel {
     nodeRows.add(rowIndex);
   }
 
-  public void deleteRows(int[] rows) {
+  public ArrayList<String> deleteRows(int[] rows) {
+    ArrayList<String> delList = new ArrayList<String>();
     for (int i = rows.length - 1; i >= 0; i--) {
       int row = rows[i];
       String key = (String) (data.get(row).getField(SenseRow.IDX_FEEDID));
       keySet.remove(key);
+      delList.add(key);
       data.remove(row);
     }
     remakeNodeRowIndex();
     fireTableRowsDeleted(rows[0], rows[rows.length - 1]);
+    return delList;
   }
 
   private void remakeNodeRowIndex() {
@@ -163,5 +174,10 @@ class SenseRow {
 
   public static Class<? extends Object> getClass(int c) {
     return classes[c].getClass();
+  }
+
+  public SenseRow clone() {
+    return new SenseRow((String) row.get(0), (String) row.get(1),
+        (String) row.get(2), (String) row.get(3), (boolean) row.get(4));
   }
 }

@@ -59,13 +59,14 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
   JTextArea logArea;
   SenseTableGUI senseTableGUI;
   SenseTableModel senseTableModel;
+  Properties config;
 
   private Hashtable<String, Node> nodes = new Hashtable<String, Node>();
 
   public SenseDataFeeder(String category, Properties config) {
     panel = new JPanel(new BorderLayout());
     this.category = category;
-
+    this.config = config;
     keyField = new JPasswordField();
     keyField.setColumns(30);
 
@@ -107,7 +108,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       }
     });
 
-    senseTableModel = new SenseTableModel();
+    senseTableModel = new SenseTableModel(config);
     senseTableGUI = new SenseTableGUI(senseTableModel);
 
     logArea = new JTextArea();
@@ -178,7 +179,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     c.weighty = 0.5;
     c.fill = GridBagConstraints.BOTH;
     c.insets = new Insets(10, 20, 5, 20);
-    logArea.setText("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    //logArea.setText("");
     sensePanel.add(new JScrollPane(logArea), c);
 
     c.gridx = 0;
@@ -194,7 +195,6 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     sensePanel.add(startStopPanel, c);
 
     panel.add(sensePanel, BorderLayout.CENTER);
-    loadConfig(config);
   }
 
   @Override
@@ -300,8 +300,13 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
         + selectedRows.length + " row(s)?", "Confirm delete",
         JOptionPane.YES_NO_OPTION);
     if (opt == JOptionPane.YES_OPTION) {
-      senseTableModel.deleteRows(selectedRows);
+      ArrayList<String> delList;
+      delList = senseTableModel.deleteRows(selectedRows);
+      for (int i = 0; i < delList.size(); i++) {
+        config.remove("feedsense," + delList.get(i));
+      }
     }
+
   }
 
   public static String arrayToString(char[] a) {
@@ -351,16 +356,11 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     }
   }
 
-  public void loadConfig(Properties config) {
-    for (Object k : config.keySet()) {
-      String key = k.toString();
-      if (((String) key).startsWith("feedsense")) {
-        String[] SKey = key.split(",");
-        String[] SVal = config.getProperty(key).split(",");
-        boolean send = Boolean.parseBoolean(SVal[3]);
-        senseTableModel.addRow(SVal[0], SVal[1], SKey[1], SVal[2], send);
-      }
-    }
+  public void loadConfigLine(String key, String value) {
+    String[] SKey = key.split(",");
+    String[] SVal = value.split(",");
+    boolean send = Boolean.parseBoolean(SVal[3]);
+    senseTableModel.addRow(SVal[0], SVal[1], SKey[1], SVal[2], send);
   }
 
   private class DialogAdd extends JDialog {
@@ -398,18 +398,6 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       JButton cancelButton = new JButton("Cancel");
       cancelButton.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-          /* DEBUG LINES */
-          senseTableModel.addRow("1.0", "Temperature", "111", "Raw", true);
-          senseTableModel.addRow("2.0", "Temperature", "222", "Raw", true);
-          senseTableModel.addRow("3.0", "Temperature", "333", "Raw", true);
-          senseTableModel.addRow("4.0", "Temperature", "444", "Raw", true);
-          senseTableModel.addRow("4.0", "Temperature", "555", "Raw", true);
-          senseTableModel.addRow("5.0", "Temperature", "666", "Raw", true);
-          senseTableModel.addRow("5.0", "Temperature", "777", "Raw", true);
-          senseTableModel.addRow("6.0", "Temperature", "888", "Raw", true);
-          senseTableModel.addRow("8.0", "Temperature", "999", "Raw", true);
-          senseTableModel.addRow("9.0", "Temperature", "000", "Raw", true);
-          /* DEBUG LINES */
           closeWindow();
         }
       });
@@ -461,7 +449,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       c.weightx = 0;
       c.weighty = 0.1;
       c.fill = GridBagConstraints.NONE;
-      c.anchor = GridBagConstraints.LINE_START;
+      c.anchor = GridBagConstraints.LINE_END;
       c.insets = new Insets(5, 5, 0, 5);
       pane.add(new JLabel("Node"), c);
 
@@ -475,7 +463,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       c.gridy = 1;
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
-      c.anchor = GridBagConstraints.LINE_START;
+      c.anchor = GridBagConstraints.LINE_END;
       pane.add(new JLabel("Sensor"), c);
 
       c.gridx = 1;
@@ -488,7 +476,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       c.gridy = 2;
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
-      c.anchor = GridBagConstraints.LINE_START;
+      c.anchor = GridBagConstraints.LINE_END;
       pane.add(new JLabel("Send values"), c);
 
       c.gridx = 1;
@@ -501,8 +489,8 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       c.gridy = 3;
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
-      c.anchor = GridBagConstraints.LINE_START;
-      pane.add(new JLabel("Feed identifier "), c);
+      c.anchor = GridBagConstraints.LINE_END;
+      pane.add(new JLabel("Feed identifier"), c);
 
       c.gridx = 1;
       c.gridy = 3;
@@ -519,7 +507,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       JPanel groupPanel = new JPanel();
       groupPanel.add(OKbutton);
       groupPanel.add(cancelButton);
-      c.insets = new Insets(0, 0, 0, 0);
+      c.insets = new Insets(10, 0, 0, 0);
       pane.add(groupPanel, c);
 
       setContentPane(pane);
@@ -530,24 +518,24 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       setModalityType(ModalityType.APPLICATION_MODAL);
     }
 
-    public boolean isValidFeedID(String id) {
-      if (id == null || id.equals("") || !isInteger(id)
-          || Integer.valueOf(id) < 0)
-        return false;
-      return true;
-    }
-
-    public boolean isInteger(String str) {
-      try {
-        Integer.parseInt(str);
-        return true;
-      } catch (NumberFormatException e) {
-        return false;
-      }
-    }
-
     void closeWindow() {
       dispose();
+    }
+  }
+
+  public static boolean isValidFeedID(String id) {
+    if (id == null || id.equals("") || !isInteger(id)
+        || Integer.valueOf(id) < 0)
+      return false;
+    return true;
+  }
+
+  public static boolean isInteger(String str) {
+    try {
+      Integer.parseInt(str);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
     }
   }
 }
