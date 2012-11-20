@@ -59,13 +59,14 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
   JTextArea logArea;
   CosmTableGUI cosmTableGUI;
   CosmTableModel cosmTableModel;
+  Properties config;
 
   private Hashtable<String, Node> nodes = new Hashtable<String, Node>();
 
   public CosmDataFeeder(String category, Properties config) {
     panel = new JPanel(new BorderLayout());
     this.category = category;
-
+    this.config = config;
     keyField = new JPasswordField();
     keyField.setColumns(30);
 
@@ -111,7 +112,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       }
     });
 
-    cosmTableModel = new CosmTableModel();
+    cosmTableModel = new CosmTableModel(config);
     cosmTableGUI = new CosmTableGUI(cosmTableModel);
 
     logArea = new JTextArea();
@@ -198,7 +199,6 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
     cosmPanel.add(startStopPanel, c);
 
     panel.add(cosmPanel, BorderLayout.CENTER);
-    loadConfig(config);
   }
 
   @Override
@@ -309,7 +309,11 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
         + selectedRows.length + " row(s)?", "Confirm delete",
         JOptionPane.YES_NO_OPTION);
     if (opt == JOptionPane.YES_OPTION) {
-      cosmTableModel.deleteRows(selectedRows);
+      ArrayList<String> delList;
+      delList = cosmTableModel.deleteRows(selectedRows);
+      for (int i = 0; i < delList.size(); i++) {
+        config.remove("feedcosm," + delList.get(i));
+      }
     }
   }
 
@@ -342,8 +346,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
   /**
    * Configuration line format (key=value)
    * 
-   * feedcosm,<feedId> =
-   * <node>,<feedTitle>,<conv>,<send>,{<dataStreams>}
+   * feedcosm,<feedId> = <node>,<feedTitle>,<conv>,<send>,{<dataStreams>}
    * 
    */
   public void updateConfig(Properties config) {
@@ -353,42 +356,42 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       CosmRow sr = li.next();
       StringBuilder value = new StringBuilder();
       @SuppressWarnings("unchecked")
-      Hashtable<String, String> dataStreams = (Hashtable<String, String>) 
-      sr.getField(CosmRow.IDX_DATASTREAMS);
+      Hashtable<String, String> dataStreams = (Hashtable<String, String>) sr
+          .getField(CosmRow.IDX_DATASTREAMS);
       String key = "feedcosm," + sr.getField(CosmRow.IDX_FEEDID);
-      value.append(sr.getField(CosmRow.IDX_NODE) + ","
-          + sr.getField(CosmRow.IDX_FEEDTITLE) + ","
-          + sr.getField(CosmRow.IDX_CONV) + ","
-          + sr.getField(CosmRow.IDX_SEND));
-      //for (int i = 0; i < dataStreams.size(); i++) {
-        value.append(","+dataStreams.toString());
-      //} 
+      value
+          .append(sr.getField(CosmRow.IDX_NODE) + ","
+              + sr.getField(CosmRow.IDX_FEEDTITLE) + ","
+              + sr.getField(CosmRow.IDX_CONV) + ","
+              + sr.getField(CosmRow.IDX_SEND));
+      // for (int i = 0; i < dataStreams.size(); i++) {
+      value.append("," + dataStreams.toString());
+      // }
       config.setProperty(key, value.toString());
     }
   }
 
-  public void loadConfig(Properties config) {
-    Hashtable<String,String> dataStreams;
-    for (Object k : config.keySet()) {
-      String key = k.toString();
-      if (((String) key).startsWith("feedcosm")) {
-        dataStreams = new Hashtable<String, String>();
-        String[] SKey = key.split(",");
-        String[] SVal = config.getProperty(key).split(",",5);
-        boolean send = Boolean.parseBoolean(SVal[3]);
-        parseDataStreams(dataStreams, SVal[4]);
-        cosmTableModel.addRow(SVal[0], dataStreams, SKey[1], SVal[1], SVal[2], send);
-      }
-    }
+  public void loadConfigLine(String key, String value) {
+    Hashtable<String, String> dataStreams;
+
+    dataStreams = new Hashtable<String, String>();
+    String[] SKey = key.split(",");
+    String[] SVal = value.split(",", 5);
+    boolean send = Boolean.parseBoolean(SVal[3]);
+    parseDataStreams(dataStreams, SVal[4]);
+    cosmTableModel
+        .addRow(SVal[0], dataStreams, SKey[1], SVal[1], SVal[2], send);
+
   }
 
-  private void parseDataStreams(Hashtable<String, String> dataStreams, String strds) {
-    strds=strds.substring(0, strds.length()-1);
-    strds=strds.substring(1);
-    String splited[]=strds.split(",");
-    for (int i=0;i<splited.length;i++){
-      String val[]=splited[i].trim().split("=");
-      dataStreams.put(val[0], val[1]); 
+  private void parseDataStreams(Hashtable<String, String> dataStreams,
+      String strds) {
+    strds = strds.substring(0, strds.length() - 1);
+    strds = strds.substring(1);
+    String splited[] = strds.split(",");
+    for (int i = 0; i < splited.length; i++) {
+      String val[] = splited[i].trim().split("=");
+      dataStreams.put(val[0], val[1]);
     }
   }
 
@@ -417,13 +420,19 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
         public void actionPerformed(ActionEvent e) {
           String id = feedIdField.getText();
           String title = feedTitleField.getText();
-          if (isValidFeedID(id)) {
+          title.replaceAll(",", " ");
+          if (!isValidFeedID(id)) {
+            JOptionPane.showMessageDialog(pane, "Invalid feed ID", "Error",
+                JOptionPane.ERROR_MESSAGE);
+          } else if (!isValidFeedTitle(title)) {
+            JOptionPane.showMessageDialog(pane,
+                "Feed title cannot be blank or contain \",\" character",
+                "Error", JOptionPane.ERROR_MESSAGE);
+          } else {
             cosmTableModel.addRow(feedingNode, dataStreams, id, title,
                 feedConv, true);
             closeWindow();
-          } else
-            JOptionPane.showMessageDialog(pane, "Invalid feed ID", "Error",
-                JOptionPane.ERROR_MESSAGE);
+          }
         }
       });
       JButton cancelButton = new JButton("Cancel");
@@ -469,7 +478,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.weightx = 0;
       c.weighty = 0.1;
       c.fill = GridBagConstraints.NONE;
-      c.anchor = GridBagConstraints.LINE_START;
+      c.anchor = GridBagConstraints.LINE_END;
       c.insets = new Insets(5, 5, 0, 5);
       pane.add(new JLabel("Node"), c);
 
@@ -483,8 +492,8 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.gridy = 1;
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
-      c.anchor = GridBagConstraints.LINE_START;
-      pane.add(new JLabel("Feed identifier "), c);
+      c.anchor = GridBagConstraints.LINE_END;
+      pane.add(new JLabel("Feed identifier"), c);
 
       c.gridx = 1;
       c.gridy = 1;
@@ -496,7 +505,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.gridy = 2;
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
-      c.anchor = GridBagConstraints.LINE_START;
+      c.anchor = GridBagConstraints.LINE_END;
       pane.add(new JLabel("Feed Title"), c);
 
       c.gridx = 1;
@@ -509,7 +518,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.gridy = 3;
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
-      c.anchor = GridBagConstraints.LINE_START;
+      c.anchor = GridBagConstraints.LINE_END;
       pane.add(new JLabel("Send values"), c);
 
       c.gridx = 1;
@@ -527,7 +536,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       JPanel groupPanel = new JPanel();
       groupPanel.add(OKbutton);
       groupPanel.add(cancelButton);
-      c.insets = new Insets(0, 0, 0, 0);
+      c.insets = new Insets(10, 0, 0, 0);
       pane.add(groupPanel, c);
 
       setContentPane(pane);
@@ -538,24 +547,30 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       setModalityType(ModalityType.APPLICATION_MODAL);
     }
 
-    public boolean isValidFeedID(String id) {
-      if (id == null || id.equals("") || !isInteger(id)
-          || Integer.valueOf(id) < 0)
-        return false;
-      return true;
-    }
-
-    public boolean isInteger(String str) {
-      try {
-        Integer.parseInt(str);
-        return true;
-      } catch (NumberFormatException e) {
-        return false;
-      }
-    }
-
     void closeWindow() {
       dispose();
+    }
+  }
+
+  public static boolean isValidFeedID(String id) {
+    if (id == null || id.equals("") || !isInteger(id)
+        || Integer.valueOf(id) < 0)
+      return false;
+    return true;
+  }
+
+  public static boolean isValidFeedTitle(String title) {
+    if (title.contains(",") || title.equals(""))
+      return false;
+    return true;
+  }
+
+  public static boolean isInteger(String str) {
+    try {
+      Integer.parseInt(str);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
     }
   }
 }

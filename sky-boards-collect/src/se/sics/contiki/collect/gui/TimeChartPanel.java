@@ -37,6 +37,7 @@
 
 package se.sics.contiki.collect.gui;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.util.Date;
@@ -75,6 +76,8 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
   private boolean hasGlobalRange;
   private int maxItemCount;
   
+  public final Color JAVA_DEF=new Color(238,238,238);
+  
   public TimeChartPanel(CollectServer server, String category, String title,
       String chartTitle, String timeAxisLabel, String valueAxisLabel) {
     super(new BorderLayout());
@@ -86,6 +89,7 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
         chartTitle, timeAxisLabel, valueAxisLabel, timeSeries,
         true, true, false
     );
+    chart.setBackgroundPaint(JAVA_DEF);
     this.chartPanel = new ChartPanel(chart);
     this.chartPanel.setPreferredSize(new Dimension(500, 270));
     setBaseShapeVisible(true);

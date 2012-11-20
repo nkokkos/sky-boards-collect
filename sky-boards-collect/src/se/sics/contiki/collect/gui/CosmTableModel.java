@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.ListIterator;
+import java.util.Properties;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -17,17 +18,18 @@ public class CosmTableModel extends AbstractTableModel {
   private static final long serialVersionUID = 1L;
   public final int defInitialCapacity = 20;
   private int keyCol = 2;
-
+  private int titleCol = 3;
   private String[] columnNames = { "Node", "Datastream ID's", "Feed ID",
       "Feed title", "Values", "Send" };
-
   private ArrayList<CosmRow> data = new ArrayList<CosmRow>(defInitialCapacity);
-
   // Unique key: feed Id
   private HashSet<String> keySet = new HashSet<String>();
-
+  Properties configFile;
   private Hashtable<String, ArrayList<Integer>> nodeRowIndex = new Hashtable<String, ArrayList<Integer>>();
 
+  public CosmTableModel(Properties configFile){
+    this.configFile = configFile;
+  }
   public ListIterator<CosmRow> getListIterator() {
     return data.listIterator();
   }
@@ -64,16 +66,27 @@ public class CosmTableModel extends AbstractTableModel {
 
   public void setValueAt(Object value, int row, int col) {
     if (col == keyCol) {
-      if (keySet.contains(value)) 
+      if (keySet.contains(value))
+        return;
+      if (!CosmDataFeeder.isValidFeedID((String) value))
         return;
       String oldValue = (String) data.get(row).getField(col);
       if (!oldValue.equals(value)) {
         keySet.remove(oldValue);
+        deleteFromConfigFile(oldValue);
         keySet.add((String) value);
       }
+    } else if (col == titleCol) {
+      if (!CosmDataFeeder.isValidFeedTitle((String) value))
+        return;
     }
+
     data.get(row).setField(col, value);
     fireTableCellUpdated(row, col);
+  }
+
+  private void deleteFromConfigFile(String key) {
+    configFile.remove("feedcosm," + key);
   }
 
   public void addRow(String nodeId, Hashtable<String, String> dataStreams,
@@ -97,15 +110,18 @@ public class CosmTableModel extends AbstractTableModel {
     nodeRows.add(rowIndex);
   }
 
-  public void deleteRows(int[] rows) {
+  public ArrayList<String> deleteRows(int[] rows) {
+    ArrayList<String> delList = new ArrayList<String>();
     for (int i = rows.length - 1; i >= 0; i--) {
       int row = rows[i];
       String key = (String) (data.get(row).getField(CosmRow.IDX_FEEDID));
       keySet.remove(key);
+      delList.add(key);
       data.remove(row);
-      remakeNodeRowIndex();
     }
+    remakeNodeRowIndex();
     fireTableRowsDeleted(rows[0], rows[rows.length - 1]);
+    return delList;
   }
 
   private void remakeNodeRowIndex() {

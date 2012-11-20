@@ -78,6 +78,7 @@ public class NodeControl implements Visualizer {
   private final JLabel statusLabel;
   private final JSeparator statusSeparator;
 
+
   public NodeControl(CollectServer server, String category) {
     this.server = server;
     this.category = category;

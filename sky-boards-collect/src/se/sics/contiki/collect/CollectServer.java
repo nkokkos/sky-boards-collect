@@ -92,12 +92,11 @@ import se.sics.contiki.collect.gui.AggregatedTimeChartPanel;
 import se.sics.contiki.collect.gui.BarChartPanel;
 import se.sics.contiki.collect.gui.ConvPanel;
 import se.sics.contiki.collect.gui.CosmDataFeeder;
-import se.sics.contiki.collect.gui.SenseDataFeeder;
 import se.sics.contiki.collect.gui.FirmwareDialog;
 import se.sics.contiki.collect.gui.MapPanel;
-import se.sics.contiki.collect.gui.NodeCalibrationDialog;
 import se.sics.contiki.collect.gui.NodeControl;
 import se.sics.contiki.collect.gui.NodeInfoPanel;
+import se.sics.contiki.collect.gui.SenseDataFeeder;
 import se.sics.contiki.collect.gui.SerialConsole;
 import se.sics.contiki.collect.gui.TimeChartPanel;
 import se.sics.contiki.collect.platform.NodeAR1000;
@@ -172,6 +171,7 @@ public class CollectServer implements SerialConnectionListener,
   private CosmDataFeeder dataFeederCosm;
 
   public CollectServer() {
+
     loadConfig(config, CONFIG_FILE);
 
     this.configFile = config.getProperty("config.datafile", CONFIG_DATA_FILE);
@@ -267,7 +267,7 @@ public class CollectServer implements SerialConnectionListener,
     NodeControl nodeControl = new NodeControl(this, MAIN);
     dataFeederSense = new SenseDataFeeder(MAIN, configTable);
     dataFeederCosm = new CosmDataFeeder(MAIN, configTable);
-    ConvPanel ConvPanel = new ConvPanel(this, MAIN, "Conversions",configTable);
+    ConvPanel ConvPanel = new ConvPanel(this, MAIN, "Conversions", configTable);
 
     visualizers = new Visualizer[] {
         ConvPanel,
@@ -294,8 +294,8 @@ public class CollectServer implements SerialConnectionListener,
                 nodeName);
           }
         },
-        new TimeChartPanel(this, SENSORS, "Temperature", "Temperature", "Time",
-            "Celsius") {
+        new TimeChartPanel(this, SENSORS, TEMPERATURE_SENSOR, "Temperature",
+            "Time", "Celsius") {
           {
             chart.getXYPlot().getRangeAxis()
                 .setStandardTickUnits(NumberAxis.createIntegerTickUnits());
@@ -334,7 +334,7 @@ public class CollectServer implements SerialConnectionListener,
             return data.getBatteryIndicator();
           }
         },
-        new TimeChartPanel(this, SENSORS, "Humidity", "Relative Humidity",
+        new TimeChartPanel(this, SENSORS, HUMIDITY_SENSOR, "Relative Humidity",
             "Time", "%") {
           {
             chart.getXYPlot().getRangeAxis().setRange(0.0, 100.0);
@@ -344,32 +344,32 @@ public class CollectServer implements SerialConnectionListener,
             return data.getSensorDataValue(HUMIDITY_SENSOR);
           }
         },
-        new TimeChartPanel(this, SENSORS, "Light 1",
+        new TimeChartPanel(this, SENSORS, LIGHT1_SENSOR,
             "Photosynthetically Active Radiation", "Time", "Lx") {
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(LIGHT1_SENSOR);
           }
         },
-        new TimeChartPanel(this, SENSORS, "Light 2", "Total Solar Radiation",
-            "Time", "Lx") {
+        new TimeChartPanel(this, SENSORS, LIGHT2_SENSOR,
+            "Total Solar Radiation", "Time", "Lx") {
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(LIGHT2_SENSOR);
           }
         },
-        new TimeChartPanel(this, SENSORS, "CO", "Carbon monoxide", "Time",
+        new TimeChartPanel(this, SENSORS, CO_SENSOR, "Carbon monoxide", "Time",
             "ppm") {
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(CO_SENSOR);
           }
         },
-        new TimeChartPanel(this, SENSORS, "CO2", "Carbon dioxide", "Time",
+        new TimeChartPanel(this, SENSORS, CO2_SENSOR, "Carbon dioxide", "Time",
             "ppm") {
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(CO2_SENSOR);
           }
         },
-        new TimeChartPanel(this, SENSORS, "Dust", "Particle concentration",
-            "Time", "mg/m^3") {
+        new TimeChartPanel(this, SENSORS, DUST_SENSOR,
+            "Particle concentration", "Time", "mg/m^3") {
           protected double getSensorDataValue(SensorData data) {
             return data.getSensorDataValue(DUST_SENSOR);
           }
@@ -867,15 +867,13 @@ public class CollectServer implements SerialConnectionListener,
 
     });
     toolsMenu.add(item);
-
-    item = new JMenuItem("Adjust conversion expressions...");
-    item.addActionListener(new ActionListener() {
-
-      public void actionPerformed(ActionEvent e) {
-        adjustConversions();
-      }
-    });
-    toolsMenu.add(item);
+    /*
+     * item = new JMenuItem("Adjust conversion expressions...");
+     * item.addActionListener(new ActionListener() {
+     * 
+     * public void actionPerformed(ActionEvent e) { adjustConversions(); } });
+     * toolsMenu.add(item);
+     */
 
     final JCheckBoxMenuItem baseShapeItem = new JCheckBoxMenuItem(
         "Base Shape Visible");
@@ -924,8 +922,10 @@ public class CollectServer implements SerialConnectionListener,
       if (key.startsWith("var")) {
         vars.add(key);
         values.add(getConfig(key));
-      } else if (key.startsWith("feedcosm")) {// do nothing
-      } else if (key.startsWith("feedsense")) {// do nothing
+      } else if (key.startsWith("feedcosm")) {
+        dataFeederCosm.loadConfigLine(key, configTable.getProperty(key));
+      } else if (key.startsWith("feedsense")) {
+        dataFeederSense.loadConfigLine(key, configTable.getProperty(key));
       } else if (!key.startsWith("collect") && !key.startsWith("firm")) {
         // Add node
         if ((nodetype = getConfig("firm," + key)) != null) {
@@ -1232,24 +1232,20 @@ public class CollectServer implements SerialConnectionListener,
     return selectedNodes;
   }
 
-  // -------------------------------------------------------------------
-  // Adjust conversions tool
-  // -------------------------------------------------------------------
-  private void adjustConversions() {
-    Node[] selected = getSelectedNodes();
-    if (selected == null || selected.length != 1)
-      return;
-    new NodeCalibrationDialog(this, "Node " + selected[0].getID(), selected[0],
-        configTable);
-  }
-
-  public void AdjustUpdateChart() {
+  /*
+   * This method is called from ConvPanel class to update TimeChartPanel
+   * instance
+   */
+  public void UpdateChart(final String title) {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         if (visualizers != null) {
           for (int i = 0, n = visualizers.length; i < n; i++) {
             if (visualizers[i] instanceof TimeChartPanel) {
-              ((TimeChartPanel) visualizers[i]).update();
+              if (visualizers[i].getTitle().equals(title)) {
+                ((TimeChartPanel) visualizers[i]).update();
+                break;
+              }
             }
           }
         }
