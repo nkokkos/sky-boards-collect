@@ -254,7 +254,7 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
     sensors.get(sensorID).setConstants();
   }
   
-  public double getConvOf(String sensorID, Integer value) {
+  public double getConvOf(String sensorID, Double value) {
     Sensor s=sensors.get(sensorID);
     if (s==(Sensor) null)
       return Double.NaN;
@@ -268,7 +268,7 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
     if (s==(Sensor) null)
       return Double.NaN;
     else{
-      int value=data.getValue(dataMsgMap(sensorID));
+      Double value=(double)data.getValue(dataMsgMap(sensorID));
       return s.getConv(value);
     }
   }
@@ -289,9 +289,9 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
         sensors.get(sensorID).getRoundDigits());
   }
   
-  public int getLastValueOf(String sensorID) {
+  public Double getLastValueOf(String sensorID) {
     SensorData sd=this.getLastSD();
-    return sd.getValue(dataMsgMapping.get(sensorID));
+    return (double)sd.getValue(dataMsgMapping.get(sensorID));
   }
   
   public int dataMsgMap(String sensorID){

@@ -20,7 +20,7 @@ public class S108701 extends Sensor {
     setRoundDigits(2);
   }
 
-  public double getConv(int value) {
+  public double getConv(Double value) {
     double vRef = getValueOf("Vref");
     double v12 = getValueOf("v12");
     double R12 = getValueOf("R12");

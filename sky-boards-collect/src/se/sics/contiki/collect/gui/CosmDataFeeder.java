@@ -288,7 +288,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
         .getField(CosmRow.IDX_DATASTREAMS);
     for (Object sensor : dataStreams.keySet()) {
       if (row.getField(CosmRow.IDX_CONV).equals("Converted")) {
-        value = Integer.toString(node.getLastValueOf((String) sensor));
+        value = Double.toString(node.getLastValueOf((String) sensor));
       } else if (row.getField(CosmRow.IDX_CONV).equals("Raw")) {
         value = node.getRoundedConvOf((String) sensor);
       }

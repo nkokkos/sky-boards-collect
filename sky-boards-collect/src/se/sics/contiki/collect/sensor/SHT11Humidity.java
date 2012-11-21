@@ -29,7 +29,7 @@ public class SHT11Humidity extends Sensor {
   }
 
   @Override
-  public double getConv(int value) {
+  public double getConv(Double value) {
     /*
      * Conversion based on this info:
      * http://www.advanticsys.com/wiki/index.php?title=Sensirion%C2%AE_SHT11

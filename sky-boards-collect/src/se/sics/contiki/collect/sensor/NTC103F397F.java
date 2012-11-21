@@ -21,7 +21,7 @@ public class NTC103F397F extends Sensor {
   }
 
   @Override
-  public double getConv(int value) {
+  public double getConv(Double value) {
     double vRef = getValueOf("Vref");
     double Vcc = getValueOf("Vcc");
     double RT = getValueOf("RT");

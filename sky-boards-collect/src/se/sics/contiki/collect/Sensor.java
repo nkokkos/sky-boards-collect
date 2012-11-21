@@ -91,7 +91,7 @@ public abstract class Sensor {
     return roundDigits;
   }
   
-  public abstract double getConv(int value);  
+  public abstract double getConv(Double value);  
   public abstract void setConstants();
   
 }

@@ -280,7 +280,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     String sensorId = (String) row.getField(SenseRow.IDX_SENSOR);
 
     if (row.getField(SenseRow.IDX_CONV).equals("Converted")) {
-      value = Integer.toString(node.getLastValueOf(sensorId));
+      value = Double.toString(node.getLastValueOf(sensorId));
     } else if (row.getField(SenseRow.IDX_CONV).equals("Raw")) {
       value = node.getRoundedConvOf(sensorId);
     }
