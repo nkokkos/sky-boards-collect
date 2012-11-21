@@ -21,7 +21,7 @@ public class SH300DC extends Sensor {
   }
 
   @Override
-  public double getConv(int value) {
+  public double getConv(Double value) {
     double vRef = getValueOf("Vref");
     double v1 = getValueOf("v1");
     double v2 = getValueOf("v2");

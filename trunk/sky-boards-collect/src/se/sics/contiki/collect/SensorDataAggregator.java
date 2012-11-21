@@ -249,7 +249,7 @@ public class SensorDataAggregator implements SensorInfo, SensorIdentifier {
 
   public double getAverageTemperature() {
     return dataCount > 0 ?
-        node.getConvOf(TEMPERATURE_SENSOR,(int)values[TEMPERATURE] / dataCount)
+        node.getConvOf(TEMPERATURE_SENSOR,(double)values[TEMPERATURE] / dataCount)
         :0.0;
   }
 

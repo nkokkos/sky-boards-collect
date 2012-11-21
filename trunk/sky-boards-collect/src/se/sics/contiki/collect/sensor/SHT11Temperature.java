@@ -26,7 +26,7 @@ public class SHT11Temperature extends Sensor {
     setRoundDigits(2);
   }
 
-  public double getConv(int value) {
+  public double getConv(Double value) {
     double v1 = getValueOf("v1");
     double v2 = getValueOf("v2");
     lastTemp=-v1 + v2 * value;

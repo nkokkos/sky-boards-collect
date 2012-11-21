@@ -21,7 +21,7 @@ public class GS02A extends Sensor {
   }
 
   @Override
-  public double getConv(int value) {
+  public double getConv(Double value) {
     double vRef = getValueOf("Vref");
     double RL = getValueOf("RL");
     double Vcc = getValueOf("Vcc");
