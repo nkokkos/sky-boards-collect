@@ -17,25 +17,29 @@ public class NodeAR1000 extends Node implements SensorInfo {
     super(nodeID);
     init();
   }
-  
-  public NodeAR1000(String nodeID, String nodeName){
-    super(nodeID,nodeName);
+
+  public NodeAR1000(String nodeID, String nodeName) {
+    super(nodeID, nodeName);
     init();
   }
-  
+
   @Override
   public void init() {
+    setPlatformADCResolution();
     addSensors();
     mapMsgFormat();
-    setNodeType();
+    setNodeType(); 
   }
-  
+
   @Override
   public void addSensors() {
     String nodeID = this.getID();
-    sensors.put(CO_SENSOR, new GS02A(CO_SENSOR, nodeID));
-    sensors.put(CO2_SENSOR, new SH300DC(CO2_SENSOR, nodeID));   
-    sensors.put(DUST_SENSOR, new SX01E(DUST_SENSOR,nodeID));  
+    sensors.put(CO_SENSOR,
+        new GS02A(CO_SENSOR, nodeID, PLATFORM_ADC_RESOLUTION));
+    sensors.put(CO2_SENSOR, new SH300DC(CO2_SENSOR, nodeID,
+        PLATFORM_ADC_RESOLUTION));
+    sensors.put(DUST_SENSOR, new SX01E(DUST_SENSOR, nodeID,
+        PLATFORM_ADC_RESOLUTION));
   }
 
   @Override
@@ -47,6 +51,11 @@ public class NodeAR1000 extends Node implements SensorInfo {
 
   @Override
   public void setNodeType() {
-    type="AR1000";    
+    type = "AR1000";
+  }
+
+  @Override
+  public void setPlatformADCResolution() {
+    PLATFORM_ADC_RESOLUTION = 4096;
   }
 }

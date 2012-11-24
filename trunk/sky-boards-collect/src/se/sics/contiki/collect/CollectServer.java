@@ -82,6 +82,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -169,6 +171,7 @@ public class CollectServer implements SerialConnectionListener,
 
   private SenseDataFeeder dataFeederSense;
   private CosmDataFeeder dataFeederCosm;
+  private ConvPanel convPanel;
 
   public CollectServer() {
 
@@ -267,10 +270,10 @@ public class CollectServer implements SerialConnectionListener,
     NodeControl nodeControl = new NodeControl(this, MAIN);
     dataFeederSense = new SenseDataFeeder(MAIN, configTable);
     dataFeederCosm = new CosmDataFeeder(MAIN, configTable);
-    ConvPanel ConvPanel = new ConvPanel(this, MAIN, "Conversions", configTable);
+    convPanel = new ConvPanel(this, MAIN, "Conversions", configTable);
 
     visualizers = new Visualizer[] {
-        ConvPanel,
+        convPanel,
         nodeControl,
         mapPanel,
         dataFeederSense,
@@ -896,7 +899,16 @@ public class CollectServer implements SerialConnectionListener,
 
     window.setJMenuBar(menuBar);
     window.pack();
-
+    mainPanel.addChangeListener(new ChangeListener(){
+      public void stateChanged(ChangeEvent e) {
+        if (((JTabbedPane) e.getSource()).getSelectedComponent() 
+            instanceof ConvPanel){
+          convPanel.setActive(true);
+          convPanel.nodesSelected(getSelectedNodes());
+        }
+        else convPanel.setActive(false);
+      }
+    });
     parseConfigFile();
 
   }

@@ -37,4 +37,6 @@ public class NodeSink extends Node implements SensorInfo {
   public void setNodeType() {
     type="Sink";    
   }
+  @Override
+  public void setPlatformADCResolution() {}
 }

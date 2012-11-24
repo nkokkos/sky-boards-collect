@@ -12,10 +12,10 @@ import se.sics.contiki.collect.Sensor;
 
 public class SH300DC extends Sensor {
 
-  public SH300DC(String sensorID, String nodeID) {
+  public SH300DC(String sensorID, String nodeID,int aDCRes) {
     super(sensorID, nodeID);
     setUnits("ppm");
-    setADC12(true);
+    setADC(aDCRes);
     setConstants();
     setRoundDigits(2);
   }
@@ -25,8 +25,8 @@ public class SH300DC extends Sensor {
     double vRef = getValueOf("Vref");
     double v1 = getValueOf("v1");
     double v2 = getValueOf("v2");
-
-    double Vs = ((double) value / (double) 4096) * vRef;
+    double resolution=getADCResolution();
+    double Vs = ((double) value / resolution) * vRef;
     return (Vs * v1) - v2;
   }
 

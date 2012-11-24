@@ -13,10 +13,10 @@ import se.sics.contiki.collect.Sensor;
 
 public class SX01E extends Sensor {
 
-  public SX01E(String sensorID, String nodeID) {
+  public SX01E(String sensorID, String nodeID, int aDCRes) {
     super(sensorID, nodeID);
     setUnits("mg/m^3");
-    setADC12(false);
+    setADC(aDCRes);
     setConstants();
     setRoundDigits(4);
   }
@@ -26,7 +26,8 @@ public class SX01E extends Sensor {
     double vRef = getValueOf("Vref");
     double v1 = getValueOf("v1");
     double v2 = getValueOf("v2");
-    double Vs = ((double) value / (double) 4096) * vRef;
+    double resolution=getADCResolution();
+    double Vs = ((double) value / resolution) * vRef;
 
     return (Vs * v1) + v2;
   }

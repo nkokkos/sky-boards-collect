@@ -6,6 +6,7 @@
  */
 
 package se.sics.contiki.collect.platform;
+
 import se.sics.contiki.collect.Node;
 import se.sics.contiki.collect.SensorInfo;
 import se.sics.contiki.collect.sensor.*;
@@ -16,25 +17,29 @@ public class NodeDS1000 extends Node implements SensorInfo {
     super(nodeID);
     init();
   }
-  
-  public NodeDS1000(String nodeID, String nodeName){
-    super(nodeID,nodeName);
+
+  public NodeDS1000(String nodeID, String nodeName) {
+    super(nodeID, nodeName);
     init();
   }
-  
+
   @Override
   public void init() {
+    setPlatformADCResolution();
     addSensors();
     mapMsgFormat();
-    setNodeType();
+    setNodeType(); 
   }
-  
+
   @Override
   public void addSensors() {
     String nodeID = this.getID();
-    sensors.put(CO_SENSOR, new GS02A(CO_SENSOR, nodeID));
-    sensors.put(CO2_SENSOR, new SH300DC(CO2_SENSOR, nodeID));   
-    sensors.put(TEMPERATURE_SENSOR, new NTC103F397F(TEMPERATURE_SENSOR,nodeID));  
+    sensors.put(CO_SENSOR,
+        new GS02A(CO_SENSOR, nodeID, PLATFORM_ADC_RESOLUTION));
+    sensors.put(CO2_SENSOR, new SH300DC(CO2_SENSOR, nodeID,
+        PLATFORM_ADC_RESOLUTION));
+    sensors.put(TEMPERATURE_SENSOR, new NTC103F397F(TEMPERATURE_SENSOR, nodeID,
+        PLATFORM_ADC_RESOLUTION));
   }
 
   @Override
@@ -46,6 +51,11 @@ public class NodeDS1000 extends Node implements SensorInfo {
 
   @Override
   public void setNodeType() {
-    type="DS1000";    
+    type = "DS1000";
+  }
+
+  @Override
+  public void setPlatformADCResolution() {
+    PLATFORM_ADC_RESOLUTION = 4096;
   }
 }

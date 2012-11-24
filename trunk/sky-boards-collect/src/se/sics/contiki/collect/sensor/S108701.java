@@ -12,10 +12,10 @@ import se.sics.contiki.collect.Sensor;
 
 public class S108701 extends Sensor {
 
-  public S108701(String sensorID, String nodeID) {
+  public S108701(String sensorID, String nodeID,int aDCRes) {
     super(sensorID, nodeID);
     setUnits("Lx");
-    setADC12(true);
+    setADC(aDCRes);
     setConstants();
     setRoundDigits(2);
   }
@@ -24,7 +24,8 @@ public class S108701 extends Sensor {
     double vRef = getValueOf("Vref");
     double v12 = getValueOf("v12");
     double R12 = getValueOf("R12");
-    double Vs = ((double) value / (double) 4096) * vRef;
+    double resolution=getADCResolution();
+    double Vs = ((double) value / resolution) * vRef;
     return (v12 * 100000 * (Vs / R12) * 1000);
   }
 

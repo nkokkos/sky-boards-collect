@@ -18,41 +18,49 @@ public class NodeTmoteSky extends Node implements SensorInfo {
     super(nodeID);
     init();
   }
-  
-  public NodeTmoteSky(String nodeID, String nodeName){
-    super(nodeID,nodeName);
+
+  public NodeTmoteSky(String nodeID, String nodeName) {
+    super(nodeID, nodeName);
     init();
   }
-  
+
   @Override
   public void init() {
+    setPlatformADCResolution();
     addSensors();
     mapMsgFormat();
-    setNodeType();
+    setNodeType(); 
   }
-  
+
   @Override
   public void addSensors() {
     String nodeID = this.getID();
-    Sensor temp=new SHT11Temperature(TEMPERATURE_SENSOR, nodeID);
-    Sensor hum=new SHT11Humidity(HUMIDITY_SENSOR, nodeID);
-    sensors.put(LIGHT1_SENSOR, new S1087(LIGHT1_SENSOR, nodeID));
-    sensors.put(LIGHT2_SENSOR, new S108701(LIGHT2_SENSOR, nodeID));   
-    sensors.put(TEMPERATURE_SENSOR, temp);  
+    Sensor temp = new SHT11Temperature(TEMPERATURE_SENSOR, nodeID);
+    Sensor hum = new SHT11Humidity(HUMIDITY_SENSOR, nodeID);
+    sensors.put(LIGHT1_SENSOR, new S1087(LIGHT1_SENSOR, nodeID,
+        PLATFORM_ADC_RESOLUTION));
+    sensors.put(LIGHT2_SENSOR, new S108701(LIGHT2_SENSOR, nodeID,
+        PLATFORM_ADC_RESOLUTION));
+    sensors.put(TEMPERATURE_SENSOR, temp);
     sensors.put(HUMIDITY_SENSOR, hum);
     ((SHT11Humidity) hum).setAssociatedTempSensor(temp);
   }
-  
+
   @Override
-  public void mapMsgFormat(){
+  public void mapMsgFormat() {
     dataMsgMapping.put(LIGHT1_SENSOR, LIGHT1);
     dataMsgMapping.put(LIGHT2_SENSOR, LIGHT2);
-    dataMsgMapping.put(TEMPERATURE_SENSOR, TEMPERATURE);  
+    dataMsgMapping.put(TEMPERATURE_SENSOR, TEMPERATURE);
     dataMsgMapping.put(HUMIDITY_SENSOR, HUMIDITY);
   }
 
   @Override
   public void setNodeType() {
-    type="TmoteSky";  
+    type = "TmoteSky";
+  }
+
+  @Override
+  public void setPlatformADCResolution() { 
+    PLATFORM_ADC_RESOLUTION = 4096;
   }
 }
