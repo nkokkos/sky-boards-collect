@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.ListIterator;
 import java.util.Properties;
-import java.util.StringTokenizer;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
@@ -36,13 +35,13 @@ import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.UIDefaults;
-import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.event.ChartProgressEvent;
 import org.jfree.chart.event.ChartProgressListener;
@@ -61,9 +60,7 @@ import se.sics.contiki.collect.CollectServer;
 import se.sics.contiki.collect.Node;
 import se.sics.contiki.collect.Sensor;
 import se.sics.contiki.collect.SensorData;
-import se.sics.contiki.collect.Variable;
 import se.sics.contiki.collect.Visualizer;
-
 
 public class ConvPanel extends JPanel implements Visualizer,
     PropertyChangeListener {
@@ -79,34 +76,27 @@ public class ConvPanel extends JPanel implements Visualizer,
   private ArrayList<JFreeChart> chartList;
   private ArrayList<XYSeriesCollection> seriesList;
   private ArrayList<Function> functions;
-  private ArrayList<JLabel> crossHairStatusList;
-  private Hashtable<String, ArrayList<JFormattedTextField>> fieldsTable; 
+  private ArrayList<JLabel> xLabelList;
+  private ArrayList<JLabel> yLabelList;
+  private Hashtable<String, ArrayList<JFormattedTextField>> fieldsTable;
   private Properties calibrationConfig;
 
   private JTabbedPane tabbedPane; // tabbedPanel
-  private JPanel mainPanel; // main Panel for each tab
-  private JFreeChart chart;
-  private ChartPanel chartPanel;
   private XYSeriesCollection dataset;
 
-  private JButton buttonReset;
-  private JButton buttonFormula;
-  private JComboBox<String> comboBoxXOpt;
-  
-  private GridBagConstraints c;
-  private static final String delim = "\n";
   public final int DEF_MIN_X = 1;
-  public final int DEF_MAX_X = 4096;
+  public int DEF_MAX_X;
   public final int DEF_INC_X = 5;
-  public final String TOOL_TIP_RESET_BT = "Reset to default values.";
-  public final String TOOL_TIP_SAVE_BT = "Confirm changes and update charts.";
-  public final String TOOL_TIP_FORM_BT = "Display sensor conversions expressions.";
-  
-  private final Color DOM_HIGHLIGHT_COLOR=Color.BLUE;
-  private final Color RANGE_HIGHLIGHT_COLOR=new Color(0,153,0);
-  private final Color LAST_HIGHLIGHT_COLOR=new Color(102,0,0);
-  private Color COLOR_JAVA_SEPARATOR=new Color(0,100,0);
-  private Color COLOR_JAVA_DEF=new Color(238,238,238);
+  public final String TOOL_TIP_RESET_BT = "Reset to default values";
+  public final String TOOL_TIP_SAVE_BT = "Confirm changes and update charts";
+  public final String TOOL_TIP_FORM_BT = "Display sensor conversions expressions";
+  public final String TOOL_TIP_LAST_LABEL = "Last raw or ADC value received from the node";
+
+  private final Color DOM_HIGHLIGHT_COLOR = Color.BLUE;
+  private final Color RANGE_HIGHLIGHT_COLOR = new Color(0, 153, 0);
+  private final Color LAST_HIGHLIGHT_COLOR = new Color(102, 0, 0);
+  private Color COLOR_JAVA_SEPARATOR = new Color(0, 100, 0);
+  private Color COLOR_JAVA_DEF = new Color(238, 238, 238);
 
   public ConvPanel(CollectServer server, String category, String title,
       Properties config) {
@@ -115,11 +105,11 @@ public class ConvPanel extends JPanel implements Visualizer,
     this.category = category;
     this.server = server;
     calibrationConfig = config;
-    active = true;
+    active = false;
     tabbedPane = new JTabbedPane();
     UIDefaults defaults = javax.swing.UIManager.getDefaults();
-    COLOR_JAVA_DEF=defaults.getColor("Panel.background");
-    COLOR_JAVA_SEPARATOR=defaults.getColor("Separator.foreground");
+    COLOR_JAVA_DEF = defaults.getColor("Panel.background");
+    COLOR_JAVA_SEPARATOR = defaults.getColor("Separator.foreground");
   }
 
   public String getCategory() {
@@ -134,173 +124,227 @@ public class ConvPanel extends JPanel implements Visualizer,
     return this;
   }
 
+  public void setActive(boolean isActive) {
+    this.active = isActive;
+  }
+
   public void nodesSelected(Node[] node) {
     if (node == null || node.length > 1)
       return;
+
+    // Do not waste resources painting
+    // components unless this is the selected tab
     if (!active)
       return;
 
     selectedNode = node[0];
+    DEF_MAX_X = selectedNode.PLATFORM_ADC_RESOLUTION;
     sensors = selectedNode.getSensors();
     tabbedPane.removeAll();
     seriesList = new ArrayList<XYSeriesCollection>();
     chartList = new ArrayList<JFreeChart>();
     functions = new ArrayList<Function>();
-    crossHairStatusList = new ArrayList<JLabel>();
+    xLabelList = new ArrayList<JLabel>();
+    yLabelList = new ArrayList<JLabel>();
     fieldsTable = new Hashtable<String, ArrayList<JFormattedTextField>>();
 
     for (int i = 0; i < sensors.length; i++) {
-      String sensorId = sensors[i].getId();
-      Variable[] vars = sensors[i].getVars();
-      mainPanel = new JPanel(new GridBagLayout());
+      Sensor sensor = sensors[i];
+      String sensorId = sensor.getId();
+      Object[] vars = sensor.getVarsNames();
+      JPanel mainPanel = new JPanel(new GridBagLayout());
 
-      c = new GridBagConstraints();
+      GridBagConstraints c = new GridBagConstraints();
       // add labels
       c.anchor = GridBagConstraints.LINE_START;
       c.gridx = c.gridy = 0;
       c.gridwidth = 2;
       c.weighty = 0.5;
-      c.insets.left=5;
-      JLabel label=new JLabel("Last Raw/ADC value: " + getLastADCValue(sensorId));
+      c.insets.left = 5;
+      JLabel label = new JLabel("Last Raw: " + getLastADCValue(sensorId));
+      label.setToolTipText(TOOL_TIP_LAST_LABEL);
       label.setForeground(LAST_HIGHLIGHT_COLOR);
       mainPanel.add(label, c);
+
+      JLabel l = new JLabel();
+      l.setForeground(DOM_HIGHLIGHT_COLOR);
+      c.gridx = 0;
+      c.gridy++;
+      xLabelList.add(l);
+      mainPanel.add(l, c);
+
+      l = new JLabel();
+      l.setForeground(RANGE_HIGHLIGHT_COLOR);
+      c.gridy++;
+      yLabelList.add(l);
+      mainPanel.add(l, c);
+
       c.gridy++;
       c.gridwidth = 1;
       mainPanel.add(new JLabel("Min. X "), c);
+
       c.gridy++;
       mainPanel.add(new JLabel("Max. X "), c);
+
       c.gridy++;
       mainPanel.add(new JLabel("Inc. X "), c);
+
       c.gridy++;
-      c.gridwidth=2;
+      c.gridwidth = 2;
       c.fill = GridBagConstraints.HORIZONTAL;
       mainPanel.add(new JSeparator(), c);
-      c.gridwidth=1;
+
+      c.gridwidth = 1;
       for (int j = 0; j < vars.length; j++) {
+        String var = (String) vars[j];
         c.gridy++;
-        mainPanel.add(new JLabel(vars[j].getName() + " "), c);
+        mainPanel.add(new JLabel(var + " "), c);
       }
-      c.insets.left=0;
+      c.insets.left = 0;
       // Add fields
       ArrayList<JFormattedTextField> fieldList = new ArrayList<JFormattedTextField>();
       c.fill = GridBagConstraints.HORIZONTAL;
-      c.weightx = 0;
       c.gridx = 1;
-      c.gridy = 1;
-      createLimitTextFields(i, "minx", DEF_MIN_X);
+      c.gridy = 3;
+      mainPanel.add(createLimitTextFields("minx", DEF_MIN_X), c);
+
       c.gridy++;
-      createLimitTextFields(i, "maxx", DEF_MAX_X);
+      mainPanel.add(createLimitTextFields("maxx", DEF_MAX_X), c);
+
       c.gridy++;
-      createLimitTextFields(i, "inc", DEF_INC_X);
-      c.gridy++;//for the JSeparator
-      int height = 5;
+      mainPanel.add(createLimitTextFields("inc", DEF_INC_X), c);
+
+      c.gridy++;// for the JSeparator
+      int height = 6;
 
       for (int j = 0; j < vars.length; j++) {
+        String var = (String) vars[j];
         c.gridy++;
         height++;
-        fieldList.add(createVarsTextFields(i, j));
+        JFormattedTextField tf = createVarsTextFields(var,
+            sensor.getValueOf(var));
+        fieldList.add(tf);
+        mainPanel.add(tf, c);
       }
-      fieldsTable.put(sensorId, fieldList);
-      c.insets.left=5;
+
+      c.insets.left = 5;
       // Add buttons/combobox
-      createComboBoxXOpt(sensors[i].getId(), c);
-      createButton(buttonReset, "Reset values", TOOL_TIP_RESET_BT, sensorId
-          + delim + i, new ButtonResetAction(), c);
-      createButton(buttonFormula, "Show formulas", TOOL_TIP_FORM_BT, sensorId,
-          new ButtonFormulaAction(), c);
+      c.gridx = 0;
+      c.gridwidth = 2;
+      c.gridy++;
+      mainPanel.add(createComboBoxXOpt(sensorId), c);
+
+      c.gridy++;
+      mainPanel.add(
+          createButton("Reset values", TOOL_TIP_RESET_BT, sensorId,
+              new ButtonResetAction()), c);
+
+      c.gridy++;
+      mainPanel.add(
+          createButton("Show formulas", TOOL_TIP_FORM_BT, sensorId,
+              new ButtonFormulaAction()), c);
       height += 3;
-      
-      // Add function cross hair status label
-      JLabel crossHairStatus = new JLabel("", JLabel.CENTER);
-      crossHairStatus.setOpaque(true);
-      crossHairStatus.setBackground(Color.white);
-      crossHairStatus.setBorder(LineBorder.createBlackLineBorder());
-      crossHairStatus.setVisible(false);
-      c.fill = GridBagConstraints.NONE;
-      c.anchor=GridBagConstraints.CENTER;
-      c.gridx = 3;
-      c.gridy = 0;
-      c.weightx = 1;
-      c.weighty = 0.5;
-      c.gridheight = 1;
-      mainPanel.add(crossHairStatus, c); 
-      crossHairStatusList.add(crossHairStatus);
-      
+
       // Add chart
       c.fill = GridBagConstraints.BOTH;
-      c.gridx = 3;
+      c.gridx = 2;
       c.gridy = 1;
       c.weightx = 1;
+      c.gridwidth = 2;
       c.weighty = 0.5;
-      c.gridheight = height-1;
-      chartPanel = createChart(sensors[i].getId());
-      mainPanel.add(chartPanel, c);     
+      c.gridheight = height - 1;
+      ChartPanel chartPanel = createChart(sensorId);
+      mainPanel.add(chartPanel, c);
+
+      fieldsTable.put(sensorId, fieldList);
       tabbedPane.add(mainPanel, sensorId);
-      
+
       // Add Slider
-      c.fill=GridBagConstraints.HORIZONTAL;
-      c.anchor=GridBagConstraints.CENTER;
-      c.gridx = 3;
+      c.fill = GridBagConstraints.BOTH;
+      c.anchor = GridBagConstraints.CENTER;
+      c.gridx = 2;
       c.gridy = height;
-      JSlider sld=new JSlider(0,1000,500);
-      sld.addChangeListener(new ChangeListener(){
-        public void stateChanged(ChangeEvent e) {
-          int i=tabbedPane.getSelectedIndex();
-          JFreeChart chart=chartList.get(i);
-          int pos=((JSlider) e.getSource()).getValue();
-          XYPlot plot = (XYPlot)chart.getPlot();
-          ValueAxis domainAxis = plot.getDomainAxis();
-          Range rangeAxis = domainAxis.getRange();
-          Double d=domainAxis.getLowerBound() + 
-              ((double)pos / 1000D) * rangeAxis.getLength();
-          plot.setDomainCrosshairValue(d);
-          plot.setRangeCrosshairValue(functions.get(i).f(d));
-        } 
-      }
-    );
-      mainPanel.add(sld,c);
+      c.gridheight = 1;
+      JSlider sld = configSlider();
+      //setSliderPos(getLastADCDnumValue(sensorId), sld, chartPanel.getChart());
+      mainPanel.add(sld, c);
+
     }
     add(tabbedPane, BorderLayout.CENTER);
     updateUI();
   }
 
-  void createLimitTextFields(int idx, String s, int value) {
+  private JSlider configSlider() {
+    JSlider sld = new JSlider(0, 1000, 500);
+    sld.addChangeListener(new ChangeListener() {
+      public void stateChanged(ChangeEvent e) {
+        int i = tabbedPane.getSelectedIndex();
+        JFreeChart chart = chartList.get(i);
+        Function func = functions.get(i);
+        int pos = ((JSlider) e.getSource()).getValue();
+        XYPlot plot = (XYPlot) chart.getPlot();
+        ValueAxis domainAxis = plot.getDomainAxis();
+        Range rangeAxis = domainAxis.getRange();
+        Double d = domainAxis.getLowerBound() + ((double) pos / 1000D)
+            * rangeAxis.getLength();
+        plot.setDomainCrosshairValue(d);
+        d = func.domainRealValue(d);
+        plot.setRangeCrosshairValue(func.f(d));
+      }
+    });
+    return sld;
+  }
+  
+/*
+  private void setSliderPos(double x, JSlider sld, JFreeChart chart) {
+    XYPlot plot = (XYPlot) chart.getPlot();
+    ValueAxis domainAxis = plot.getDomainAxis();
+    Range rangeAxis = domainAxis.getRange();
+    Double lower = domainAxis.getLowerBound();
+    Double axisLenght = rangeAxis.getLength();
+    Double pos = ((x - lower) / axisLenght) * sld.getMaximum();
+    if (pos > 1000)
+      pos = 1000D;
+    else if (pos < 0)
+      pos = 0D;
+    sld.setValue((int)Math.floor(pos));
+    sld.updateUI();
+  }
+  */
+  
+  private JFormattedTextField createLimitTextFields(String fieldName, int value) {
     NumberFormat format = NumberFormat.getIntegerInstance();
     JFormattedTextField valueField = new JFormattedTextField(format);
     valueField.setValue(value);
     valueField.setColumns(10);
-    valueField.setName(sensors[idx].getId() + delim + s);
+    valueField.setName(fieldName);
     valueField.addPropertyChangeListener("value", this);
-    mainPanel.add(valueField, c);
-  }
-
-  JFormattedTextField createVarsTextFields(int s, int v) {
-    Variable[] vars = sensors[s].getVars();
-    NumberFormat format = NumberFormat.getNumberInstance();
-    format.setMaximumFractionDigits(15);
-    JFormattedTextField valueField = new JFormattedTextField(format);
-    valueField.setValue(new Double(vars[v].getValue()));
-    valueField.setColumns(10);
-    valueField.setName(sensors[s].getId() + delim + vars[v].getName());
-    valueField.addPropertyChangeListener("value", this);
-    mainPanel.add(valueField, c);
     return valueField;
   }
 
-  void createButton(JButton b, String text, String tip, String name,
-      ActionListener Listener, GridBagConstraints c) {
-    b = new JButton(text);
+  private JFormattedTextField createVarsTextFields(String varName, double value) {
+    NumberFormat format = NumberFormat.getNumberInstance();
+    format.setMaximumFractionDigits(15);
+    JFormattedTextField valueField = new JFormattedTextField(format);
+    valueField.setValue(value);
+    valueField.setColumns(10);
+    valueField.setName(varName);
+    valueField.addPropertyChangeListener("value", this);
+    return valueField;
+  }
+
+  private JButton createButton(String text, String tip, String name,
+      ActionListener Listener) {
+    JButton b = new JButton(text);
     b.setToolTipText(tip);
     b.setName(name);
     b.addActionListener(Listener);
-    c.gridy++;
-    c.fill = GridBagConstraints.HORIZONTAL;
-    mainPanel.add(b, c);
+    return b;
   }
 
-  void createComboBoxXOpt(String sensorId, GridBagConstraints c) {
+  private JComboBox<String> createComboBoxXOpt(String sensorId) {
     String[] opt = { "adc value", "Sensor voltage(Vs)" };
-    comboBoxXOpt = new JComboBox<String>();
+    JComboBox<String> comboBoxXOpt = new JComboBox<String>();
     comboBoxXOpt.setModel(new DefaultComboBoxModel<String>(opt));
     comboBoxXOpt.setName(sensorId);
     comboBoxXOpt.addActionListener(new ActionListener() {
@@ -324,58 +368,41 @@ public class ConvPanel extends JPanel implements Visualizer,
         }
       }
     });
-    c.gridx = 0;
-    c.gridwidth = 2;
-    c.gridy++;
-    mainPanel.add(comboBoxXOpt, c);
+    return comboBoxXOpt;
   }
 
-  @Override
   public void propertyChange(PropertyChangeEvent e) {
-    int update = -1;
     Object source = e.getSource();
-    StringTokenizer tokens = new StringTokenizer(
-        ((JFormattedTextField) source).getName(), delim);
-    String sensorStr = tokens.nextToken();
-    String varStr = tokens.nextToken();
-    Variable var;
+    String varName = ((JFormattedTextField) source).getName();
     double newValue = ((Number) ((JFormattedTextField) source).getValue())
         .doubleValue();
+    int i = tabbedPane.getSelectedIndex();
+    String sensorId = sensors[i].getId();
 
-    Sensor sensor = selectedNode.getNodeSensor(sensorStr);
-    if ((var = sensor.getVar(varStr)) != null)
-      if (var.getValue() == newValue)
-        return;
-
-    //for (int i = 0; i < sensors.length; i++)
-    int i=tabbedPane.getSelectedIndex();
-      if (sensors[i].getId().equals(sensorStr)) {
-        if (varStr.equals("minx"))
-          functions.get(i).setMinX((int) newValue);
-        else if (varStr.equals("maxx"))
-          functions.get(i).setMaxX((int) newValue);
-        else if (varStr.equals("inc"))
-          functions.get(i).setIncrement((int) newValue);
-        else {
-          sensors[i].setVar(varStr, newValue);
-          updateConfig(sensors[i].getId(), varStr, newValue);
-        }
-        update = i;
-      }
-
-    if (update >= 0)
-      updateChart(update);
+    if (varName.equals("minx"))
+      functions.get(i).setMinX((int) newValue);
+    else if (varName.equals("maxx"))
+      functions.get(i).setMaxX((int) newValue);
+    else if (varName.equals("inc"))
+      functions.get(i).setIncrement((int) newValue);
+    else {
+      Sensor sensor = selectedNode.getNodeSensor(sensorId);
+      sensor.setVar(varName, newValue);
+      updateConfig(sensor.getId(), varName, newValue);
+    }
+    updateChart(i);
   }
 
   private void updateChart(int chartIndex) {
     dataset = seriesList.get(chartIndex);
     dataset.removeAllSeries();
     Function conv = functions.get(chartIndex);
-    XYSeries series = new XYSeries("Conversion function ("+conv.getSensorId()+")");
+    XYSeries series = new XYSeries("Conversion function (" + conv.getSensorId()
+        + ")");
     genSerie(conv, series);
     dataset.addSeries(series);
-    JFreeChart chart=chartList.get(chartIndex);
-    XYPlot plot = (XYPlot)chart.getPlot();
+    JFreeChart chart = chartList.get(chartIndex);
+    XYPlot plot = (XYPlot) chart.getPlot();
     plot.setRangeCrosshairValue(conv.f(plot.getDomainCrosshairValue()));
     server.UpdateChart(conv.getSensorId());
   }
@@ -383,37 +410,35 @@ public class ConvPanel extends JPanel implements Visualizer,
   private ChartPanel createChart(String sensorId) {
     if (selectedNode.getSensorDataCount() == 0)
       return new ChartPanel(null);
-    data = selectedNode.getSensorData(selectedNode.getSensorDataCount() - 1);
-    Function conv = new Function(selectedNode.getNodeSensor(sensorId)) {
+    data = selectedNode.getLastSD();
+    Function conv = new Function(selectedNode.getNodeSensor(sensorId),
+        selectedNode.PLATFORM_ADC_RESOLUTION) {
       protected double f(Double value) {
         return sensor.getConv(value);
       }
     };
     functions.add(conv);
-    
+
     return paintChart(conv);
   }
 
   private ChartPanel paintChart(Function conv) {
-    String sensorId=conv.getSensorId();
-    XYSeries series = new XYSeries("Conversion function ("+sensorId+")");  
+    String sensorId = conv.getSensorId();
+    XYSeries series = new XYSeries("Conversion function (" + sensorId + ")");
     genSerie(conv, series);
     dataset = new XYSeriesCollection();
     seriesList.add(dataset);
     dataset.addSeries(series);
-    String title="Conversion function (Node "
-        + selectedNode.getID()+")";
-    chart = ChartFactory.createXYLineChart(title, // Title
+    String title = "Conversion function (Node " + selectedNode.getID() + ")";
+    JFreeChart chart = ChartFactory.createXYLineChart(title, // Title
         conv.getxTag(), // x-axis Label
         conv.getyTag(), // y-axis Label
-        dataset, // Dataset
-        PlotOrientation.VERTICAL, // Plot Orientation
-        true, // Show Legend
+        dataset, PlotOrientation.VERTICAL, //
+        false, // Show Legend
         true, // Use tooltips
         false // Configure chart to generate URLs?
         );
-    
-    XYPlot plot=chart.getXYPlot();
+    XYPlot plot = chart.getXYPlot();
     plot.getDomainAxis().setLabelPaint(DOM_HIGHLIGHT_COLOR);
     plot.getDomainAxis().setTickLabelPaint(DOM_HIGHLIGHT_COLOR);
     plot.getRangeAxis().setLabelPaint(RANGE_HIGHLIGHT_COLOR);
@@ -423,62 +448,66 @@ public class ConvPanel extends JPanel implements Visualizer,
     plot.setRangeGridlinePaint(Color.GRAY);
     chart.setBackgroundPaint(COLOR_JAVA_DEF);
     chart.setBorderPaint(COLOR_JAVA_SEPARATOR);
+
     plot.setOutlineStroke(new BasicStroke(1.0f));
     plot.setOutlinePaint(COLOR_JAVA_SEPARATOR);
 
-    BasicStroke s= (BasicStroke) plot.getDomainGridlineStroke();
-    BasicStroke stroke=new BasicStroke(1.0f,s.getEndCap(), BasicStroke.JOIN_BEVEL, 
-        100.0f, s.getDashArray(), s.getDashPhase());
+    BasicStroke s = (BasicStroke) plot.getDomainGridlineStroke();
+    BasicStroke stroke = new BasicStroke(1.0f, s.getEndCap(),
+        BasicStroke.JOIN_BEVEL, 100.0f, s.getDashArray(), s.getDashPhase());
 
-    Double x=getLastADCDnumValue(sensorId);
-    plot.setDomainCrosshairValue(x,true);
+    Double x = getLastADCDnumValue(sensorId);
+    plot.setDomainCrosshairValue(x, true);
     plot.setDomainCrosshairStroke(stroke);
     plot.setDomainCrosshairVisible(true);
     plot.setDomainCrosshairLockedOnData(true);
     plot.setDomainCrosshairPaint(DOM_HIGHLIGHT_COLOR);
-    
-    
-    Double y=conv.f(x);
-    plot.setRangeCrosshairValue(y,true);
+
+    Double y = conv.f(x);
+    plot.setRangeCrosshairValue(y, true);
     plot.setRangeCrosshairStroke(stroke);
     plot.setRangeCrosshairVisible(true);
     plot.setRangeCrosshairLockedOnData(true);
     plot.setRangeCrosshairPaint(RANGE_HIGHLIGHT_COLOR);
-    
+
     ValueMarker valueMarker = new ValueMarker(x);
     valueMarker.setPaint(LAST_HIGHLIGHT_COLOR);
     valueMarker.setLabel("Last received");
     valueMarker.setLabelOffsetType(LengthAdjustmentType.EXPAND);
-    valueMarker.setStroke(new BasicStroke(0.5f));  
+    valueMarker.setStroke(new BasicStroke(0.5f));
     valueMarker.setLabelAnchor(RectangleAnchor.TOP_RIGHT);
     valueMarker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
-
-    plot.addDomainMarker(valueMarker,Layer.FOREGROUND);
-
     
-    chart.addProgressListener(new ChartProgressListener(){
+    //TODO Two Domain Axis instead of ( Vs / ADC) dropbox
+    NumberAxis  va = new NumberAxis("Sensor Voltage");
+    
+    plot.setDomainAxis(va);
+
+    plot.addDomainMarker(valueMarker, Layer.FOREGROUND);
+
+    chart.addProgressListener(new ChartProgressListener() {
       public void chartProgress(ChartProgressEvent e) {
-        if (e.getType()==ChartProgressEvent.DRAWING_FINISHED){
-          int i=tabbedPane.getSelectedIndex();
-          XYPlot plot=(XYPlot) e.getChart().getPlot();
-          Double x=plot.getDomainCrosshairValue();
-          Double y=plot.getRangeCrosshairValue();
-          JLabel status=crossHairStatusList.get(i);
-          status.setForeground(Color.BLACK);
-          Sensor s=selectedNode.getNodeSensor(tabbedPane.getTitleAt(i));
-          
-          status.setText("CONV("+round(x,2)+")="+round(y,s.getRoundDigits()));
-          status.setVisible(true);
+        if (e.getType() == ChartProgressEvent.DRAWING_FINISHED) {
+          int i = tabbedPane.getSelectedIndex();
+          Sensor s = selectedNode.getNodeSensor(tabbedPane.getTitleAt(i));
+          XYPlot plot = (XYPlot) e.getChart().getPlot();
+          Double x = plot.getDomainCrosshairValue();
+          Double y = plot.getRangeCrosshairValue();
+          JLabel xL = xLabelList.get(i);
+          JLabel yL = yLabelList.get(i);
+          xL.setText("x     = " + round(x, 2));
+          yL.setText("f(x) = " + round(y, s.getRoundDigits()) + " ("
+              + s.getUnits() + ")");
         }
       }
     });
     chartList.add(chart);
-    return (chartPanel = new ChartPanel(chart));
+    return (new ChartPanel(chart));
   }
 
   private void genSerie(Function conv, XYSeries series) {
     for (int i = conv.getMinX(); i <= conv.getMaxX(); i += conv.getIncrement()) {
-      series.add(conv.getX(i), conv.f((double)i));
+      series.add(conv.getX(i), conv.f((double) i));
     }
   }
 
@@ -488,7 +517,7 @@ public class ConvPanel extends JPanel implements Visualizer,
     Double lastValue = selectedNode.getLastValueOf(sensor);
     return Double.toString(lastValue);
   }
-  
+
   Double getLastADCDnumValue(String sensor) {
     if (selectedNode.getLastSD() == null)
       return Double.NaN;
@@ -508,41 +537,29 @@ public class ConvPanel extends JPanel implements Visualizer,
 
   private class ButtonResetAction implements ActionListener {
     public void actionPerformed(ActionEvent e) {
-      String buttonName = ((Component) e.getSource()).getName();
-      StringTokenizer tokens = new StringTokenizer(buttonName, delim);
-      String sensor = tokens.nextToken();
-      String index = tokens.nextToken();
-
+      String sensor = ((Component) e.getSource()).getName();
+      int i = tabbedPane.getSelectedIndex();
       selectedNode.setDefaultValues(sensor);
-
       ArrayList<JFormattedTextField> TextFields = fieldsTable.get(sensor);
       ListIterator<JFormattedTextField> it = TextFields.listIterator();
       while (it.hasNext()) {
-        reset(it.next());
+        reset(it.next(), i);
       }
-      updateChart(Integer.parseInt(index));
+      updateChart(i);
     }
 
-    public void reset(JFormattedTextField field) {
-      String fieldName = field.getName();
-      if (fieldName == "" || fieldName == null)
-        return;
-      StringTokenizer tokens = new StringTokenizer(field.getName(), delim);
-      String sensorStr = tokens.nextToken();
-      String varStr = tokens.nextToken();
-      Variable var;
-
-      Sensor sensor = selectedNode.getNodeSensor(sensorStr);
-      if ((var = sensor.getVar(varStr)) != null) {
-        ((JFormattedTextField) field).setValue(var.getValue());
-        // default values do not need to be stored
-        removeFromConfig(sensorStr, varStr, var.getValue());
-      }
+    public void reset(JFormattedTextField field, int i) {
+      String varName = field.getName();
+      String sensorId = sensors[i].getId();
+      Sensor sensor = selectedNode.getNodeSensor(sensorId);
+      Double value = sensor.getValueOf(varName);
+      ((JFormattedTextField) field).setValue(value);
+      // default values do not need to be stored
+      removeFromConfig(sensorId, varName, value);
     }
   }
 
   public class ButtonFormulaAction implements ActionListener {
-    @Override
     public void actionPerformed(ActionEvent e) {
       String sensor = ((Component) e.getSource()).getName();
       JFrame imgFrame = new JFrame();
@@ -577,27 +594,39 @@ public class ConvPanel extends JPanel implements Visualizer,
     private String xLabel = "Raw value";
     private String yLabel;
     private int minX = 1;
-    private int maxX = 4096;
+    private int maxX;
     private int increment = 5;// increase for better GUI performance
-    private boolean hasVs = false;
     private String sensorId;
     private boolean showVs = false;
+    private int aDCresolution;
+    public static final int DEF_MAX_X = 10000;
 
-    Function(Sensor sensor) {
+    Function(Sensor sensor, int aDCresolution) {
       this.sensor = sensor;
+      maxX = sensor.getADCResolution();
+      if (maxX<=0) maxX=DEF_MAX_X;
+          
       yLabel = sensor.getUnits();
       sensorId = sensor.getId();
-      hasVs = sensor.ADC12();
+      this.aDCresolution = aDCresolution;
     }
 
     public Number getX(int i) {
       Sensor s;
-      if (hasVs && showVs) {
+      if (showVs) {
         s = data.getNode().getNodeSensor(sensorId);
-        double vRef = s.getVar("Vref").getValue();
-        return ((double) i / (double) 4096) * vRef;
+        double vRef = s.getValueOf("Vref");
+        return ((double) i / (double) aDCresolution) * vRef;
       } else
         return i;
+    }
+
+    public double domainRealValue(double V) {
+      if (showVs) {
+        double vRef = sensor.getValueOf("Vref");
+        V = (V * aDCresolution) / vRef;
+      }
+      return V;
     }
 
     abstract double f(Double value);
@@ -639,18 +668,34 @@ public class ConvPanel extends JPanel implements Visualizer,
     }
 
     public void setShowVs(boolean showVs) {
-      if (!hasVs)
+      if (!sensor.ADC()) {
+        showVs = false;
         return;
+      }
+      Sensor s = data.getNode().getNodeSensor(sensorId);
+      if (s.getValueOf("Vref") == Double.NaN) {
+        showVs = false;
+        return;
+      }
+
       if (showVs)
         setXTag("Voltage sensor (Vs)");
       else
         setXTag("adc_value");
+
       this.showVs = showVs;
     }
 
     public String getSensorId() {
       return sensorId;
     }
+  }
+
+  static String round(double d, int digits) {
+    NumberFormat frm = NumberFormat.getInstance();
+    frm.setMaximumFractionDigits(digits);
+    frm.setRoundingMode(RoundingMode.UP);
+    return frm.format(d);
   }
 
   public void nodeAdded(Node node) {/* ignore */
@@ -661,12 +706,4 @@ public class ConvPanel extends JPanel implements Visualizer,
 
   public void clearNodeData() {/* ignore */
   }
-  
-  static String round(double d, int digits) {
-    NumberFormat frm = NumberFormat.getInstance();
-    frm.setMaximumFractionDigits(digits);
-    frm.setRoundingMode(RoundingMode.UP);
-    return frm.format(d);
-  }
-  
 }

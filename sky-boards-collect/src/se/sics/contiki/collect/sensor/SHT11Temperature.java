@@ -21,7 +21,6 @@ public class SHT11Temperature extends Sensor {
   public SHT11Temperature(String sensorID, String nodeID) {
     super(sensorID, nodeID);
     setUnits("Celsius");
-    setADC12(false);
     setConstants();
     setRoundDigits(2);
   }

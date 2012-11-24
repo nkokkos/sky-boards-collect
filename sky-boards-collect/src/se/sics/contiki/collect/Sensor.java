@@ -7,19 +7,25 @@
 
 package se.sics.contiki.collect;
 
-import java.util.Vector;
+import java.util.Hashtable;
+import java.util.Set;
 
 public abstract class Sensor {
 
-  private Vector<Variable> vars;
+  private Hashtable<String, Double> vars;
   private String id;
   private String units;
-  private boolean adc12;
+  private boolean ADC;
   private int roundDigits;
+  private int aDCResolution;
 
   public Sensor(String sensorID, String nodeID) {
-    vars = new Vector<Variable>();
+    vars = new Hashtable<String, Double>();
     this.id = sensorID;
+    aDCResolution = -1;
+    ADC = false;
+    roundDigits = 2;
+    units = "";
   }
 
   public String getId() {
@@ -27,38 +33,12 @@ public abstract class Sensor {
   }
 
   public void setVar(String name, double value) {
-    int i = 0;
-
-    while (i < vars.size()) {
-      if (vars.get(i).getName().equals(name)) {
-        vars.get(i).setValue(value);
-        return;
-      }
-      i++;
-    }
-
-    Variable var1 = new Variable(name, value);
-    vars.add(var1);
+    vars.put(name, value);
   }
 
-  public Variable[] getVars() {
-    Variable[] vars_array = new Variable[vars.size()];
-    for (int i = 0; i < vars.size(); i++) {
-      vars_array[i] = vars.get(i);
-    }
-    return vars_array;
-  }
-
-  public Variable getVar(String name) {
-    int i = 0;
-
-    while (i < vars.size()) {
-      if (vars.get(i).getName().equals(name)) {
-        return vars.get(i);
-      }
-      i++;
-    }
-    return null;
+  public Object[] getVarsNames() {
+    Set<String> s=vars.keySet();
+    return s.toArray();
   }
 
   public void setUnits(String units) {
@@ -69,16 +49,23 @@ public abstract class Sensor {
     return units;
   }
 
-  public void setADC12(boolean b) {
-    this.adc12 = b;
+  public void setADC(int aDCResolution) {
+    this.ADC = true;
+    this.aDCResolution=aDCResolution;
   }
 
-  public boolean ADC12() {
-    return adc12;
+  public boolean ADC() {
+    return ADC;
+  }
+
+  public int getADCResolution() {
+    return aDCResolution;
   }
   
   public double getValueOf(String var){
-    return getVar(var).getValue();
+    Double value=vars.get(var);
+    if (value==null) return Double.NaN;
+    return value;
   }
   
   public void setRoundDigits(int digits){
@@ -93,5 +80,4 @@ public abstract class Sensor {
   
   public abstract double getConv(Double value);  
   public abstract void setConstants();
-  
 }

@@ -89,7 +89,7 @@ public abstract class TimeChartPanel extends JPanel implements Visualizer {
         chartTitle, timeAxisLabel, valueAxisLabel, timeSeries,
         true, true, false
     );
-    chart.setBackgroundPaint(JAVA_DEF);
+    //chart.setBackgroundPaint(JAVA_DEF);
     this.chartPanel = new ChartPanel(chart);
     this.chartPanel.setPreferredSize(new Dimension(500, 270));
     setBaseShapeVisible(true);

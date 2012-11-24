@@ -12,10 +12,10 @@ import se.sics.contiki.collect.Sensor;
 
 public class GS02A extends Sensor {
 
-  public GS02A(String sensorID, String nodeID) {
+  public GS02A(String sensorID, String nodeID, int aDCRes) {
     super(sensorID, nodeID);
     setUnits("ppm");
-    setADC12(true);
+    setADC(aDCRes);
     setConstants();
     setRoundDigits(2);
   }
@@ -32,8 +32,8 @@ public class GS02A extends Sensor {
     double case3_v2 = getValueOf("case3_v2");
     double up_limit = getValueOf("upper_limit");
     double low_limit = getValueOf("lower_limit");
-
-    double Vs = ((double) value / (double) 4096) * vRef;
+    double resolution=getADCResolution();
+    double Vs = ((double) value / resolution) * vRef;
     double sensitivity = ((Vcc / Vs) - 1) * RL / R0;
 
     if (sensitivity > up_limit)

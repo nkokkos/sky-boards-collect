@@ -18,7 +18,6 @@ public class SHT11Humidity extends Sensor {
   public SHT11Humidity(String sensorID, String nodeID) {
     super(sensorID, nodeID);
     setUnits("%");
-    setADC12(false);
     setConstants();
     setRoundDigits(2);
   }

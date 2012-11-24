@@ -232,6 +232,7 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
   protected Hashtable<String, Integer> dataMsgMapping = new Hashtable<String, Integer>();
   private String feedTitle;
   public String type;
+  public int PLATFORM_ADC_RESOLUTION;
   
   public Sensor[] getSensors() {
     Sensor[] sensors_array = new Sensor[sensors.size()];
@@ -334,6 +335,7 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
   public abstract void addSensors();
   public abstract void mapMsgFormat();
   public abstract void setNodeType();
+  public abstract void setPlatformADCResolution();
 
   public void setFeedTitle(String feedTitle) {
     this.feedTitle = feedTitle;

@@ -12,10 +12,10 @@ import se.sics.contiki.collect.Sensor;
 
 public class NTC103F397F extends Sensor {
 
-  public NTC103F397F(String sensorID, String nodeID) {
+  public NTC103F397F(String sensorID, String nodeID, int aDCRes) {
     super(sensorID, nodeID);
     setUnits("Celsius");
-    setADC12(true);
+    setADC(aDCRes);
     setConstants();
     setRoundDigits(2);
   }
@@ -28,8 +28,9 @@ public class NTC103F397F extends Sensor {
     double T = getValueOf("T");
     double beta = getValueOf("beta");
     double K = 272.15;
+    double resolution=getADCResolution();
     // Thermistor resistor R0
-    double Vs = ((double) value / (double) 4096) * vRef;
+    double Vs = ((double) value / resolution) * vRef;
     double R0 = ((Vcc - Vs) * RT) / Vs;
     double ln_param = (double) RT / (double) R0;
     return ((-beta / (Math.log(ln_param) - (beta / T)))) - K;
