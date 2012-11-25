@@ -11,9 +11,11 @@
 package se.sics.contiki.collect.sensor;
 import se.sics.contiki.collect.Sensor;
 
+
 public class SHT11Humidity extends Sensor {
   
-  SHT11Temperature tempSensor;
+  //source for temperature compensation
+  Sensor tempSensor;
 
   public SHT11Humidity(String sensorID, String nodeID) {
     super(sensorID, nodeID);
@@ -38,7 +40,7 @@ public class SHT11Humidity extends Sensor {
     double c3 = getValueOf("c3");
     double t1 = getValueOf("t1");
     double t2 = getValueOf("t2");
-    double temp = tempSensor.lastTemp;
+    Double temp = ((SHT11Temperature) tempSensor).getLastTempValue();
         
     double RHlinear = c1 + c2 * value + c3 * (value * value);
     // Temperature compensation:

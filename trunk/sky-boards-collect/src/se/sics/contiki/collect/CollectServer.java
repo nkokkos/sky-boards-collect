@@ -899,14 +899,13 @@ public class CollectServer implements SerialConnectionListener,
 
     window.setJMenuBar(menuBar);
     window.pack();
-    mainPanel.addChangeListener(new ChangeListener(){
+    mainPanel.addChangeListener(new ChangeListener() {
       public void stateChanged(ChangeEvent e) {
-        if (((JTabbedPane) e.getSource()).getSelectedComponent() 
-            instanceof ConvPanel){
+        if (((JTabbedPane) e.getSource()).getSelectedComponent() instanceof ConvPanel) {
           convPanel.setActive(true);
           convPanel.nodesSelected(getSelectedNodes());
-        }
-        else convPanel.setActive(false);
+        } else
+          convPanel.setActive(false);
       }
     });
     parseConfigFile();
@@ -1151,65 +1150,65 @@ public class CollectServer implements SerialConnectionListener,
     return nodeCache;
   }
 
+  public Node createNode(String nodeID,int nodeType){
+    switch (nodeType) {
+    case SensorInfo.TmoteSky:
+      return new NodeTmoteSky(nodeID);
+    case SensorInfo.AR1000:
+      return new NodeAR1000(nodeID);
+    case SensorInfo.DS1000:
+      return new NodeDS1000(nodeID);
+    case SensorInfo.SINK:
+      return new NodeSink(nodeID);
+    default:
+      return new NodeTmoteSky(nodeID);
+    }
+  }
+  
   public Node addNode(String nodeID, int nodeType) {
     return getNode(nodeID, true, nodeType);
   }
 
   private Node getNode(final String nodeID, boolean notify, int nodeType) {
     Node node = nodeTable.get(nodeID);
-    if (node == null) {
-      switch (nodeType) {
-      case SensorInfo.TmoteSky:
-        node = new NodeTmoteSky(nodeID);
-        break;
-      case SensorInfo.AR1000:
-        node = new NodeAR1000(nodeID);
-        break;
-      case SensorInfo.DS1000:
-        node = new NodeDS1000(nodeID);
-        break;
-      case SensorInfo.SINK:
-        node = new NodeSink(nodeID);
-        break;
-      default:
-        node = new NodeTmoteSky(nodeID);
-      }
-      setConfig("firm," + nodeID, String.valueOf(nodeType));
+    if (node != null)
+      return node;
 
-      nodeTable.put(nodeID, node);
+    node=createNode(nodeID,nodeType);
+    setConfig("firm," + nodeID, String.valueOf(nodeType));
+    nodeTable.put(nodeID, node);
 
-      synchronized (this) {
-        nodeCache = null;
-      }
+    synchronized (this) {
+      nodeCache = null;
+    }
 
-      if (notify) {
-        final Node newNode = node;
-        SwingUtilities.invokeLater(new Runnable() {
-          public void run() {
-            boolean added = false;
-            for (int i = 1, n = nodeModel.size(); i < n; i++) {
-              int cmp = newNode.compareTo((Node) nodeModel.get(i));
-              if (cmp < 0) {
-                nodeModel.insertElementAt(newNode, i);
-                added = true;
-                break;
-              } else if (cmp == 0) {
-                // node already added
-                added = true;
-                break;
-              }
-            }
-            if (!added) {
-              nodeModel.addElement(newNode);
-            }
-            if (visualizers != null) {
-              for (int i = 0, n = visualizers.length; i < n; i++) {
-                visualizers[i].nodeAdded(newNode);
-              }
+    if (notify) {
+      final Node newNode = node;
+      SwingUtilities.invokeLater(new Runnable() {
+        public void run() {
+          boolean added = false;
+          for (int i = 1, n = nodeModel.size(); i < n; i++) {
+            int cmp = newNode.compareTo((Node) nodeModel.get(i));
+            if (cmp < 0) {
+              nodeModel.insertElementAt(newNode, i);
+              added = true;
+              break;
+            } else if (cmp == 0) {
+              // node already added
+              added = true;
+              break;
             }
           }
-        });
-      }
+          if (!added) {
+            nodeModel.addElement(newNode);
+          }
+          if (visualizers != null) {
+            for (int i = 0, n = visualizers.length; i < n; i++) {
+              visualizers[i].nodeAdded(newNode);
+            }
+          }
+        }
+      });
     }
     return node;
   }
@@ -1248,7 +1247,7 @@ public class CollectServer implements SerialConnectionListener,
    * This method is called from ConvPanel class to update TimeChartPanel
    * instance
    */
-  public void UpdateChart(final String title) {
+  public void updateChart(final String title) {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
         if (visualizers != null) {

@@ -10,8 +10,10 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -19,8 +21,6 @@ import java.beans.PropertyChangeListener;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.ListIterator;
 import java.util.Properties;
 
 import javax.swing.DefaultComboBoxModel;
@@ -31,17 +31,22 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextPane;
 import javax.swing.UIDefaults;
+import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.event.ChartProgressEvent;
 import org.jfree.chart.event.ChartProgressListener;
@@ -51,7 +56,6 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.data.Range;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.jfree.ui.Layer;
 import org.jfree.ui.LengthAdjustmentType;
 import org.jfree.ui.RectangleAnchor;
 import org.jfree.ui.TextAnchor;
@@ -71,30 +75,30 @@ public class ConvPanel extends JPanel implements Visualizer,
   private String category;
 
   private Node selectedNode;
+  private Node workingCopyNode; // working copy of the node
   private Sensor[] sensors;
-  private SensorData data;
   private ArrayList<JFreeChart> chartList;
   private ArrayList<XYSeriesCollection> seriesList;
   private ArrayList<Function> functions;
-  private ArrayList<JLabel> xLabelList;
-  private ArrayList<JLabel> yLabelList;
-  private Hashtable<String, ArrayList<JFormattedTextField>> fieldsTable;
+  private ArrayList<JTextPane> crossHairStatusList;
+  private  ArrayList<JFormattedTextField> fieldList;
   private Properties calibrationConfig;
 
   private JTabbedPane tabbedPane; // tabbedPanel
+  TabChangeListener tabChangeListener;
   private XYSeriesCollection dataset;
 
   public final int DEF_MIN_X = 1;
   public int DEF_MAX_X;
   public final int DEF_INC_X = 5;
   public final String TOOL_TIP_RESET_BT = "Reset to default values";
-  public final String TOOL_TIP_SAVE_BT = "Confirm changes and update charts";
+  public final String TOOL_TIP_SAVE_BT = "Confirm changes and update charts taking new values as input";
   public final String TOOL_TIP_FORM_BT = "Display sensor conversions expressions";
   public final String TOOL_TIP_LAST_LABEL = "Last raw or ADC value received from the node";
 
-  private final Color DOM_HIGHLIGHT_COLOR = Color.BLUE;
-  private final Color RANGE_HIGHLIGHT_COLOR = new Color(0, 153, 0);
-  private final Color LAST_HIGHLIGHT_COLOR = new Color(102, 0, 0);
+  private final Color COLOR_DOM_HIGHLIGHT = Color.BLUE;
+  private final Color COLOR_RANGE_HIGHLIGHT = new Color(0, 153, 0);
+  private final Color COLOR_LAST_HIGHLIGHT = new Color(102, 0, 0);
   private Color COLOR_JAVA_SEPARATOR = new Color(0, 100, 0);
   private Color COLOR_JAVA_DEF = new Color(238, 238, 238);
 
@@ -110,6 +114,17 @@ public class ConvPanel extends JPanel implements Visualizer,
     UIDefaults defaults = javax.swing.UIManager.getDefaults();
     COLOR_JAVA_DEF = defaults.getColor("Panel.background");
     COLOR_JAVA_SEPARATOR = defaults.getColor("Separator.foreground");
+    tabChangeListener = new TabChangeListener();
+  }
+
+  private class TabChangeListener implements ChangeListener {
+    public void stateChanged(ChangeEvent e) {
+      // This has to be done because sensors can
+      // have dependent expressions (eg: Temperature
+      // compensation in SHT11 Humidity sensor).
+      // See SHT11Humidity.java and SHT11Temperature.java
+      updateChart(tabbedPane.getSelectedIndex());
+    }
   }
 
   public String getCategory() {
@@ -128,150 +143,141 @@ public class ConvPanel extends JPanel implements Visualizer,
     this.active = isActive;
   }
 
+  private void copySelectedNode(Node n) {
+    selectedNode = n;
+    int nodeType = selectedNode.getLastSD().getType();
+    String id = selectedNode.getID();
+    workingCopyNode = server.createNode(id, nodeType);
+    workingCopyNode.copySensorVarsFrom(selectedNode);
+  }
+
   public void nodesSelected(Node[] node) {
     if (node == null || node.length > 1)
       return;
 
     // Do not waste resources painting
-    // components unless this is the selected tab
+    // components unless this class is the selected tab
     if (!active)
       return;
+    tabbedPane.removeChangeListener(tabChangeListener);
 
-    selectedNode = node[0];
+    copySelectedNode(node[0]);
+
     DEF_MAX_X = selectedNode.PLATFORM_ADC_RESOLUTION;
     sensors = selectedNode.getSensors();
     tabbedPane.removeAll();
     seriesList = new ArrayList<XYSeriesCollection>();
     chartList = new ArrayList<JFreeChart>();
     functions = new ArrayList<Function>();
-    xLabelList = new ArrayList<JLabel>();
-    yLabelList = new ArrayList<JLabel>();
-    fieldsTable = new Hashtable<String, ArrayList<JFormattedTextField>>();
+    crossHairStatusList = new ArrayList<JTextPane>();
+    fieldList = new ArrayList<JFormattedTextField>();
+    GridBagConstraints c = new GridBagConstraints();
 
     for (int i = 0; i < sensors.length; i++) {
       Sensor sensor = sensors[i];
       String sensorId = sensor.getId();
       Object[] vars = sensor.getVarsNames();
       JPanel mainPanel = new JPanel(new GridBagLayout());
-
-      GridBagConstraints c = new GridBagConstraints();
-      // add labels
-      c.anchor = GridBagConstraints.LINE_START;
-      c.gridx = c.gridy = 0;
-      c.gridwidth = 2;
-      c.weighty = 0.5;
-      c.insets.left = 5;
-      JLabel label = new JLabel("Last Raw: " + getLastADCValue(sensorId));
-      label.setToolTipText(TOOL_TIP_LAST_LABEL);
-      label.setForeground(LAST_HIGHLIGHT_COLOR);
-      mainPanel.add(label, c);
-
-      JLabel l = new JLabel();
-      l.setForeground(DOM_HIGHLIGHT_COLOR);
+      // Add crosshair status text pane
+      JTextPane status = new JTextPane();
+      status.setBorder(LineBorder.createBlackLineBorder());
+      status.setEditable(false);
+      //status.setBackground(COLOR_JAVA_DEF);
+      StyledDocument doc = status.getStyledDocument();
+      Style def = StyleContext.getDefaultStyleContext().getStyle(
+          StyleContext.DEFAULT_STYLE);
+      doc.addStyle("regular", def);
+      Style s = doc.addStyle("x", null);
+      StyleConstants.setForeground(s, COLOR_DOM_HIGHLIGHT);
+      s = doc.addStyle("y", null);
+      StyleConstants.setForeground(s, COLOR_RANGE_HIGHLIGHT);
       c.gridx = 0;
-      c.gridy++;
-      xLabelList.add(l);
-      mainPanel.add(l, c);
-
-      l = new JLabel();
-      l.setForeground(RANGE_HIGHLIGHT_COLOR);
-      c.gridy++;
-      yLabelList.add(l);
-      mainPanel.add(l, c);
-
-      c.gridy++;
-      c.gridwidth = 1;
-      mainPanel.add(new JLabel("Min. X "), c);
-
-      c.gridy++;
-      mainPanel.add(new JLabel("Max. X "), c);
-
-      c.gridy++;
-      mainPanel.add(new JLabel("Inc. X "), c);
-
-      c.gridy++;
-      c.gridwidth = 2;
+      c.gridy=0;
+      c.gridwidth = 4;
       c.fill = GridBagConstraints.HORIZONTAL;
-      mainPanel.add(new JSeparator(), c);
-
-      c.gridwidth = 1;
-      for (int j = 0; j < vars.length; j++) {
-        String var = (String) vars[j];
-        c.gridy++;
-        mainPanel.add(new JLabel(var + " "), c);
-      }
-      c.insets.left = 0;
-      // Add fields
-      ArrayList<JFormattedTextField> fieldList = new ArrayList<JFormattedTextField>();
-      c.fill = GridBagConstraints.HORIZONTAL;
-      c.gridx = 1;
-      c.gridy = 3;
-      mainPanel.add(createLimitTextFields("minx", DEF_MIN_X), c);
-
-      c.gridy++;
-      mainPanel.add(createLimitTextFields("maxx", DEF_MAX_X), c);
-
-      c.gridy++;
-      mainPanel.add(createLimitTextFields("inc", DEF_INC_X), c);
-
-      c.gridy++;// for the JSeparator
-      int height = 6;
-
-      for (int j = 0; j < vars.length; j++) {
-        String var = (String) vars[j];
-        c.gridy++;
-        height++;
-        JFormattedTextField tf = createVarsTextFields(var,
-            sensor.getValueOf(var));
-        fieldList.add(tf);
-        mainPanel.add(tf, c);
-      }
-
-      c.insets.left = 5;
-      // Add buttons/combobox
-      c.gridx = 0;
-      c.gridwidth = 2;
-      c.gridy++;
-      mainPanel.add(createComboBoxXOpt(sensorId), c);
-
-      c.gridy++;
-      mainPanel.add(
-          createButton("Reset values", TOOL_TIP_RESET_BT, sensorId,
-              new ButtonResetAction()), c);
-
-      c.gridy++;
-      mainPanel.add(
-          createButton("Show formulas", TOOL_TIP_FORM_BT, sensorId,
-              new ButtonFormulaAction()), c);
-      height += 3;
-
+      c.insets = new Insets(0,0,10,0);
+      crossHairStatusList.add(status);
+      mainPanel.add(status, c);
       // Add chart
       c.fill = GridBagConstraints.BOTH;
-      c.gridx = 2;
+      c.gridx = 0;
       c.gridy = 1;
       c.weightx = 1;
-      c.gridwidth = 2;
+      c.gridwidth = 4;
       c.weighty = 0.5;
-      c.gridheight = height - 1;
+      c.weightx = 0.5;
       ChartPanel chartPanel = createChart(sensorId);
       mainPanel.add(chartPanel, c);
-
-      fieldsTable.put(sensorId, fieldList);
-      tabbedPane.add(mainPanel, sensorId);
-
       // Add Slider
-      c.fill = GridBagConstraints.BOTH;
-      c.anchor = GridBagConstraints.CENTER;
-      c.gridx = 2;
-      c.gridy = height;
-      c.gridheight = 1;
+      c.gridy++;
+      c.weighty = 0;
+      c.fill = GridBagConstraints.HORIZONTAL;
       JSlider sld = configSlider();
-      //setSliderPos(getLastADCDnumValue(sensorId), sld, chartPanel.getChart());
       mainPanel.add(sld, c);
 
+      // Add controls
+      c.gridy++;
+      c.gridwidth=1;
+      c.gridx=1;
+      c.weightx=0;
+      c.fill = GridBagConstraints.NONE;
+      c.anchor = GridBagConstraints.LINE_END;
+      c.insets = new Insets(5,20,0,0);
+      mainPanel.add(new JLabel("Constant: "),c);
+
+      JComboBox<Object> varsComboBox = new JComboBox<Object>(vars);
+      if (vars.length>0)
+        varsComboBox.setSelectedIndex(0);
+      varsComboBox.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          int i=tabbedPane.getSelectedIndex();
+          @SuppressWarnings("unchecked")
+          String var=(String) ((JComboBox<Object>)e.getSource()).getSelectedItem();
+          Sensor s=sensors[i];
+          fieldList.get(i).setValue(s.getValueOf(var));
+          fieldList.get(i).repaint();
+        }
+      });
+      c.gridx++;
+      c.weightx=0;
+      c.fill = GridBagConstraints.NONE;
+      c.anchor = GridBagConstraints.CENTER;
+      c.insets = new Insets(5,0,0,5);
+      mainPanel.add(varsComboBox,c);
+
+      NumberFormat format = NumberFormat.getNumberInstance();
+      format.setMaximumFractionDigits(15);
+      JFormattedTextField valueField = new JFormattedTextField(format);
+      valueField.setValue(532D);
+      //valueField.setColumns(12);
+      //valueField.addPropertyChangeListener("value", this);
+      fieldList.add(valueField);
+      c.gridx++;
+      c.gridwidth=1;
+      c.weightx=0.1;
+      c.fill = GridBagConstraints.HORIZONTAL;
+      c.insets = new Insets(5,0,0,20);
+      mainPanel.add(valueField,c);
+      
+      c.gridy++;
+      c.gridx=0;
+      c.gridwidth=4;
+      c.fill = GridBagConstraints.HORIZONTAL;
+      JPanel buttonPanel = new JPanel();
+      buttonPanel.add(createButton("Reset", TOOL_TIP_RESET_BT, sensorId,
+          new ButtonResetAction()));
+      buttonPanel.add(createButton("Confirm", TOOL_TIP_SAVE_BT,
+          sensorId, new ButtonSaveChangesAction()));
+      buttonPanel.add(createButton("Show", TOOL_TIP_FORM_BT, sensorId,
+          new ButtonFormulaAction()));
+      c.insets = new Insets(5,20,0,20);
+      mainPanel.add(buttonPanel,c);
+
+      tabbedPane.add(mainPanel, sensorId);
     }
     add(tabbedPane, BorderLayout.CENTER);
     updateUI();
+    tabbedPane.addChangeListener(tabChangeListener);
   }
 
   private JSlider configSlider() {
@@ -294,29 +300,11 @@ public class ConvPanel extends JPanel implements Visualizer,
     });
     return sld;
   }
-  
-/*
-  private void setSliderPos(double x, JSlider sld, JFreeChart chart) {
-    XYPlot plot = (XYPlot) chart.getPlot();
-    ValueAxis domainAxis = plot.getDomainAxis();
-    Range rangeAxis = domainAxis.getRange();
-    Double lower = domainAxis.getLowerBound();
-    Double axisLenght = rangeAxis.getLength();
-    Double pos = ((x - lower) / axisLenght) * sld.getMaximum();
-    if (pos > 1000)
-      pos = 1000D;
-    else if (pos < 0)
-      pos = 0D;
-    sld.setValue((int)Math.floor(pos));
-    sld.updateUI();
-  }
-  */
-  
+
   private JFormattedTextField createLimitTextFields(String fieldName, int value) {
     NumberFormat format = NumberFormat.getIntegerInstance();
     JFormattedTextField valueField = new JFormattedTextField(format);
     valueField.setValue(value);
-    valueField.setColumns(10);
     valueField.setName(fieldName);
     valueField.addPropertyChangeListener("value", this);
     return valueField;
@@ -327,7 +315,6 @@ public class ConvPanel extends JPanel implements Visualizer,
     format.setMaximumFractionDigits(15);
     JFormattedTextField valueField = new JFormattedTextField(format);
     valueField.setValue(value);
-    valueField.setColumns(10);
     valueField.setName(varName);
     valueField.addPropertyChangeListener("value", this);
     return valueField;
@@ -386,9 +373,9 @@ public class ConvPanel extends JPanel implements Visualizer,
     else if (varName.equals("inc"))
       functions.get(i).setIncrement((int) newValue);
     else {
-      Sensor sensor = selectedNode.getNodeSensor(sensorId);
+      Sensor sensor = workingCopyNode.getNodeSensor(sensorId);
       sensor.setVar(varName, newValue);
-      updateConfig(sensor.getId(), varName, newValue);
+      // updateConfig(sensor.getId(), varName, newValue);
     }
     updateChart(i);
   }
@@ -404,21 +391,19 @@ public class ConvPanel extends JPanel implements Visualizer,
     JFreeChart chart = chartList.get(chartIndex);
     XYPlot plot = (XYPlot) chart.getPlot();
     plot.setRangeCrosshairValue(conv.f(plot.getDomainCrosshairValue()));
-    server.UpdateChart(conv.getSensorId());
   }
 
   private ChartPanel createChart(String sensorId) {
     if (selectedNode.getSensorDataCount() == 0)
       return new ChartPanel(null);
-    data = selectedNode.getLastSD();
-    Function conv = new Function(selectedNode.getNodeSensor(sensorId),
-        selectedNode.PLATFORM_ADC_RESOLUTION) {
+
+    Sensor s = workingCopyNode.getNodeSensor(sensorId);
+    Function conv = new Function(s, selectedNode.PLATFORM_ADC_RESOLUTION) {
       protected double f(Double value) {
         return sensor.getConv(value);
       }
     };
     functions.add(conv);
-
     return paintChart(conv);
   }
 
@@ -439,10 +424,10 @@ public class ConvPanel extends JPanel implements Visualizer,
         false // Configure chart to generate URLs?
         );
     XYPlot plot = chart.getXYPlot();
-    plot.getDomainAxis().setLabelPaint(DOM_HIGHLIGHT_COLOR);
-    plot.getDomainAxis().setTickLabelPaint(DOM_HIGHLIGHT_COLOR);
-    plot.getRangeAxis().setLabelPaint(RANGE_HIGHLIGHT_COLOR);
-    plot.getRangeAxis().setTickLabelPaint(RANGE_HIGHLIGHT_COLOR);
+    plot.getDomainAxis().setLabelPaint(COLOR_DOM_HIGHLIGHT);
+    plot.getDomainAxis().setTickLabelPaint(COLOR_DOM_HIGHLIGHT);
+    plot.getRangeAxis().setLabelPaint(COLOR_RANGE_HIGHLIGHT);
+    plot.getRangeAxis().setTickLabelPaint(COLOR_RANGE_HIGHLIGHT);
     plot.setBackgroundPaint(Color.WHITE);
     plot.setDomainGridlinePaint(Color.GRAY);
     plot.setRangeGridlinePaint(Color.GRAY);
@@ -461,43 +446,58 @@ public class ConvPanel extends JPanel implements Visualizer,
     plot.setDomainCrosshairStroke(stroke);
     plot.setDomainCrosshairVisible(true);
     plot.setDomainCrosshairLockedOnData(true);
-    plot.setDomainCrosshairPaint(DOM_HIGHLIGHT_COLOR);
+    plot.setDomainCrosshairPaint(COLOR_DOM_HIGHLIGHT);
 
     Double y = conv.f(x);
     plot.setRangeCrosshairValue(y, true);
     plot.setRangeCrosshairStroke(stroke);
     plot.setRangeCrosshairVisible(true);
     plot.setRangeCrosshairLockedOnData(true);
-    plot.setRangeCrosshairPaint(RANGE_HIGHLIGHT_COLOR);
+    plot.setRangeCrosshairPaint(COLOR_RANGE_HIGHLIGHT);
 
     ValueMarker valueMarker = new ValueMarker(x);
-    valueMarker.setPaint(LAST_HIGHLIGHT_COLOR);
+    valueMarker.setPaint(COLOR_LAST_HIGHLIGHT);
     valueMarker.setLabel("Last received");
     valueMarker.setLabelOffsetType(LengthAdjustmentType.EXPAND);
     valueMarker.setStroke(new BasicStroke(0.5f));
     valueMarker.setLabelAnchor(RectangleAnchor.TOP_RIGHT);
     valueMarker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
-    
-    //TODO Two Domain Axis instead of ( Vs / ADC) dropbox
-    NumberAxis  va = new NumberAxis("Sensor Voltage");
-    
-    plot.setDomainAxis(va);
 
-    plot.addDomainMarker(valueMarker, Layer.FOREGROUND);
+    // TODO Two Domain Axis instead of ( Vs / ADC) dropbox
+    // NumberAxis va = new NumberAxis("Sensor Voltage");
+
+    // plot.setDomainAxis(1, va);
+
+    // plot.addDomainMarker(valueMarker, Layer.FOREGROUND);
 
     chart.addProgressListener(new ChartProgressListener() {
       public void chartProgress(ChartProgressEvent e) {
         if (e.getType() == ChartProgressEvent.DRAWING_FINISHED) {
           int i = tabbedPane.getSelectedIndex();
-          Sensor s = selectedNode.getNodeSensor(tabbedPane.getTitleAt(i));
+          JTextPane status = crossHairStatusList.get(i);
+          Sensor s = sensors[i];
+          StyledDocument doc = status.getStyledDocument();
           XYPlot plot = (XYPlot) e.getChart().getPlot();
           Double x = plot.getDomainCrosshairValue();
           Double y = plot.getRangeCrosshairValue();
-          JLabel xL = xLabelList.get(i);
-          JLabel yL = yLabelList.get(i);
-          xL.setText("x     = " + round(x, 2));
-          yL.setText("f(x) = " + round(y, s.getRoundDigits()) + " ("
-              + s.getUnits() + ")");
+          try {
+            System.out.println(doc.getEndPosition());
+            doc.remove(0, doc.getLength());
+            String xValue = round(x, 2);
+            String yValue = round(y, s.getRoundDigits());
+            String a = "   f ( ";
+            String b = " ) = ";
+            String c = " "+s.getUnits();
+            String statusText = a + xValue + b + yValue + c;
+            doc.insertString(0, statusText, doc.getStyle("main"));
+            doc.setCharacterAttributes(a.length(), xValue.length(),
+                doc.getStyle("x"), false);
+            doc.setCharacterAttributes(
+                a.length() + xValue.length() + b.length(), yValue.length()+c.length(),
+                doc.getStyle("y"), false);
+          } catch (BadLocationException e1) {
+            e1.printStackTrace();
+          }
         }
       }
     });
@@ -513,7 +513,7 @@ public class ConvPanel extends JPanel implements Visualizer,
 
   String getLastADCValue(String sensor) {
     if (selectedNode.getLastSD() == null)
-      return "";
+      return "No data";
     Double lastValue = selectedNode.getLastValueOf(sensor);
     return Double.toString(lastValue);
   }
@@ -525,8 +525,6 @@ public class ConvPanel extends JPanel implements Visualizer,
   }
 
   private JLabel getConversionImage(String sensorName) {
-    if (selectedNode.getSensorDataCount() == 0)
-      return null;
     String firmName = selectedNode.getFirmName();
     ImageIcon imgIcon = new ImageIcon("./images/" + firmName + "-" + sensorName
         + "-" + "formula.jpeg");
@@ -539,23 +537,23 @@ public class ConvPanel extends JPanel implements Visualizer,
     public void actionPerformed(ActionEvent e) {
       String sensor = ((Component) e.getSource()).getName();
       int i = tabbedPane.getSelectedIndex();
-      selectedNode.setDefaultValues(sensor);
-      ArrayList<JFormattedTextField> TextFields = fieldsTable.get(sensor);
+      workingCopyNode.setDefaultValues(sensor);
+      /*ArrayList<JFormattedTextField> TextFields = fieldsTable.get(sensor);
       ListIterator<JFormattedTextField> it = TextFields.listIterator();
       while (it.hasNext()) {
         reset(it.next(), i);
       }
-      updateChart(i);
+      updateChart(i);*/
     }
 
     public void reset(JFormattedTextField field, int i) {
       String varName = field.getName();
       String sensorId = sensors[i].getId();
-      Sensor sensor = selectedNode.getNodeSensor(sensorId);
+      Sensor sensor = workingCopyNode.getNodeSensor(sensorId);
       Double value = sensor.getValueOf(varName);
       ((JFormattedTextField) field).setValue(value);
       // default values do not need to be stored
-      removeFromConfig(sensorId, varName, value);
+      // removeFromConfig(sensorId, varName, value);
     }
   }
 
@@ -568,6 +566,15 @@ public class ConvPanel extends JPanel implements Visualizer,
       imgFrame.setLocationRelativeTo((Component) e.getSource());
       imgFrame.pack();
       imgFrame.setVisible(true);
+    }
+  }
+
+  public class ButtonSaveChangesAction implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+      // copy changes in workingcopy to selectednode instance
+      // server.updateChart(conv.getSensorId());
+      // for every value update variable value on disk ONLY IF , the value of
+      // workingcopy != the value of selected node copy
     }
   }
 
@@ -604,18 +611,17 @@ public class ConvPanel extends JPanel implements Visualizer,
     Function(Sensor sensor, int aDCresolution) {
       this.sensor = sensor;
       maxX = sensor.getADCResolution();
-      if (maxX<=0) maxX=DEF_MAX_X;
-          
+      if (maxX <= 0)
+        maxX = DEF_MAX_X;
+
       yLabel = sensor.getUnits();
       sensorId = sensor.getId();
       this.aDCresolution = aDCresolution;
     }
 
     public Number getX(int i) {
-      Sensor s;
       if (showVs) {
-        s = data.getNode().getNodeSensor(sensorId);
-        double vRef = s.getValueOf("Vref");
+        double vRef = sensor.getValueOf("Vref");
         return ((double) i / (double) aDCresolution) * vRef;
       } else
         return i;
@@ -672,8 +678,7 @@ public class ConvPanel extends JPanel implements Visualizer,
         showVs = false;
         return;
       }
-      Sensor s = data.getNode().getNodeSensor(sensorId);
-      if (s.getValueOf("Vref") == Double.NaN) {
+      if (sensor.getValueOf("Vref") == Double.NaN) {
         showVs = false;
         return;
       }

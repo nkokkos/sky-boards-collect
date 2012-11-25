@@ -27,6 +27,14 @@ public abstract class Sensor {
     roundDigits = 2;
     units = "";
   }
+  
+  public void cloneVars(Sensor s){
+    vars.clear();
+    for (Object varName:s.getVarsNames()){
+      String var=(String) varName;
+      vars.put(var, s.getValueOf(var));
+    }
+  }
 
   public String getId() {
     return id;
