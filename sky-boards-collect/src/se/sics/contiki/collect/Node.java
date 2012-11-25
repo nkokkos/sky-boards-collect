@@ -230,7 +230,6 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
   // -------------------------------------------------------------------
   protected Hashtable<String, Sensor> sensors = new Hashtable<String, Sensor>();
   protected Hashtable<String, Integer> dataMsgMapping = new Hashtable<String, Integer>();
-  private String feedTitle;
   public String type;
   public int PLATFORM_ADC_RESOLUTION;
   
@@ -292,6 +291,9 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
   
   public Double getLastValueOf(String sensorID) {
     SensorData sd=this.getLastSD();
+    if (sd==null) 
+      return Double.NaN;
+    
     return (double)sd.getValue(dataMsgMapping.get(sensorID));
   }
   
@@ -330,6 +332,14 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
     return frm.format(d);
   }
   
+  public void copySensorVarsFrom(Node n){
+    Sensor s;
+    for (String key:sensors.keySet()){
+      s=sensors.get(key);
+      s.cloneVars(n.getNodeSensor(s.getId()));
+    }
+  }
+  
   // Abstract methods
   public abstract void init();
   public abstract void addSensors();
@@ -337,11 +347,5 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
   public abstract void setNodeType();
   public abstract void setPlatformADCResolution();
 
-  public void setFeedTitle(String feedTitle) {
-    this.feedTitle = feedTitle;
-  }
 
-  public String getFeedTitle() {
-    return feedTitle;
-  }
 }
