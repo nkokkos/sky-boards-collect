@@ -44,6 +44,7 @@ import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 
 /**
  *
@@ -72,7 +73,7 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
     this.id = nodeID;
     this.name = nodeName;
     sensorDataAggregator = new SensorDataAggregator(this);
-    sensors = new Hashtable<String, Sensor>();
+    sensors = new LinkedHashMap<String, Sensor>();
   }
 
   public final String getID() {
@@ -228,17 +229,17 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
   // -------------------------------------------------------------------
   // sky-boards-collect extension
   // -------------------------------------------------------------------
-  protected Hashtable<String, Sensor> sensors = new Hashtable<String, Sensor>();
+  protected LinkedHashMap<String, Sensor> sensors = new LinkedHashMap<String, Sensor>();
   protected Hashtable<String, Integer> dataMsgMapping = new Hashtable<String, Integer>();
   public String type;
   public int PLATFORM_ADC_RESOLUTION;
   
   public Sensor[] getSensors() {
     Sensor[] sensors_array = new Sensor[sensors.size()];
-    int i = sensors.size() - 1;
+    int i = 0;
     for (Object key : sensors.keySet()) {
       sensors_array[i] = sensors.get(key);
-      i--;
+      i++;
     }
     return sensors_array;
   }

@@ -53,10 +53,10 @@ public class SHT11Humidity extends Sensor {
 
   @Override
   public void setConstants() {
-    setVar("c1", -2.0468);
-    setVar("c2", 0.0367);
-    setVar("c3", -1.5955E-6);
-    setVar("t1", 0.01);
-    setVar("t2", 8E-5);
+    setVar("c1", -2.0468d);
+    setVar("c2", 0.0367d);
+    setVar("c3", -1.5955E-6d);
+    setVar("t1", 0.01d);
+    setVar("t2", 8E-5d);
   }
 }
