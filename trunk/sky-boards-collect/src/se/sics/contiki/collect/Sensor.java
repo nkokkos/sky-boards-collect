@@ -7,12 +7,12 @@
 
 package se.sics.contiki.collect;
 
-import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 public abstract class Sensor {
 
-  private Hashtable<String, Double> vars;
+  private LinkedHashMap<String, Double> vars;
   private String id;
   private String units;
   private boolean ADC;
@@ -20,7 +20,7 @@ public abstract class Sensor {
   private int aDCResolution;
 
   public Sensor(String sensorID, String nodeID) {
-    vars = new Hashtable<String, Double>();
+    vars = new LinkedHashMap<String, Double>();
     this.id = sensorID;
     aDCResolution = -1;
     ADC = false;
