@@ -13,6 +13,7 @@ import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -74,8 +75,7 @@ import se.sics.contiki.collect.Sensor;
 import se.sics.contiki.collect.SensorData;
 import se.sics.contiki.collect.Visualizer;
 
-public class ConvPanel extends JPanel implements Visualizer,
-    PropertyChangeListener {
+public class ConvPanel extends JPanel implements Visualizer{
   private static final long serialVersionUID = 1L;
   private CollectServer server;
   private boolean active;
@@ -83,8 +83,10 @@ public class ConvPanel extends JPanel implements Visualizer,
   private String category;
 
   private Node selectedNode;
+  private String SelectedNodeID;
   private Node workingCopyNode; // working copy of the node
   private Sensor[] sensors;
+  private String selectedVar;
   private ArrayList<JFreeChart> chartList;
   private ArrayList<XYSeriesCollection> seriesList;
   private ArrayList<Function> functions;
@@ -98,18 +100,21 @@ public class ConvPanel extends JPanel implements Visualizer,
   private XYSeriesCollection dataset;
 
   public final int DEF_MIN_X = 1;
-  public final int DEF_INC_X = 10; // increase for better GUI performance
-  public final String TOOL_TIP_RESET_BT = "Reset all sensor's conversion expressions constants to default values";
-  public final String TOOL_TIP_FORM_BT = "Display sensor's conversions expressions";
-  public final String TOOL_TIP_LAST_LABEL = "Last raw or ADC value received from the node";
-  public final String TOOL_TIP_DOMAIN_INT = "Double click to edit";
-  public final String TOOL_TIP_SAVE_CHECK = "Check the box to auto-save changes in constants and update application's charts";
+  public final int DEF_INC_X = 1; // increase for better GUI performance
+  private final String TOOL_TIP_RESET_BT = "Reset all sensor's conversion expressions constants to default values";
+  private final String TOOL_TIP_FORM_BT = "Display sensor's conversions expressions";
+  private final String TOOL_TIP_LAST_LABEL = "Last raw or ADC value received from the node";
+  private final String TOOL_TIP_CLICK_CHANGE = "Click to change";
+  private final String TOOL_TIP_SAVE_CHECK = "Check the box to auto-save changes in constants and update application's charts";
+  private final String INTERVAL_SELECTION_TITLE = "Domain interval. Use carefully. Increse step for large intervals.";
 
   private final Color COLOR_DOM_HIGHLIGHT = Color.BLUE;
   private final Color COLOR_RANGE_HIGHLIGHT = new Color(0, 153, 0);
   private final Color COLOR_LAST_HIGHLIGHT = new Color(102, 0, 0);
-  private Color COLOR_JAVA_SEPARATOR = new Color(0, 100, 0);
-  private Color COLOR_JAVA_DEF = new Color(238, 238, 238);
+  private Color COLOR_MOUSE_ON;
+  private Color COLOR_BACKGROUND;
+
+  functionGenerator fc;
 
   public ConvPanel(CollectServer server, String category, String title,
       Properties config) {
@@ -121,8 +126,8 @@ public class ConvPanel extends JPanel implements Visualizer,
     active = false;
     tabbedPane = new JTabbedPane();
     UIDefaults defaults = javax.swing.UIManager.getDefaults();
-    COLOR_JAVA_DEF = defaults.getColor("Panel.background");
-    COLOR_JAVA_SEPARATOR = defaults.getColor("Separator.foreground");
+    COLOR_BACKGROUND = defaults.getColor("Panel.background");
+    COLOR_MOUSE_ON = defaults.getColor("Button.shadow");
     tabChangeListener = new TabChangeListener();
   }
 
@@ -145,48 +150,51 @@ public class ConvPanel extends JPanel implements Visualizer,
     }
 
     public void mouseClicked(MouseEvent e) {
-      if (e.getClickCount() == 2) {
-        int i = tabbedPane.getSelectedIndex();
-        Function func = functions.get(i);
-        NumberFormat format = NumberFormat.getIntegerInstance();
-        JFormattedTextField lowerField = new JFormattedTextField(format);
-        JFormattedTextField upperField = new JFormattedTextField(format);
-        lowerField.setColumns(6);
-        int lowerValue = func.getMinX();
-        int upperValue = func.getMaxX();
-        lowerField.setValue(lowerValue);
-        upperField.setColumns(6);
-        upperField.setValue(upperValue);
-        JPanel intervalPanel = new JPanel();
-        intervalPanel.add(new JLabel("Lower value:"));
-        intervalPanel.add(lowerField);
-        intervalPanel.add(Box.createHorizontalStrut(10));
-        intervalPanel.add(new JLabel("Upper value:"));
-        intervalPanel.add(upperField);
 
-        int result = JOptionPane.showConfirmDialog(pane, intervalPanel,
-            "Please enter interval values", JOptionPane.OK_CANCEL_OPTION);
-        if (result == JOptionPane.OK_OPTION) {
-          int newUpper = (int) ((Number) upperField.getValue()).doubleValue();
-          int newLower = (int) ((Number) lowerField.getValue()).doubleValue();
-          if (newLower >= newUpper || newLower <= 0 || newUpper <= 0)
-            return;
-          if (newUpper != upperValue)
-            func.setMaxX(newUpper);
-          if (newLower != lowerValue)
-            func.setMinX(newLower);
-          updateChart(i);
-          setDomainIntervalText(pane, newLower, newUpper);
-        }
+      if (!fcFinished())
+        return;
+      int i = tabbedPane.getSelectedIndex();
+      Function func = functions.get(i);
+      NumberFormat format = NumberFormat.getIntegerInstance();
+      JFormattedTextField lowerField = new JFormattedTextField(format);
+      JFormattedTextField upperField = new JFormattedTextField(format);
+      lowerField.setColumns(6);
+      int lowerValue = func.getMinX();
+      int upperValue = func.getMaxX();
+      lowerField.setValue(lowerValue);
+      upperField.setColumns(6);
+      upperField.setValue(upperValue);
+      JPanel intervalPanel = new JPanel();
+      intervalPanel.add(new JLabel("Lower value:"));
+      intervalPanel.add(lowerField);
+      intervalPanel.add(Box.createHorizontalStrut(10));
+      intervalPanel.add(new JLabel("Upper value:"));
+      intervalPanel.add(upperField);
+
+      int result = JOptionPane.showConfirmDialog(pane, intervalPanel,
+          INTERVAL_SELECTION_TITLE, JOptionPane.OK_CANCEL_OPTION);
+      if (result == JOptionPane.OK_OPTION) {
+        int newUpper = (int) ((Number) upperField.getValue()).doubleValue();
+        int newLower = (int) ((Number) lowerField.getValue()).doubleValue();
+        if (newLower >= newUpper || newLower <= 0 || newUpper <= 0)
+          return;
+        if (newUpper != upperValue)
+          func.setMaxX(newUpper);
+        if (newLower != lowerValue)
+          func.setMinX(newLower);
+        updateChart(i);
+        setDomainIntervalText(pane, newLower, newUpper);
       }
     }
 
     public void mouseEntered(MouseEvent e) {
       pane.setBorder(LineBorder.createGrayLineBorder());
+      pane.setBackground(COLOR_MOUSE_ON);
     }
 
     public void mouseExited(MouseEvent e) {
       pane.setBorder(null);
+      pane.setBackground(COLOR_BACKGROUND);
     }
 
     public void mousePressed(MouseEvent e) {
@@ -194,6 +202,15 @@ public class ConvPanel extends JPanel implements Visualizer,
 
     public void mouseReleased(MouseEvent e) {
     }
+  }
+
+  public boolean fcFinished() {
+    if (fc == null)
+      return true;
+    if (!fc.Finished()) {
+      return false;
+    }
+    return true;
   }
 
   public void setDomainIntervalText(JTextPane tf, int lower, int upper) {
@@ -219,7 +236,11 @@ public class ConvPanel extends JPanel implements Visualizer,
 
   private void copySelectedNode(Node n) {
     selectedNode = n;
-    int nodeType = selectedNode.getLastSD().getType();
+    SelectedNodeID = selectedNode.getID();
+    SensorData sd = selectedNode.getLastSD();
+    if (sd == null)
+      return;
+    int nodeType = sd.getType();
     String id = selectedNode.getID();
     workingCopyNode = server.createNode(id, nodeType);
     workingCopyNode.copySensorVarsFrom(selectedNode);
@@ -227,15 +248,15 @@ public class ConvPanel extends JPanel implements Visualizer,
 
   public void nodesSelected(Node[] node) {
 
-    // Do not waste resources painting
-    // components unless this class is the selected tab
-    // and node not null and only one node's selected
-    if (!active || node == null || node.length > 1)
+    // Do not waste time painting
+    // components in these cases
+    if (!active || node == null || node.length > 1
+        || node[0].getID().equals(SelectedNodeID))
       return;
-
+      
     tabbedPane.removeChangeListener(tabChangeListener);
     copySelectedNode(node[0]);
-    sensors = selectedNode.getSensors();
+    sensors = workingCopyNode.getSensors();
     tabbedPane.removeAll();
     seriesList = new ArrayList<XYSeriesCollection>();
     chartList = new ArrayList<JFreeChart>();
@@ -255,7 +276,7 @@ public class ConvPanel extends JPanel implements Visualizer,
       JTextPane status = new JTextPane();
       status.setBorder(LineBorder.createBlackLineBorder());
       status.setEditable(false);
-      status.setBackground(COLOR_JAVA_DEF);
+      status.setBackground(COLOR_BACKGROUND);
       StyledDocument doc = status.getStyledDocument();
       Style def = StyleContext.getDefaultStyleContext().getStyle(
           StyleContext.DEFAULT_STYLE);
@@ -310,8 +331,8 @@ public class ConvPanel extends JPanel implements Visualizer,
       JTextPane domainIntervalPane = new JTextPane();
       domainIntervalPane.setEditable(false);
       domainIntervalPane.setSelectionColor(null);
-      domainIntervalPane.setToolTipText(TOOL_TIP_DOMAIN_INT);
-      domainIntervalPane.setBackground(COLOR_JAVA_DEF);
+      domainIntervalPane.setToolTipText(TOOL_TIP_CLICK_CHANGE);
+      domainIntervalPane.setBackground(COLOR_BACKGROUND);
 
       domainIntervalPane.addMouseListener(new domainIntervalPaneMouseListener(
           domainIntervalPane));
@@ -326,15 +347,18 @@ public class ConvPanel extends JPanel implements Visualizer,
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_END;
-      mainPanel.add(new JLabel("Increment: "), c);
+      mainPanel.add(new JLabel("Step: "), c);
 
-      SpinnerModel model = new SpinnerNumberModel(DEF_INC_X, 1, 500, 5);
+      SpinnerModel model = new SpinnerNumberModel(DEF_INC_X, 1, 500, 1);
       JSpinner spinner = new JSpinner(model);
       spinner.addChangeListener(new ChangeListener() {
         public void stateChanged(ChangeEvent e) {
+          if (!fcFinished())
+            return;
+
           int i = tabbedPane.getSelectedIndex();
           int inc = (int) ((JSpinner) e.getSource()).getValue();
-          functions.get(i).setIncrement(inc);
+          functions.get(i).setStep(inc);
           updateChart(i);
         }
       });
@@ -343,7 +367,7 @@ public class ConvPanel extends JPanel implements Visualizer,
       c.fill = GridBagConstraints.HORIZONTAL;
       c.insets = new Insets(0, 0, 0, 20);
       mainPanel.add(spinner, c);
-      
+
       JCheckBox autoRange = new JCheckBox("Auto Range");
       autoRange.setToolTipText(TOOL_TIP_SAVE_CHECK);
       autoRange.setSelected(true);
@@ -373,9 +397,9 @@ public class ConvPanel extends JPanel implements Visualizer,
           @SuppressWarnings("unchecked")
           JComboBox<Object> cb = (JComboBox<Object>) e.getSource();
           int i = Integer.parseInt(cb.getName());
-          String var = (String) cb.getSelectedItem();
+          selectedVar = (String) cb.getSelectedItem();
           Sensor s = sensors[i];
-          Double v = new Double(s.getValueOf(var));
+          Double v = new Double(s.getValueOf(selectedVar));
           fieldList.get(i).setValue(v);
         }
       });
@@ -390,7 +414,7 @@ public class ConvPanel extends JPanel implements Visualizer,
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_END;
-      c.insets = new Insets(0, 5, 0, 0);
+      c.insets = new Insets(5, 5, 0, 0);
       mainPanel.add(new JLabel("value: "), c);
 
       NumberFormat format = NumberFormat.getNumberInstance();
@@ -404,7 +428,7 @@ public class ConvPanel extends JPanel implements Visualizer,
       c.fill = GridBagConstraints.HORIZONTAL;
       c.insets = new Insets(5, 0, 0, 20);
       mainPanel.add(valueField, c);
-      
+
       JCheckBox saveCheck = new JCheckBox("Save changes");
       saveCheck.setToolTipText(TOOL_TIP_SAVE_CHECK);
       saveCheck.setSelected(false);
@@ -417,12 +441,12 @@ public class ConvPanel extends JPanel implements Visualizer,
       c.insets = new Insets(5, 0, 0, 0);
       mainPanel.add(saveCheck, c);
 
-      JPanel p= new JPanel();
+      JPanel p = new JPanel();
       p.add(createButton("Show Formulas", TOOL_TIP_FORM_BT, sensorId,
-              new ButtonFormulaAction()));
+          new ButtonFormulaAction()));
       p.add(createButton("Reset All", TOOL_TIP_RESET_BT, sensorId,
           new ButtonResetAction()));
-      
+
       c.gridwidth = 5;
       c.gridx = 0;
       c.gridy++;
@@ -430,7 +454,7 @@ public class ConvPanel extends JPanel implements Visualizer,
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.CENTER;
       c.insets = new Insets(5, 5, 5, 5);
-      mainPanel.add(p,c);
+      mainPanel.add(p, c);
       tabbedPane.add(mainPanel, sensorId);
 
       // Things that need to be done _after_ adding all the stuff
@@ -438,6 +462,22 @@ public class ConvPanel extends JPanel implements Visualizer,
           .getMaxX());
       if (vars.length > 0)
         varsComboBox.setSelectedIndex(0);
+      
+      valueField.addPropertyChangeListener("value",new PropertyChangeListener(){
+        public void propertyChange(PropertyChangeEvent e) {
+          if (!e.getPropertyName().equals("value"))
+            return;
+          JFormattedTextField source = (JFormattedTextField) e.getSource();
+          double newValue = ((Number) ((JFormattedTextField) source).getValue())
+              .doubleValue();
+          int i = tabbedPane.getSelectedIndex();
+          String sensorId = sensors[i].getId();
+          Sensor sensor = workingCopyNode.getNodeSensor(sensorId);
+          sensor.setVar(selectedVar, newValue);
+          // updateConfig(sensor.getId(), varName, newValue);
+          updateChart(i);
+        }
+      });
     }
     add(tabbedPane, BorderLayout.CENTER);
     updateUI();
@@ -475,42 +515,29 @@ public class ConvPanel extends JPanel implements Visualizer,
     return b;
   }
 
-  public void propertyChange(PropertyChangeEvent e) {
-    Object source = e.getSource();
-    String varName = ((JFormattedTextField) source).getName();
-    double newValue = ((Number) ((JFormattedTextField) source).getValue())
-        .doubleValue();
-    int i = tabbedPane.getSelectedIndex();
-    String sensorId = sensors[i].getId();
-
-    if (varName.equals("minx"))
-      functions.get(i).setMinX((int) newValue);
-    else if (varName.equals("maxx"))
-      functions.get(i).setMaxX((int) newValue);
-    else if (varName.equals("inc"))
-      functions.get(i).setIncrement((int) newValue);
-    else {
-      Sensor sensor = workingCopyNode.getNodeSensor(sensorId);
-      sensor.setVar(varName, newValue);
-      // updateConfig(sensor.getId(), varName, newValue);
-    }
-    updateChart(i);
-  }
-
-  private void updateChart(int chartIndex) {
-    dataset = seriesList.get(chartIndex);
-    dataset.removeAllSeries();
+  private void updateChart(final int chartIndex) {
+    
     Function conv = functions.get(chartIndex);
     XYSeries series = new XYSeries("Conversion function (" + conv.getSensorId()
         + ")");
-    genSerie(conv, series);
+    fc = new functionGenerator(conv, series, this, chartIndex);
+    fc.start();
+  }
+
+  // called by the Thread functionGenerator
+  public void addSeriesToChart(XYSeries series, int i) {
+    if (tabbedPane.getSelectedIndex() != i || !active)
+      return;
+
+    dataset = seriesList.get(i);
+    dataset.removeAllSeries();
     dataset.addSeries(series);
-    JFreeChart chart = chartList.get(chartIndex);
+    JFreeChart chart = chartList.get(i);
     XYPlot plot = (XYPlot) chart.getPlot();
-    plot.setRangeCrosshairValue(conv.f(plot.getDomainCrosshairValue()));
+    plot.setRangeCrosshairValue(functions.get(i).f(
+        plot.getDomainCrosshairValue()));
     plot.getDomainAxis().setAutoRange(true);
     plot.getRangeAxis().setAutoRange(true);
-    
   }
 
   private ChartPanel createChart(String sensorId) {
@@ -530,7 +557,14 @@ public class ConvPanel extends JPanel implements Visualizer,
   private ChartPanel paintChart(Function conv) {
     String sensorId = conv.getSensorId();
     XYSeries series = new XYSeries("Conversion function (" + sensorId + ")");
-    genSerie(conv, series);
+    int min = conv.getMinX();
+    int max = conv.getMaxX();
+    int step = conv.getStep();
+
+    for (int i = min; i <= max; i += step) {
+      series.add(i, conv.f((double) i));
+    }
+
     dataset = new XYSeriesCollection();
     seriesList.add(dataset);
     dataset.addSeries(series);
@@ -551,11 +585,11 @@ public class ConvPanel extends JPanel implements Visualizer,
     plot.setBackgroundPaint(Color.WHITE);
     plot.setDomainGridlinePaint(Color.GRAY);
     plot.setRangeGridlinePaint(Color.GRAY);
-    chart.setBackgroundPaint(COLOR_JAVA_DEF);
-    chart.setBorderPaint(COLOR_JAVA_SEPARATOR);
+    chart.setBackgroundPaint(COLOR_BACKGROUND);
+    chart.setBorderPaint(COLOR_MOUSE_ON);
 
     plot.setOutlineStroke(new BasicStroke(1.0f));
-    plot.setOutlinePaint(COLOR_JAVA_SEPARATOR);
+    plot.setOutlinePaint(COLOR_MOUSE_ON);
 
     BasicStroke s = (BasicStroke) plot.getDomainGridlineStroke();
     BasicStroke stroke = new BasicStroke(1.0f, s.getEndCap(),
@@ -632,12 +666,6 @@ public class ConvPanel extends JPanel implements Visualizer,
     valueMarker.setLabelAnchor(RectangleAnchor.TOP_RIGHT);
     valueMarker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
     plot.addDomainMarker(valueMarker, Layer.FOREGROUND);
-  }
-
-  private void genSerie(Function conv, XYSeries series) {
-    for (int i = conv.getMinX(); i <= conv.getMaxX(); i += conv.getIncrement()) {
-      series.add(conv.getX(i), conv.f((double) i));
-    }
   }
 
   String getLastADCValue(String sensor) {
@@ -732,8 +760,6 @@ public class ConvPanel extends JPanel implements Visualizer,
     private int maxX;
     private int increment = DEF_INC_X;
     private String sensorId;
-    private boolean showVs = false;
-    private int aDCresolution;
     private int DEF_MAX_X = 7000;
 
     Function(Sensor sensor, int aDCresolution) {
@@ -744,23 +770,6 @@ public class ConvPanel extends JPanel implements Visualizer,
 
       yLabel = sensor.getUnits();
       sensorId = sensor.getId();
-      this.aDCresolution = aDCresolution;
-    }
-
-    public Number getX(int i) {
-      if (showVs) {
-        double vRef = sensor.getValueOf("Vref");
-        return ((double) i / (double) aDCresolution) * vRef;
-      } else
-        return i;
-    }
-
-    public double domainRealValue(double V) {
-      if (showVs) {
-        double vRef = sensor.getValueOf("Vref");
-        V = (V * aDCresolution) / vRef;
-      }
-      return V;
     }
 
     abstract double f(Double value);
@@ -781,11 +790,11 @@ public class ConvPanel extends JPanel implements Visualizer,
       return maxX;
     }
 
-    public void setIncrement(int increment) {
+    public void setStep(int increment) {
       this.increment = increment;
     }
 
-    public int getIncrement() {
+    public int getStep() {
       return increment;
     }
 
@@ -793,30 +802,8 @@ public class ConvPanel extends JPanel implements Visualizer,
       return xLabel;
     }
 
-    public void setXTag(String lab) {
-      xLabel = lab;
-    }
-
     public String getyTag() {
       return yLabel;
-    }
-
-    public void setShowVs(boolean showVs) {
-      if (!sensor.ADC()) {
-        showVs = false;
-        return;
-      }
-      if (sensor.getValueOf("Vref") == Double.NaN) {
-        showVs = false;
-        return;
-      }
-
-      if (showVs)
-        setXTag("Voltage sensor (Vs)");
-      else
-        setXTag("adc_value");
-
-      this.showVs = showVs;
     }
 
     public String getSensorId() {
@@ -853,5 +840,41 @@ public class ConvPanel extends JPanel implements Visualizer,
   }
 
   public void clearNodeData() {/* ignore */
+  }
+
+  private class functionGenerator extends Thread {
+    Function func;
+    XYSeries series;
+    ConvPanel convPanel;
+    int chartIndex;
+    boolean finished = false;
+
+    functionGenerator(Function function, XYSeries series, ConvPanel convPanel,
+        int chartIndex) {
+      this.func = function;
+      this.series = series;
+      this.convPanel = convPanel;
+      this.chartIndex = chartIndex;
+    }
+
+    void addSeries() {
+      convPanel.addSeriesToChart(series, chartIndex);
+    }
+
+    boolean Finished() {
+      return finished;
+    }
+
+    public void run() {
+      int min = func.getMinX();
+      int max = func.getMaxX();
+      int step = func.getStep();
+
+      for (int i = min; i <= max; i += step) {
+        series.add(i, func.f((double) i));
+      }
+      addSeries();
+      finished = true;
+    }
   }
 }
