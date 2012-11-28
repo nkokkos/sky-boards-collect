@@ -21,7 +21,6 @@ public class SX01E extends Sensor {
     setRoundDigits(4);
   }
 
-  @Override
   public double getConv(Double value) {
     double vRef = getValueOf("Vref");
     double v1 = getValueOf("v1");
@@ -32,11 +31,20 @@ public class SX01E extends Sensor {
     return (Vs * v1) + v2;
   }
 
-  @Override
   public void setConstants() {
     setVar("Vref", 2.5);
     setVar("v1", 0.228);
     setVar("v2", 0.03);
   }
-
+  
+  public Sensor Clone() {
+    Sensor copy=new SX01E(getId(),nodeID,getADCResolution());
+    Sensor a;
+    copy.updateVars(this);
+    if ((a=getAssociatedSensor())!=null)
+      copy.setAssociatedSensor(a.Clone());
+    copy.setRoundDigits(getRoundDigits());
+    copy.setUnits(getUnits());
+    return copy;
+  }
 }

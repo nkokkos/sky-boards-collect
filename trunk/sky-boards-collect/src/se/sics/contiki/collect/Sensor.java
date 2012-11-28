@@ -18,6 +18,9 @@ public abstract class Sensor {
   private boolean ADC;
   private int roundDigits;
   private int aDCResolution;
+  public String nodeID;
+  public double lastValue;
+  private Sensor associatedSensor;
 
   public Sensor(String sensorID, String nodeID) {
     vars = new LinkedHashMap<String, Double>();
@@ -26,16 +29,17 @@ public abstract class Sensor {
     ADC = false;
     roundDigits = 2;
     units = "";
+    this.nodeID=nodeID;
   }
   
-  public void cloneVars(Sensor s){
+  public void updateVars(Sensor s){
     vars.clear();
     for (Object varName:s.getVarsNames()){
       String var=(String) varName;
       vars.put(var, s.getValueOf(var));
     }
   }
-
+  
   public String getId() {
     return id;
   }
@@ -86,6 +90,15 @@ public abstract class Sensor {
     return roundDigits;
   }
   
+  public void setAssociatedSensor(Sensor s){
+    associatedSensor=s;
+  }
+  
+  public Sensor getAssociatedSensor(){
+    return associatedSensor;
+  }
+  
   public abstract double getConv(Double value);  
   public abstract void setConstants();
+  public abstract Sensor Clone();
 }

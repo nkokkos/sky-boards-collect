@@ -44,4 +44,15 @@ public class NTC103F397F extends Sensor {
     setVar("T", 298.15);
     setVar("beta", 3970.0);
   }
+  
+  public Sensor Clone() {
+    Sensor copy=new NTC103F397F(getId(),nodeID,getADCResolution());
+    Sensor a;
+    copy.updateVars(this);
+    if ((a=getAssociatedSensor())!=null)
+      copy.setAssociatedSensor(a.Clone());
+    copy.setRoundDigits(getRoundDigits());
+    copy.setUnits(getUnits());
+    return copy;
+  }
 }

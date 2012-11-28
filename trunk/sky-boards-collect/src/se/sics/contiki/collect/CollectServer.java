@@ -902,10 +902,10 @@ public class CollectServer implements SerialConnectionListener,
     mainPanel.addChangeListener(new ChangeListener() {
       public void stateChanged(ChangeEvent e) {
         if (((JTabbedPane) e.getSource()).getSelectedComponent() instanceof ConvPanel) {
-          convPanel.setActive(true);
+          convPanel.setSelected(true);
           convPanel.nodesSelected(getSelectedNodes());
         } else
-          convPanel.setActive(false);
+          convPanel.setSelected(false);
       }
     });
     parseConfigFile();

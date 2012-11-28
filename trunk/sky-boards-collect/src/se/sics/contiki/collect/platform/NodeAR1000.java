@@ -58,4 +58,11 @@ public class NodeAR1000 extends Node implements SensorInfo {
   public void setPlatformADCResolution() {
     PLATFORM_ADC_RESOLUTION = 4096;
   }
+
+  @Override
+  public void copySensorsFrom(Node n) {
+    sensors.put(CO_SENSOR, n.getNodeSensor(CO_SENSOR).Clone());
+    sensors.put(CO2_SENSOR, n.getNodeSensor(CO_SENSOR).Clone());
+    sensors.put(DUST_SENSOR, n.getNodeSensor(DUST_SENSOR).Clone());
+  }
 }

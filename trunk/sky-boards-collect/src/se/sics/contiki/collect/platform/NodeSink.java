@@ -39,4 +39,7 @@ public class NodeSink extends Node implements SensorInfo {
   }
   @Override
   public void setPlatformADCResolution() {}
+
+  @Override
+  public void copySensorsFrom(Node n) {}
 }

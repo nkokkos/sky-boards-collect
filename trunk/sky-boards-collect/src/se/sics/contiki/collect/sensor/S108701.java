@@ -29,11 +29,21 @@ public class S108701 extends Sensor {
     return (v12 * 100000 * (Vs / R12) * 1000);
   }
 
-  @Override
   public void setConstants() {
     setVar("Vref", 2.5);
     setVar("R12", 100000);
     setVar("v12", 0.769);
+  }
+
+  public Sensor Clone() {
+    Sensor copy=new S108701(getId(),nodeID,getADCResolution());
+    Sensor a;
+    copy.updateVars(this);
+    if ((a=getAssociatedSensor())!=null)
+      copy.setAssociatedSensor(a.Clone());
+    copy.setRoundDigits(getRoundDigits());
+    copy.setUnits(getUnits());
+    return copy;
   }
 
 }
