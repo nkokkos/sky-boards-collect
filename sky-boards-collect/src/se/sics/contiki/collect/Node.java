@@ -332,21 +332,23 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
     frm.setRoundingMode(RoundingMode.UP);
     return frm.format(d);
   }
-  
-  public void copySensorVarsFrom(Node n){
+  /*
+  public void copySensorsFrom(Node n){
+    sensors.clear();
+    sensors.add();
+    
     Sensor s;
     for (String key:sensors.keySet()){
       s=sensors.get(key);
       s.cloneVars(n.getNodeSensor(s.getId()));
     }
   }
-  
+  */
   // Abstract methods
   public abstract void init();
   public abstract void addSensors();
   public abstract void mapMsgFormat();
   public abstract void setNodeType();
   public abstract void setPlatformADCResolution();
-
-
+  public abstract void copySensorsFrom(Node n);
 }

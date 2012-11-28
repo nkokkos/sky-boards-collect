@@ -20,7 +20,6 @@ public class GS02A extends Sensor {
     setRoundDigits(2);
   }
 
-  @Override
   public double getConv(Double value) {
     double vRef = getValueOf("Vref");
     double RL = getValueOf("RL");
@@ -43,7 +42,6 @@ public class GS02A extends Sensor {
     return (double) ((-case3_v1 * sensitivity) + case3_v2); // sensitivity<=lower limit
   }
 
-  @Override
   public void setConstants() {
     setVar("Vref", 2.5);
     setVar("RL", 20000.0);
@@ -56,5 +54,15 @@ public class GS02A extends Sensor {
     setVar("upper_limit",0.8);
     setVar("lower_limit",0.5);
   }
-
+  
+  public Sensor Clone() {
+    Sensor copy=new GS02A(getId(),nodeID,getADCResolution());
+    Sensor a;
+    copy.updateVars(this);
+    if ((a=getAssociatedSensor())!=null)
+      copy.setAssociatedSensor(a.Clone());
+    copy.setRoundDigits(getRoundDigits());
+    copy.setUnits(getUnits());
+    return copy;
+  }
 }

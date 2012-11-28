@@ -35,4 +35,15 @@ public class S1087 extends Sensor {
     setVar("R11", 100000);
     setVar("v11", 0.625);
   }
+  
+  public Sensor Clone() {
+    Sensor copy=new S1087(getId(),nodeID,getADCResolution());
+    Sensor a;
+    copy.updateVars(this);
+    if ((a=getAssociatedSensor())!=null)
+      copy.setAssociatedSensor(a.Clone());
+    copy.setRoundDigits(getRoundDigits());
+    copy.setUnits(getUnits());
+    return copy;
+  }
 }

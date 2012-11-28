@@ -43,7 +43,7 @@ public class NodeTmoteSky extends Node implements SensorInfo {
         PLATFORM_ADC_RESOLUTION));
     sensors.put(TEMPERATURE_SENSOR, temp);
     sensors.put(HUMIDITY_SENSOR, hum);
-    ((SHT11Humidity) hum).setAssociatedTempSensor(temp);
+    hum.setAssociatedSensor(temp);
   }
 
   @Override
@@ -63,4 +63,12 @@ public class NodeTmoteSky extends Node implements SensorInfo {
   public void setPlatformADCResolution() { 
     PLATFORM_ADC_RESOLUTION = 4096;
   }
+
+  @Override
+  public void copySensorsFrom(Node n) {
+    sensors.put(LIGHT1_SENSOR,n.getNodeSensor(LIGHT1_SENSOR));
+    sensors.put(LIGHT2_SENSOR,n.getNodeSensor(LIGHT2_SENSOR));
+    sensors.put(TEMPERATURE_SENSOR, n.getNodeSensor(TEMPERATURE_SENSOR));
+    sensors.put(HUMIDITY_SENSOR, n.getNodeSensor(HUMIDITY_SENSOR));
+  } 
 }

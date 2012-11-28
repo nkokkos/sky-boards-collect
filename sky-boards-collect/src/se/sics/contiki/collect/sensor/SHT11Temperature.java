@@ -10,13 +10,10 @@
  * Temperature Accuracy: ± 0.4 °C (typical)
  */
 package se.sics.contiki.collect.sensor;
+
 import se.sics.contiki.collect.Sensor;
 
 public class SHT11Temperature extends Sensor {
-  
-  /*Last value for associated humidity sensor temperature compensation.
-   * See SHT11Humidity.java*/
-  private double lastTemp=25; 
 
   public SHT11Temperature(String sensorID, String nodeID) {
     super(sensorID, nodeID);
@@ -28,18 +25,23 @@ public class SHT11Temperature extends Sensor {
   public double getConv(Double value) {
     double v1 = getValueOf("v1");
     double v2 = getValueOf("v2");
-    lastTemp=-v1 + v2 * value;
-    return lastTemp;
-  }
-  
-  public double getLastTempValue(){
-    return lastTemp;
+    lastValue = -v1 + v2 * value;
+    return lastValue;
   }
 
-  @Override
   public void setConstants() {
     setVar("v1", 39.6);
     setVar("v2", 0.01);
   }
 
+  public Sensor Clone() {
+    Sensor copy = new SHT11Temperature(getId(), nodeID);
+    Sensor a;
+    copy.updateVars(this);
+    if ((a=getAssociatedSensor())!=null)
+      copy.setAssociatedSensor(a.Clone());
+    copy.setRoundDigits(getRoundDigits());
+    copy.setUnits(getUnits());
+    return copy;
+  }
 }
