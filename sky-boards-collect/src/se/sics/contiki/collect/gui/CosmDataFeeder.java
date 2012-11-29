@@ -9,7 +9,6 @@ package se.sics.contiki.collect.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -48,8 +47,6 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
   private static final long serialVersionUID = 1L;
   String category;
   JPasswordField keyField;
-  JButton startButton;
-  JButton stopButton;
   JButton addButton;
   JButton deleteButton;
   private JPanel panel;
@@ -60,6 +57,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
   CosmTableGUI cosmTableGUI;
   CosmTableModel cosmTableModel;
   Properties config;
+  String apiKey;
 
   private Hashtable<String, Node> nodes = new Hashtable<String, Node>();
 
@@ -70,33 +68,13 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
     keyField = new JPasswordField();
     keyField.setColumns(30);
 
-    startButton = new JButton("Start Feeding");
-    startButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        String apikey = arrayToString(keyField.getPassword());
-        if (apikey == null || "".equals(apikey)) {
-          JOptionPane.showMessageDialog(startButton, "Missing API Key",
-              "Error", JOptionPane.ERROR_MESSAGE);
-          return;
-        }
-        doFeed = true;
-        statusLabel.setText("Status: Feeding");
-      }
-    });
-
-    stopButton = new JButton("Stop Feeding ");
-    stopButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doFeed = false;
-        statusLabel.setText("Status: Not feeding");
-      }
-    });
-
     addButton = new JButton("Add");
     addButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
           public void run() {
+            if (nodes.isEmpty())
+              return;
             JDialog dialog = new DialogAdd(nodes);
             dialog.setLocationRelativeTo(addButton);
             dialog.setVisible(true);
@@ -115,9 +93,8 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
     cosmTableModel = new CosmTableModel(config);
     cosmTableGUI = new CosmTableGUI(cosmTableModel);
 
-    logArea = new JTextArea();
+    logArea = new JTextArea(10,40);
     logArea.setEditable(false);
-    logArea.setPreferredSize(new Dimension(400, 250));
 
     statusLabel = new JLabel("Status: Not feeding");
     JPanel cosmPanel = new JPanel(new GridBagLayout());
@@ -182,21 +159,8 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
     c.gridwidth = 4;
     c.weighty = 0.5;
     c.fill = GridBagConstraints.BOTH;
-    c.insets = new Insets(10, 20, 5, 20);
-    logArea.setText("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    c.insets = new Insets(10, 20, 10, 20);
     cosmPanel.add(new JScrollPane(logArea), c);
-
-    c.gridx = 0;
-    c.gridy = 6;
-    c.gridwidth = 4;
-    c.weighty = 0;
-    c.fill = GridBagConstraints.NONE;
-    c.anchor = GridBagConstraints.CENTER;
-    JPanel startStopPanel = new JPanel();
-    startStopPanel.add(startButton);
-    startStopPanel.add(stopButton);
-    c.insets = new Insets(5, 20, 10, 20);
-    cosmPanel.add(startStopPanel, c);
 
     panel.add(cosmPanel, BorderLayout.CENTER);
   }
@@ -252,8 +216,6 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
 
   @Override
   public void nodeDataReceived(SensorData sensorData) {
-    if (!isVisible())
-      return;
 
     if (nodes.get(sensorData.getNodeID()) == null) {
       nodeAdded(sensorData.getNode());
@@ -263,8 +225,12 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
     CosmRow row;
     Hashtable<String, String> feedTable = new Hashtable<String, String>();
     Node node = sensorData.getNode();
-    String APIkey = arrayToString(keyField.getPassword());
-    ArrayList<CosmRow> FeedRows = cosmTableModel.getRows(node.getID());
+    String nodeId = node.getID();
+    if (!getAPIKey())
+      return;
+    ArrayList<CosmRow> FeedRows = cosmTableModel.getRows(nodeId);
+    if (FeedRows==null)
+      return;
     ListIterator<CosmRow> it = FeedRows.listIterator();
     PublisherCosm publisher;
 
@@ -272,9 +238,10 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       row = (CosmRow) it.next();
       if ((boolean) row.getField(CosmRow.IDX_SEND)) {
         putValues(node, row, feedTable);
-        publisher = new PublisherCosm(feedTable, APIkey,
+        publisher = new PublisherCosm(feedTable, apiKey,
             (String) row.getField(CosmRow.IDX_FEEDID), this);
         publisher.setCosmTitle((String) row.getField(CosmRow.IDX_FEEDTITLE));
+        publisher.setFeedingNode(nodeId);
         publisher.start();
       }
     }
@@ -294,6 +261,14 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       }
       feedTable.put(dataStreams.get(sensor), value);
     }
+  }
+  
+  private boolean  getAPIKey(){
+    apiKey = arrayToString(keyField.getPassword());
+    if (apiKey == null || "".equals(apiKey)) {
+      return false;
+    }
+    return true;
   }
 
   @Override
@@ -331,14 +306,10 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
   public void addResponseLine(final String text) {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        String current = logArea.getText();
-        int len = current.length();
-        if (len > 4096) {
-          current = current.substring(len - 4096);
-        }
-        current = len > 0 ? (current + '\n' + text) : text;
-        logArea.setText(current);
-        logArea.setCaretPosition(current.length());
+        if (logArea.getText().length()>4096) 
+          logArea.setText("");
+        logArea.append(text+"\n");
+        logArea.setCaretPosition(logArea.getText().length());
       }
     });
   }
@@ -479,13 +450,14 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.weighty = 0.1;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_END;
-      c.insets = new Insets(5, 5, 0, 5);
+      c.insets = new Insets(10, 0, 0, 0);
       pane.add(new JLabel("Node"), c);
 
       c.gridx = 1;
       c.gridy = 0;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
+      c.insets = new Insets(10, 5, 0, 10);
       pane.add(comboBoxNode, c);
 
       c.gridx = 0;
@@ -493,12 +465,14 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_END;
+      c.insets = new Insets(10, 10, 0, 0);
       pane.add(new JLabel("Feed identifier"), c);
 
       c.gridx = 1;
       c.gridy = 1;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
+      c.insets = new Insets(10, 5, 0, 10);
       pane.add(feedIdField, c);
 
       c.gridx = 0;
@@ -506,12 +480,14 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_END;
+      c.insets = new Insets(10, 0, 0, 0);
       pane.add(new JLabel("Feed Title"), c);
 
       c.gridx = 1;
       c.gridy = 2;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
+      c.insets = new Insets(10, 5, 0, 10);
       pane.add(feedTitleField, c);
 
       c.gridx = 0;
@@ -519,12 +495,14 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_END;
+      c.insets = new Insets(10, 0, 0, 0);
       pane.add(new JLabel("Send values"), c);
 
       c.gridx = 1;
       c.gridy = 3;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
+      c.insets = new Insets(10, 5, 0, 10);
       pane.add(comboBoxRaw, c);
 
       c.gridx = 0;
@@ -536,7 +514,7 @@ public class CosmDataFeeder extends JPanel implements Visualizer, Configurable {
       JPanel groupPanel = new JPanel();
       groupPanel.add(OKbutton);
       groupPanel.add(cancelButton);
-      c.insets = new Insets(10, 0, 0, 0);
+      c.insets = new Insets(10, 10, 10, 10);
       pane.add(groupPanel, c);
 
       setContentPane(pane);

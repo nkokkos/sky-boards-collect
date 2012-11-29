@@ -9,7 +9,6 @@ package se.sics.contiki.collect.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -48,8 +47,6 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
   private static final long serialVersionUID = 1L;
   String category;
   JPasswordField keyField;
-  JButton startButton;
-  JButton stopButton;
   JButton addButton;
   JButton deleteButton;
   private JPanel panel;
@@ -60,6 +57,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
   SenseTableGUI senseTableGUI;
   SenseTableModel senseTableModel;
   Properties config;
+  String apiKey;
 
   private Hashtable<String, Node> nodes = new Hashtable<String, Node>();
 
@@ -70,31 +68,11 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     keyField = new JPasswordField();
     keyField.setColumns(30);
 
-    startButton = new JButton("Start Feeding");
-    startButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        String apikey = arrayToString(keyField.getPassword());
-        if (apikey == null || "".equals(apikey)) {
-          JOptionPane.showMessageDialog(startButton, "Missing API Key",
-              "Error", JOptionPane.ERROR_MESSAGE);
-          return;
-        }
-        doFeed = true;
-        statusLabel.setText("Status: Feeding");
-      }
-    });
-
-    stopButton = new JButton("Stop Feeding ");
-    stopButton.addActionListener(new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        doFeed = false;
-        statusLabel.setText("Status: Not feeding");
-      }
-    });
-
     addButton = new JButton("Add");
     addButton.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
+        if (nodes.isEmpty())
+          return;
         JDialog dialog = new DialogAdd(nodes);
         dialog.setLocationRelativeTo(addButton);
         dialog.setVisible(true);
@@ -111,9 +89,8 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     senseTableModel = new SenseTableModel(config);
     senseTableGUI = new SenseTableGUI(senseTableModel);
 
-    logArea = new JTextArea();
+    logArea = new JTextArea(10,40);
     logArea.setEditable(false);
-    logArea.setPreferredSize(new Dimension(400, 250));
 
     statusLabel = new JLabel("Status: Not feeding");
     JPanel sensePanel = new JPanel(new GridBagLayout());
@@ -178,21 +155,8 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     c.gridwidth = 4;
     c.weighty = 0.5;
     c.fill = GridBagConstraints.BOTH;
-    c.insets = new Insets(10, 20, 5, 20);
-    //logArea.setText("");
+    c.insets = new Insets(10, 20, 10, 20);
     sensePanel.add(new JScrollPane(logArea), c);
-
-    c.gridx = 0;
-    c.gridy = 6;
-    c.gridwidth = 4;
-    c.weighty = 0;
-    c.fill = GridBagConstraints.NONE;
-    c.anchor = GridBagConstraints.CENTER;
-    JPanel startStopPanel = new JPanel();
-    startStopPanel.add(startButton);
-    startStopPanel.add(stopButton);
-    c.insets = new Insets(5, 20, 10, 20);
-    sensePanel.add(startStopPanel, c);
 
     panel.add(sensePanel, BorderLayout.CENTER);
   }
@@ -248,9 +212,10 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
 
   @Override
   public void nodeDataReceived(SensorData sensorData) {
-    if (!isVisible())
+    
+    if (nodes.isEmpty())
       return;
-
+    
     if (nodes.get(sensorData.getNodeID()) == null) {
       nodeAdded(sensorData.getNode());
       return;
@@ -259,8 +224,12 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     SenseRow row;
     Hashtable<String, String> feedTable = new Hashtable<String, String>();
     Node node = sensorData.getNode();
-    String APIkey = arrayToString(keyField.getPassword());
-    ArrayList<SenseRow> FeedRows = senseTableModel.getRows(node.getID());
+    String nodeId=node.getID();
+    if (!getAPIKey())
+      return;
+    ArrayList<SenseRow> FeedRows = senseTableModel.getRows(nodeId);
+    if (FeedRows==null)
+      return;
     ListIterator<SenseRow> it = FeedRows.listIterator();
     PublisherSense publisher;
 
@@ -270,7 +239,8 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
         putValue(node, row, feedTable);
       }
     }
-    publisher = new PublisherSense(feedTable, APIkey, this);
+    publisher = new PublisherSense(feedTable, apiKey, this);
+    publisher.setFeedingNode(nodeId);
     publisher.start();
   }
 
@@ -285,6 +255,14 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       value = node.getRoundedConvOf(sensorId);
     }
     feedTable.put((String) row.getField(SenseRow.IDX_FEEDID), value);
+  }
+  
+  private boolean  getAPIKey(){
+    apiKey = arrayToString(keyField.getPassword());
+    if (apiKey == null || "".equals(apiKey)) {
+      return false;
+    }
+    return true;
   }
 
   @Override
@@ -323,14 +301,10 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
   public void addResponseLine(final String text) {
     SwingUtilities.invokeLater(new Runnable() {
       public void run() {
-        String current = logArea.getText();
-        int len = current.length();
-        if (len > 4096) {
-          current = current.substring(len - 4096);
-        }
-        current = len > 0 ? (current + '\n' + text) : text;
-        logArea.setText(current);
-        logArea.setCaretPosition(current.length());
+        if (logArea.getText().length()>4096) 
+          logArea.setText("");
+        logArea.append(text+"\n");
+        logArea.setCaretPosition(logArea.getText().length());
       }
     });
   }
@@ -450,13 +424,14 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       c.weighty = 0.1;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_END;
-      c.insets = new Insets(5, 5, 0, 5);
+      c.insets = new Insets(10, 0, 0, 0);
       pane.add(new JLabel("Node"), c);
 
       c.gridx = 1;
       c.gridy = 0;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
+      c.insets = new Insets(10, 5, 0, 10);
       pane.add(comboBoxNode, c);
 
       c.gridx = 0;
@@ -464,12 +439,14 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_END;
+      c.insets = new Insets(10, 0, 0, 0);
       pane.add(new JLabel("Sensor"), c);
 
       c.gridx = 1;
       c.gridy = 1;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
+      c.insets = new Insets(10, 5, 0, 10);
       pane.add(comboBoxSensor, c);
 
       c.gridx = 0;
@@ -477,12 +454,14 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_END;
+      c.insets = new Insets(10, 0, 0, 0);
       pane.add(new JLabel("Send values"), c);
 
       c.gridx = 1;
       c.gridy = 2;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
+      c.insets = new Insets(10, 5, 0, 10);
       pane.add(comboBoxRaw, c);
 
       c.gridx = 0;
@@ -490,12 +469,14 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       c.weightx = 0;
       c.fill = GridBagConstraints.NONE;
       c.anchor = GridBagConstraints.LINE_END;
+      c.insets = new Insets(10, 10, 0, 0);
       pane.add(new JLabel("Feed identifier"), c);
 
       c.gridx = 1;
       c.gridy = 3;
       c.weightx = 0.1;
       c.fill = GridBagConstraints.HORIZONTAL;
+      c.insets = new Insets(10, 5, 0, 10);
       pane.add(feedIdField, c);
 
       c.gridx = 0;
@@ -507,7 +488,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
       JPanel groupPanel = new JPanel();
       groupPanel.add(OKbutton);
       groupPanel.add(cancelButton);
-      c.insets = new Insets(10, 0, 0, 0);
+      c.insets = new Insets(10, 0, 10, 0);
       pane.add(groupPanel, c);
 
       setContentPane(pane);

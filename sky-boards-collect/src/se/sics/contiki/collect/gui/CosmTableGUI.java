@@ -209,7 +209,7 @@ public class CosmTableGUI extends JTable {
     private JDialog createDatastreamsDialog() {
       JDialog dialog = new JDialog();
       dialog.setModalityType(ModalityType.APPLICATION_MODAL);
-      dialog.setTitle("Datastreams configuration");
+      dialog.setTitle("Datastream IDs configuration");
       JPanel pane = new JPanel(new GridBagLayout());
       GridBagConstraints c = new GridBagConstraints();
       textFields = new ArrayList<JTextField>();

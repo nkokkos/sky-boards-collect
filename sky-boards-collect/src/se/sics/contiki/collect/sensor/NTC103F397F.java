@@ -53,6 +53,7 @@ public class NTC103F397F extends Sensor {
       copy.setAssociatedSensor(a.Clone());
     copy.setRoundDigits(getRoundDigits());
     copy.setUnits(getUnits());
+    copy.lastValue = lastValue;
     return copy;
   }
 }

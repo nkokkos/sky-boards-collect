@@ -42,6 +42,7 @@ public class SHT11Temperature extends Sensor {
       copy.setAssociatedSensor(a.Clone());
     copy.setRoundDigits(getRoundDigits());
     copy.setUnits(getUnits());
+    copy.lastValue = lastValue;
     return copy;
   }
 }

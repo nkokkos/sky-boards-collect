@@ -135,6 +135,8 @@ public class CosmTableModel extends AbstractTableModel {
 
   public ArrayList<CosmRow> getRows(String nodeId) {
     ArrayList<Integer> nodeRows = nodeRowIndex.get(nodeId);
+    if (nodeRows==null)
+      return null;
     ArrayList<CosmRow> rows = new ArrayList<CosmRow>();
     for (int i = 0; i < nodeRows.size(); i++) {
       rows.add(data.get(nodeRows.indexOf(i)));

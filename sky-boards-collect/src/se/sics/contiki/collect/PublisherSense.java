@@ -29,7 +29,7 @@ public class PublisherSense extends Thread {
   private String APIkey;
   private Hashtable<String, String> feedTable;
   private SenseDataFeeder guiSense;
-  private int feedingNode;
+  private String feedingNode;
   private String keysString;
 
   public PublisherSense(Hashtable<String, String> feedTable, String key,
@@ -170,7 +170,7 @@ public class PublisherSense extends Thread {
     }
   }
 
-  public void setFeedingNode(int feedingNode) {
+  public void setFeedingNode(String feedingNode) {
     this.feedingNode = feedingNode;
   }
 }

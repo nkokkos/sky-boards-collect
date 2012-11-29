@@ -30,7 +30,7 @@ public class ConvPanel extends JPanel implements Visualizer {
   private String category;
 
   private Node selectedNode;
-  private String SelectedNodeID;
+  private String selectedNodeID;
   private Node workingCopyNode; // working copy of the node
   private Properties config;
 
@@ -56,6 +56,8 @@ public class ConvPanel extends JPanel implements Visualizer {
       // compensation in SHT11 Humidity sensor).
       // See SHT11Humidity.java and SHT11Temperature.java
       SensorAdjustPanel sap=(SensorAdjustPanel) tabbedPane.getSelectedComponent();
+      if (sap==null)
+        return;
       if (sap.isSensorDependent())
         sap.updateChart();
     }
@@ -77,12 +79,12 @@ public class ConvPanel extends JPanel implements Visualizer {
     selected = isSelected;
   }
 
-  private void copySelectedNode(Node n) {
-    selectedNode = n;
-    SelectedNodeID = selectedNode.getID();
+  private void copySelectedNode() {
+    
     SensorData sd = selectedNode.getLastSD();
-    if (sd == null)
+    if (sd == null){
       return;
+    }
     int nodeType = sd.getType();
     String id = selectedNode.getID();
     workingCopyNode = server.createNode(id, nodeType);
@@ -92,17 +94,22 @@ public class ConvPanel extends JPanel implements Visualizer {
 
   public void nodesSelected(Node[] node) {
 
-    // Do not waste time painting
-    // components in these cases
-    if (!selected || node == null || node.length > 1
-        || node[0].getID().equals(SelectedNodeID))
+    if (node==null)
       return;
 
-    tabbedPane.removeChangeListener(tabChangeListener);
-    copySelectedNode(node[0]);
-    Sensor[] sensors = workingCopyNode.getSensors();
+    // Do not paint
+    // components in these cases
+    if (!selected || node == null || node.length > 1
+        || node[0].getID().equals(selectedNodeID))
+      return;
     tabbedPane.removeAll();
-
+    tabbedPane.removeChangeListener(tabChangeListener);
+    selectedNode = node[0];
+    selectedNodeID = selectedNode.getID();
+    if (node[0].getSensorDataCount()==0){return;}
+    copySelectedNode();
+    Sensor[] sensors = workingCopyNode.getSensors();
+    
     for (int i = 0; i < sensors.length; i++) {
       Sensor sensor = sensors[i];
       JPanel pane = new SensorAdjustPanel(workingCopyNode, sensor,
