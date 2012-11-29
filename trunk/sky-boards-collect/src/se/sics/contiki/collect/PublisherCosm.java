@@ -32,7 +32,7 @@ public class PublisherCosm extends Thread {
   private final String cosmVersion = "1.0.0";
   private Hashtable<String, String> feedTable;
   private CosmDataFeeder guiCosm;
-  private int feedingNode;
+  private String feedingNode;
 
   public PublisherCosm(Hashtable<String, String> feedTable, String key,
       String cosmFeed, CosmDataFeeder guiCosm) {
@@ -100,7 +100,7 @@ public class PublisherCosm extends Thread {
         cal.getTime();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         guiCosm.addResponseLine(sdf.format(cal.getTime()) + " Cosm> Node "
-            + feedingNode + ", Feed" + cosmFeed + ": " + r);
+            + feedingNode + ", Feed " + cosmFeed + ": " + r);
       }
     });
   }
@@ -190,7 +190,7 @@ public class PublisherCosm extends Thread {
     }
   }
 
-  public void setFeedingNode(int feedingNode) {
+  public void setFeedingNode(String feedingNode) {
     this.feedingNode = feedingNode;
   }
 }

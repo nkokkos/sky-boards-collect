@@ -522,16 +522,15 @@ public class SensorAdjustPanel extends JPanel {
       if (!fcFinished())
         return;
       sensor.setConstants();
-      // default values do not need to be stored
-      Object[] vars = sensor.getVarsNames();
-      for (int i = 0; i < vars.length; i++) {
-        removeFromConfig((String) vars[i]);
-      }
       if (saveChanges){
+        Object[] vars = sensor.getVarsNames();
+        for (int i = 0; i < vars.length; i++) {
+          removeFromConfig((String) vars[i]);
+        }
         convPanel.updateChanges(sensor);
       }
-      
       updateChart();
+      varsComboBox.setSelectedIndex(0);
     }
   }
 
