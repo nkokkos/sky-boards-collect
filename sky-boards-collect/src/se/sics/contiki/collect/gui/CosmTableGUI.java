@@ -193,6 +193,7 @@ public class CosmTableGUI extends JTable {
     public void actionPerformed(ActionEvent e) {
       if (e.getActionCommand().equals(EDIT)) {
         dialog = createDatastreamsDialog();
+        //dialog.setPreferredSize(new Dimension(200,200));
         dialog.setVisible(true);
         fireEditingStopped();
         return;
@@ -253,6 +254,7 @@ public class CosmTableGUI extends JTable {
       dialog.pack();
       dialog.setLocationRelativeTo(button);
       dialog.setModalityType(ModalityType.APPLICATION_MODAL);
+      dialog.setSize(250, 200);
       return dialog;
     }
 
