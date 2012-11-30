@@ -123,7 +123,7 @@ public class CosmTableGUI extends JTable {
 
   public void HandleSelectionEvent() {
     selectedRows = getSelectedRows();
-    for (int i = 0; i < selectedRows.length; i++) {
+    for (int i = 0, n=selectedRows.length; i < n ; i++) {
       selectedRows[i] = convertRowIndexToModel(selectedRows[i]);
     }
   }
@@ -137,8 +137,8 @@ public class CosmTableGUI extends JTable {
     
     removeRowSelectionInterval(0, model.getRowCount()-1);
 
-    for (int i = 0; i < node.length; i++) {
-      if ((rows = model.getRowsOfIndex(node[i].getID())) != null) {
+    for (int i = 0, n=node.length; i < n ; i++) {
+      if ((rows = model.getRowsOf(node[i].getID())) != null) {
         rowsIt = rows.listIterator();
         while (rowsIt.hasNext()) {
           int row = convertRowIndexToView((int) rowsIt.next());
@@ -210,7 +210,7 @@ public class CosmTableGUI extends JTable {
     private JDialog createDatastreamsDialog() {
       JDialog dialog = new JDialog();
       dialog.setModalityType(ModalityType.APPLICATION_MODAL);
-      dialog.setTitle("Datastream IDs configuration");
+      dialog.setTitle("Datastream IDs");
       JPanel pane = new JPanel(new GridBagLayout());
       GridBagConstraints c = new GridBagConstraints();
       textFields = new ArrayList<JTextField>();

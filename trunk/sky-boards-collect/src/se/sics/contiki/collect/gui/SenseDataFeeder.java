@@ -26,9 +26,11 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
@@ -46,18 +48,17 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
 
   private static final long serialVersionUID = 1L;
   String category;
-  JPasswordField keyField;
-  JButton addButton;
-  JButton deleteButton;
+  
+  private SenseTableGUI senseTableGUI;
+  private SenseTableModel senseTableModel;
+  private Properties config;
+  private String apiKey;
+  
+  private JTextArea logArea;
+  private JButton addButton;
+  private JButton deleteButton;
   private JPanel panel;
-  boolean doFeed = false;
-  JLabel statusLabel;
-  PublisherSense publisher;
-  JTextArea logArea;
-  SenseTableGUI senseTableGUI;
-  SenseTableModel senseTableModel;
-  Properties config;
-  String apiKey;
+  private JPasswordField keyField;
 
   private Hashtable<String, Node> nodes = new Hashtable<String, Node>();
 
@@ -88,11 +89,12 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
 
     senseTableModel = new SenseTableModel(config);
     senseTableGUI = new SenseTableGUI(senseTableModel);
+    
+    
 
     logArea = new JTextArea(10,40);
     logArea.setEditable(false);
-
-    statusLabel = new JLabel("Status: Not feeding");
+    
     JPanel sensePanel = new JPanel(new GridBagLayout());
 
     GridBagConstraints c = new GridBagConstraints();
@@ -157,6 +159,16 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     c.fill = GridBagConstraints.BOTH;
     c.insets = new Insets(10, 20, 10, 20);
     sensePanel.add(new JScrollPane(logArea), c);
+    
+    JPopupMenu popupMenu = new JPopupMenu();
+    JMenuItem clearItem = new JMenuItem("Clear");
+    clearItem.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        logArea.setText("");
+      }
+    });
+    popupMenu.add(clearItem);
+    logArea.setComponentPopupMenu(popupMenu);
 
     panel.add(sensePanel, BorderLayout.CENTER);
   }
@@ -205,7 +217,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
 
   private Vector<String> toStringList(Node[] nodeList) {
     Vector<String> list = new Vector<String>();
-    for (int i = 0; i < nodeList.length; i++)
+    for (int i = 0, n=nodeList.length; i < n ; i++)
       list.add(nodeList[i].getID());
     return list;
   }
@@ -280,7 +292,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     if (opt == JOptionPane.YES_OPTION) {
       ArrayList<String> delList;
       delList = senseTableModel.deleteRows(selectedRows);
-      for (int i = 0; i < delList.size(); i++) {
+      for (int i = 0, n=delList.size(); i < n ; i++) {
         config.remove("feedsense," + delList.get(i));
       }
     }
@@ -291,7 +303,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     StringBuffer result = new StringBuffer();
     if (a.length > 0) {
       result.append(a[0]);
-      for (int i = 1; i < a.length; i++) {
+      for (int i = 1, n=a.length; i < n; i++) {
         result.append(a[i]);
       }
     }
@@ -387,7 +399,7 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
           Node n = nodes.get(feedingNode);
           Sensor[] sensors = n.getSensors();
           Vector<String> sensorNames = new Vector<String>();
-          for (int i = 0; i < sensors.length; i++)
+          for (int i = 0, len=sensors.length; i < len; i++)
             sensorNames.add(sensors[i].getId());
           comboBoxSensor
               .setModel(new DefaultComboBoxModel<String>(sensorNames));

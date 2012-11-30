@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 
+
 /**
  *
  */
@@ -332,18 +333,7 @@ public abstract class  Node implements Comparable<Node>, SensorIdentifier {
     frm.setRoundingMode(RoundingMode.UP);
     return frm.format(d);
   }
-  /*
-  public void copySensorsFrom(Node n){
-    sensors.clear();
-    sensors.add();
-    
-    Sensor s;
-    for (String key:sensors.keySet()){
-      s=sensors.get(key);
-      s.cloneVars(n.getNodeSensor(s.getId()));
-    }
-  }
-  */
+  
   // Abstract methods
   public abstract void init();
   public abstract void addSensors();

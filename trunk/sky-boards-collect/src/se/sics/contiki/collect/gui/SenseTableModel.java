@@ -126,7 +126,7 @@ public class SenseTableModel extends AbstractTableModel {
   private void remakeNodeRowIndex() {
     nodeRowIndex.clear();
     SenseRow row;
-    for (int i = 0; i < data.size(); i++) {
+    for (int i = 0, size=data.size(); i < size ; i++) {
       row = data.get(i);
       addToNodeRowIndex((String) row.getField(SenseRow.IDX_NODE), i);
     }
@@ -137,13 +137,13 @@ public class SenseTableModel extends AbstractTableModel {
     if (nodeRows==null)
       return null;
     ArrayList<SenseRow> rows = new ArrayList<SenseRow>();
-    for (int i = 0; i < nodeRows.size(); i++) {
+    for (int i = 0, size=nodeRows.size(); i < size; i++) {
       rows.add(data.get(nodeRows.get(i)));
     }
     return rows;
   }
 
-  public ArrayList<Integer> getRowsOfIndex(String nodeId) {
+  public ArrayList<Integer> getRowsOf(String nodeId) {
     return nodeRowIndex.get(nodeId);
   }
 }

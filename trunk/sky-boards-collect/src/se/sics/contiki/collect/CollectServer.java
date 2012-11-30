@@ -926,9 +926,10 @@ public class CollectServer implements SerialConnectionListener,
     Vector<String> vars = new Vector<String>();
     Vector<String> values = new Vector<String>();
 
+
     // Add nodes stored in config file
     for (Object k : configTable.keySet()) {
-      String key = k.toString();
+      String key=(String) k;
       String nodetype;
       if (key.startsWith("var")) {
         vars.add(key);
@@ -946,7 +947,7 @@ public class CollectServer implements SerialConnectionListener,
     }
 
     // set sensor variables
-    for (int j = 0; j < vars.size(); j++) {
+    for (int j = 0, n=vars.size(); j < n; j++) {
       String[] varKey = vars.get(j).split(",");
       String nodeID = varKey[1];
       String sensorName = varKey[2];

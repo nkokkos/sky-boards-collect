@@ -110,7 +110,7 @@ public class ConvPanel extends JPanel implements Visualizer {
     copySelectedNode();
     Sensor[] sensors = workingCopyNode.getSensors();
     
-    for (int i = 0; i < sensors.length; i++) {
+    for (int i = 0, n=sensors.length; i < n ; i++) {
       Sensor sensor = sensors[i];
       JPanel pane = new SensorAdjustPanel(workingCopyNode, sensor,
           config,this);
@@ -129,7 +129,7 @@ public class ConvPanel extends JPanel implements Visualizer {
     if (!selected || sensorData.getNode().getID() != selectedNode.getID())
       return;
 
-    for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+    for (int i = 0, n=tabbedPane.getTabCount(); i < n ; i++) {
       ((SensorAdjustPanel) tabbedPane.getComponentAt(0))
           .addSensorData(sensorData);
     }
