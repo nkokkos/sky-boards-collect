@@ -36,8 +36,7 @@ public abstract class Sensor {
     vars.clear();
     String[] varNames=(String[]) s.getVarsNames();
     for (int i=0,n=varNames.length;i<n;i++){
-      String var=varNames[i];
-      vars.put(var, s.getValueOf(var));
+      vars.put(varNames[i], s.getValueOf(varNames[i]));
     }
   }
   
