@@ -527,7 +527,7 @@ public class SensorAdjustPanel extends JPanel {
       sensor.setConstants();
       if (saveChanges){
         Object[] vars = sensor.getVarsNames();
-        for (int i = 0; i < vars.length; i++) {
+        for (int i = 0, n=vars.length; i < n; i++) {
           removeFromConfig((String) vars[i]);
         }
         convPanel.updateChanges(sensor);
@@ -593,7 +593,9 @@ public class SensorAdjustPanel extends JPanel {
     sensorNode.addSensorData(sensorData);
     XYPlot plot = chart.getXYPlot();
     plot.clearDomainMarkers();
-    addValueMarker(getLastADCValue(), plot);
+    double last=getLastADCValue();
+    addValueMarker(last, plot);
+    lastRawLabel.setText("Last Raw: " + String.valueOf(last));
   }
 
   public boolean isSensorDependent() {
@@ -640,7 +642,7 @@ public class SensorAdjustPanel extends JPanel {
           function.setMaxX(newUpper);
         if (newLower != lowerValue)
           function.setMinX(newLower);
-        if (newUpper - newLower > INTERVAL_WARNING_T) {
+        if (newUpper - newLower >= INTERVAL_WARNING_T) {
           Object[] options = { "Proceed", "Do not proceed"};
           int n = JOptionPane.showOptionDialog(pane,
               "Your interval is too big. This could lead to application problems.\n"

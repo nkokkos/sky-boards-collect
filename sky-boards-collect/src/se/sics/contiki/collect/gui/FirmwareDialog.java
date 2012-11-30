@@ -89,7 +89,7 @@ public class FirmwareDialog extends javax.swing.JDialog implements
   }
 
   public void actionPerformed(final ActionEvent e) {
-    for (int i = 0; i < CBlist.size(); i++) {
+    for (int i = 0, n=CBlist.size(); i < n; i++) {
       final JComboBox<String> comboBox = CBlist.get(i);
       final int idx = comboBox.getSelectedIndex();
       firmList.add(comboBox.getItemAt(idx).toString());
