@@ -11,6 +11,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -60,6 +61,7 @@ import org.jfree.chart.event.ChartProgressListener;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.data.Range;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -301,7 +303,7 @@ public class SensorAdjustPanel extends JPanel {
 
     dataset = new XYSeriesCollection();
     dataset.addSeries(new XYSeries(""));
-    String title = "Conversion function (Node " + sensorNode.getID() + ")";
+    String title = "Conversion function (Node " + sensorNode.getID() + " "+ sensor.getId() + ")";
     chart = ChartFactory.createXYLineChart(title, // Title
         function.getxTag(), // x-axis Label
         function.getyTag(), // y-axis Label
@@ -310,6 +312,7 @@ public class SensorAdjustPanel extends JPanel {
         true, // Use tooltips
         false // Configure chart to generate URLs?
         );
+    chart.setTitle(new TextTitle(title,new Font("",Font.BOLD,14)));
     XYPlot plot = chart.getXYPlot();
 
     ValueAxis va = plot.getDomainAxis();

@@ -25,6 +25,7 @@ public class CosmTableModel extends AbstractTableModel {
   // Unique key: feed Id
   private HashSet<String> keySet = new HashSet<String>();
   Properties configFile;
+  // <NodeId, list of row indexes containing that node Id>
   private Hashtable<String, ArrayList<Integer>> nodeRowIndex = new Hashtable<String, ArrayList<Integer>>();
 
   public CosmTableModel(Properties configFile){
@@ -139,7 +140,7 @@ public class CosmTableModel extends AbstractTableModel {
       return null;
     ArrayList<CosmRow> rows = new ArrayList<CosmRow>();
     for (int i = 0; i < nodeRows.size(); i++) {
-      rows.add(data.get(nodeRows.indexOf(i)));
+      rows.add(data.get(nodeRows.get(i)));
     }
     return rows;
   }
