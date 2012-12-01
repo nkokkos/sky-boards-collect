@@ -34,7 +34,6 @@ public class SenseTableGUI extends JTable {
   public SenseTableGUI(SenseTableModel tableModel) {
     super(tableModel);
     setUpValuesColumn();
-    //setUpSendColumn();
     setPreferredScrollableViewportSize(new Dimension(400, 250));
     setFillsViewportHeight(true);
     setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -43,6 +42,7 @@ public class SenseTableGUI extends JTable {
     setRowSelectionAllowed(true);
     setColumnSelectionAllowed(false);
     getSelectionModel().addListSelectionListener(new RowListener());
+    setUpPopUpMenu();
   }
 
   public void setUpValuesColumn() {
@@ -55,10 +55,8 @@ public class SenseTableGUI extends JTable {
     valuesCol.setCellRenderer(renderer);
   }
   
-  public void setUpSendColumn(){
-    TableColumn sendCol = getColumnModel().getColumn(SenseRow.IDX_SEND);
-    DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-    
+  public void setUpPopUpMenu(){
+  
     JPopupMenu popupMenu = new JPopupMenu();
     JMenuItem item = new JMenuItem("Check all");
     item.addActionListener(new ActionListener() {
@@ -83,8 +81,7 @@ public class SenseTableGUI extends JTable {
       }
     });
     popupMenu.add(item);
-    renderer.setComponentPopupMenu(popupMenu);
-    sendCol.setCellRenderer(renderer);
+    this.setComponentPopupMenu(popupMenu);
   }
 
   public String getToolTipText(MouseEvent e) {

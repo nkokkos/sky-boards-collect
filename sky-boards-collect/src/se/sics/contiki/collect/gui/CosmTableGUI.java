@@ -26,7 +26,9 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -55,6 +57,7 @@ public class CosmTableGUI extends JTable {
     setRowSelectionAllowed(true);
     setColumnSelectionAllowed(false);
     getSelectionModel().addListSelectionListener(new RowListener());
+    setUpPopUpMenu();
   }
 
   public void setUpDataStreamsColumn() {
@@ -71,6 +74,35 @@ public class CosmTableGUI extends JTable {
     valuesCol.setCellEditor(new DefaultCellEditor(comboBox));
     DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
     valuesCol.setCellRenderer(renderer);
+  }
+  
+  public void setUpPopUpMenu(){
+    
+    JPopupMenu popupMenu = new JPopupMenu();
+    JMenuItem item = new JMenuItem("Check all");
+    item.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        CosmTableModel model = (CosmTableModel) getModel();
+        int size = model.getRowCount();
+        for (int i=0;i<size;i++){
+          model.setValueAt(true, i, CosmRow.IDX_SEND);
+        }
+      }
+    });
+    popupMenu.add(item);
+    
+    item = new JMenuItem("Uncheck all");
+    item.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        CosmTableModel model = (CosmTableModel) getModel();
+        int size = model.getRowCount();
+        for (int i=0;i<size;i++){
+          model.setValueAt(false, i, CosmRow.IDX_SEND);
+        }
+      }
+    });
+    popupMenu.add(item);
+    this.setComponentPopupMenu(popupMenu);
   }
 
   @SuppressWarnings("unchecked")
