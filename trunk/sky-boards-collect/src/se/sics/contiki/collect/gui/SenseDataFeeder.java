@@ -90,8 +90,6 @@ public class SenseDataFeeder extends JPanel implements Visualizer, Configurable 
     senseTableModel = new SenseTableModel(config);
     senseTableGUI = new SenseTableGUI(senseTableModel);
     
-    
-
     logArea = new JTextArea(10,40);
     logArea.setEditable(false);
     

@@ -105,8 +105,8 @@ public class SensorAdjustPanel extends JPanel {
   private JComboBox<Object> varsComboBox;
 
   // constants
-  public final int DEF_MIN_X = 1;
-  public final int DEF_INC_X = 1; // increase for better GUI performance
+  public final int DEF_MIN_X = 0;
+  public final int DEF_INC_X = 10; // increase for better performance
   public final String TOOL_TIP_RESET_BT = "Reset all sensor's conversion expressions constants to default values";
   private final String TOOL_TIP_FORM_BT = "Display sensor's conversions expressions";
   private final String TOOL_TIP_LAST_LABEL = "Last raw or ADC value received from the node";
@@ -404,8 +404,21 @@ public class SensorAdjustPanel extends JPanel {
         Range rangeAxis = domainAxis.getRange();
         Double d = domainAxis.getLowerBound() + ((double) pos / 1000D)
             * rangeAxis.getLength();
-        plot.setDomainCrosshairValue(d);
-        plot.setRangeCrosshairValue(function.f(d));
+        
+        int step = function.getStep();
+        int value = (new Long(Math.round(d))).intValue();
+        int mod = value % step;
+        if (mod != 0){
+          int deltaLower = mod;
+          int deltaUpper = step - mod;
+          if (deltaLower>deltaUpper)
+            value=value+deltaUpper;
+          else if (deltaLower<=deltaUpper){
+            value=value-deltaLower;
+          }
+        }
+        plot.setDomainCrosshairValue(value);
+        plot.setRangeCrosshairValue(function.f((double)value));
       }
     });
   }

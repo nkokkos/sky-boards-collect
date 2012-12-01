@@ -34,9 +34,9 @@ public abstract class Sensor {
   
   public void updateVars(Sensor s){
     vars.clear();
-    String[] varNames=(String[]) s.getVarsNames();
+    Object[] varNames= s.getVarsNames();
     for (int i=0,n=varNames.length;i<n;i++){
-      vars.put(varNames[i], s.getValueOf(varNames[i]));
+      vars.put((String)varNames[i], s.getValueOf((String)varNames[i]));
     }
   }
   
