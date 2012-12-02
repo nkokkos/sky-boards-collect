@@ -138,6 +138,7 @@ public class ConvPanel extends JPanel implements Visualizer {
   public void updateChanges(Sensor s){
     Sensor appSensor=selectedNode.getNodeSensor(s.getId());
     appSensor.updateVars(s);
+    appSensor.setConstants();
     server.updateChart(s.getId());
   }
 

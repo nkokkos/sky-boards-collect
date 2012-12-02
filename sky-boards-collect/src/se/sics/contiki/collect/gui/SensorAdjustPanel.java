@@ -106,7 +106,7 @@ public class SensorAdjustPanel extends JPanel {
 
   // constants
   public final int DEF_MIN_X = 0;
-  public final int DEF_INC_X = 10; // increase for better performance
+  public final int DEF_INC_X = 2; 
   public final String TOOL_TIP_RESET_BT = "Reset all sensor's conversion expressions constants to default values";
   private final String TOOL_TIP_FORM_BT = "Display sensor's conversions expressions";
   private final String TOOL_TIP_LAST_LABEL = "Last raw or ADC value received from the node";
@@ -489,6 +489,7 @@ public class SensorAdjustPanel extends JPanel {
             double newValue = ((Number) selectedVarField.getValue())
                 .doubleValue();
             sensor.setVar(selectedVar, newValue);
+            sensor.setConstants();
             if (saveChanges) {
               updateConfig(selectedVar, newValue);
             }
@@ -537,7 +538,7 @@ public class SensorAdjustPanel extends JPanel {
     public void actionPerformed(ActionEvent e) {
       if (!fcFinished())
         return;
-      sensor.setConstants();
+      sensor.configDefConstants();
       if (saveChanges){
         Object[] vars = sensor.getVarsNames();
         for (int i = 0, n=vars.length; i < n; i++) {

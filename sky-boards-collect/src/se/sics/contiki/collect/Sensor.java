@@ -17,7 +17,7 @@ public abstract class Sensor {
   private String units;
   private boolean ADC;
   private int roundDigits;
-  private int aDCResolution;
+  protected int aDCResolution;
   public String nodeID;
   public double lastValue;
   private Sensor associatedSensor;
@@ -99,6 +99,7 @@ public abstract class Sensor {
   }
   
   public abstract double getConv(Double value);  
+  public abstract void configDefConstants();
   public abstract void setConstants();
   public abstract Sensor Clone();
 }
