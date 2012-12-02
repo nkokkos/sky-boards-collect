@@ -12,29 +12,35 @@ package se.sics.contiki.collect.sensor;
 import se.sics.contiki.collect.Sensor;
 
 public class SX01E extends Sensor {
+  
+  double vRef;
+  double c1;
+  double c2;
 
   public SX01E(String sensorID, String nodeID, int aDCRes) {
     super(sensorID, nodeID);
     setUnits("mg/m^3");
     setADC(aDCRes);
+    configDefConstants();
     setConstants();
     setRoundDigits(4);
   }
 
   public double getConv(Double value) {
-    double vRef = getValueOf("Vref");
-    double v1 = getValueOf("v1");
-    double v2 = getValueOf("v2");
-    double resolution=getADCResolution();
-    double Vs = ((double) value / resolution) * vRef;
-
-    return (Vs * v1) + v2;
+    double Vs = ((double) value / aDCResolution) * vRef;
+    return (Vs * c1) + c2;
   }
 
-  public void setConstants() {
+  public void configDefConstants() {
     setVar("Vref", 2.5);
-    setVar("v1", 0.228);
-    setVar("v2", 0.03);
+    setVar("c1", 0.228);
+    setVar("c2", 0.03);
+  }
+  
+  public void setConstants() {
+    vRef = getValueOf("Vref");
+    c1 = getValueOf("c1");
+    c2 = getValueOf("c2");
   }
   
   public Sensor Clone() {
@@ -46,6 +52,7 @@ public class SX01E extends Sensor {
     copy.setRoundDigits(getRoundDigits());
     copy.setUnits(getUnits());
     copy.lastValue = lastValue;
+    copy.setConstants();
     return copy;
   }
 }

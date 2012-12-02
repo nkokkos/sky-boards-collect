@@ -12,27 +12,40 @@ import se.sics.contiki.collect.Sensor;
 
 public class S108701 extends Sensor {
 
+  double vRef;
+  double k12;
+  double R12;
+  double c1;
+  double c2;
+  
   public S108701(String sensorID, String nodeID,int aDCRes) {
     super(sensorID, nodeID);
     setUnits("Lx");
     setADC(aDCRes);
+    configDefConstants();
     setConstants();
     setRoundDigits(2);
   }
 
   public double getConv(Double value) {
-    double vRef = getValueOf("Vref");
-    double v12 = getValueOf("v12");
-    double R12 = getValueOf("R12");
-    double resolution=getADCResolution();
-    double Vs = ((double) value / resolution) * vRef;
-    return (v12 * 100000 * (Vs / R12) * 1000);
+    double Vs = ((double) value / aDCResolution) * vRef;
+    return (k12 * c1 * (Vs / R12) * c2);
   }
 
-  public void setConstants() {
+  public void configDefConstants() {
     setVar("Vref", 2.5);
     setVar("R12", 100000);
-    setVar("v12", 0.769);
+    setVar("k12", 0.769);
+    setVar("c1", 10e5);
+    setVar("c2", 1000);
+  }
+  
+  public void setConstants(){
+    vRef = getValueOf("Vref");
+    k12 = getValueOf("k12");
+    R12 = getValueOf("R12");
+    c1 = getValueOf("c1");
+    c2 = getValueOf("c2");
   }
 
   public Sensor Clone() {
@@ -44,7 +57,7 @@ public class S108701 extends Sensor {
     copy.setRoundDigits(getRoundDigits());
     copy.setUnits(getUnits());
     copy.lastValue = lastValue;
+    copy.setConstants();
     return copy;
   }
-
 }

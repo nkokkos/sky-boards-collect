@@ -8,42 +8,51 @@
  * Voltage output based 
  */
 package se.sics.contiki.collect.sensor;
+
 import se.sics.contiki.collect.Sensor;
 
 public class SH300DC extends Sensor {
 
-  public SH300DC(String sensorID, String nodeID,int aDCRes) {
+  double vRef;
+  double c1;
+  double c2;
+
+  public SH300DC(String sensorID, String nodeID, int aDCRes) {
     super(sensorID, nodeID);
     setUnits("ppm");
     setADC(aDCRes);
+    configDefConstants();
     setConstants();
     setRoundDigits(2);
   }
 
   public double getConv(Double value) {
-    double vRef = getValueOf("Vref");
-    double v1 = getValueOf("v1");
-    double v2 = getValueOf("v2");
-    double resolution=getADCResolution();
-    double Vs = ((double) value / resolution) * vRef;
-    return (Vs * v1) - v2;
+    double Vs = ((double) value / aDCResolution) * vRef;
+    return (Vs * c1) - c2;
+  }
+
+  public void configDefConstants() {
+    setVar("Vref", 2.5);
+    setVar("c1", 1000.0);
+    setVar("c2", 200.0);
   }
 
   public void setConstants() {
-    setVar("Vref", 2.5);
-    setVar("v1", 1000.0);
-    setVar("v2", 200.0);
+    vRef = getValueOf("Vref");
+    c1 = getValueOf("c1");
+    c2 = getValueOf("c2");
   }
 
   public Sensor Clone() {
-    Sensor copy=new SH300DC(getId(),nodeID,getADCResolution());
+    Sensor copy = new SH300DC(getId(), nodeID, getADCResolution());
     Sensor a;
     copy.updateVars(this);
-    if ((a=getAssociatedSensor())!=null)
+    if ((a = getAssociatedSensor()) != null)
       copy.setAssociatedSensor(a.Clone());
     copy.setRoundDigits(getRoundDigits());
     copy.setUnits(getUnits());
     copy.lastValue = lastValue;
+    copy.setConstants();
     return copy;
   }
 }
