@@ -1,3 +1,9 @@
+/*
+ * SenseRow
+ *
+ * Author  : Eloy Díaz <eldial@gmail.com>
+ * Created : 04 Oct 2012
+ */
 package se.sics.contiki.collect.gui;
 
 import java.util.ArrayList;
