@@ -86,7 +86,7 @@ public class SensorAdjustPanel extends JPanel {
   private boolean saveChanges;
   Properties config;
   ConvPanel convPanel;
-  
+
   // JFreeChart
   private JFreeChart chart;
   private ChartPanel chartPanel;
@@ -103,16 +103,15 @@ public class SensorAdjustPanel extends JPanel {
   private JCheckBox autoRangeCheckBox;
   private JCheckBox saveCheckBox;
   private JComboBox<Object> varsComboBox;
+  private ValueChangeListener valueChangeListener;
 
   // constants
   public final int DEF_MIN_X = 0;
-  public final int DEF_INC_X = 2; 
-  public final String TOOL_TIP_RESET_BT = "Reset all sensor's conversion expressions constants to default values";
-  private final String TOOL_TIP_FORM_BT = "Display sensor's conversions expressions";
-  private final String TOOL_TIP_LAST_LABEL = "Last raw or ADC value received from the node";
+  public final int DEF_INC_X = 2;
+  public final String TOOL_TIP_RESET_BT = "Reset all constants to its default values";
+  private final String TOOL_TIP_LAST_LABEL = "Last raw/ADC value received from the node";
   private final String TOOL_TIP_CLICK_CHANGE = "Click to change";
-  private final String TOOL_TIP_SAVE_CHECK = "Check the box to auto-save changes in constants and update application's charts";
-  private final String INTERVAL_SELECTION_TITLE = "Domain interval. Use carefully. Increse step for large intervals.";
+  private final String INTERVAL_SELECTION_TITLE = "Domain interval";
   private final Color COLOR_DOM_HIGHLIGHT = Color.BLUE;
   private final Color COLOR_RANGE_HIGHLIGHT = new Color(0, 153, 0);
   private final Color COLOR_LAST_HIGHLIGHT = new Color(102, 0, 0);
@@ -121,7 +120,8 @@ public class SensorAdjustPanel extends JPanel {
 
   functionGenerator fc;
 
-  public SensorAdjustPanel(Node n, Sensor s, Properties config, ConvPanel convPanel) {
+  public SensorAdjustPanel(Node n, Sensor s, Properties config,
+      ConvPanel convPanel) {
     sensor = s;
     sensorNode = n;
     this.config = config;
@@ -180,7 +180,7 @@ public class SensorAdjustPanel extends JPanel {
     c.gridwidth = 1;
     c.fill = GridBagConstraints.NONE;
     c.anchor = GridBagConstraints.LINE_END;
-    c.insets = new Insets(0, 20, 0, 0);
+    c.insets = new Insets(0, 0, 0, 0);
     add(new JLabel("Domain: "), c);
 
     // interval setup pane
@@ -202,7 +202,7 @@ public class SensorAdjustPanel extends JPanel {
     c.gridx++;
     c.weightx = 0.5;
     c.fill = GridBagConstraints.HORIZONTAL;
-    c.insets = new Insets(0, 0, 0, 20);
+    c.insets = new Insets(0, 0, 0, 0);
     add(spinner, c);
 
     // auto range checkbox
@@ -211,7 +211,7 @@ public class SensorAdjustPanel extends JPanel {
     c.weightx = 0;
     c.fill = GridBagConstraints.NONE;
     c.anchor = GridBagConstraints.LINE_END;
-    c.insets = new Insets(5, 0, 0, 0);
+    c.insets = new Insets(5, 0, 0, 20);
     add(autoRangeCheckBox, c);
 
     // constant label
@@ -221,7 +221,7 @@ public class SensorAdjustPanel extends JPanel {
     c.weightx = 0;
     c.fill = GridBagConstraints.NONE;
     c.anchor = GridBagConstraints.LINE_END;
-    c.insets = new Insets(5, 20, 0, 0);
+    c.insets = new Insets(5, 0, 0, 0);
     add(new JLabel("Constant: "), c);
 
     // add combo box
@@ -245,7 +245,7 @@ public class SensorAdjustPanel extends JPanel {
     c.gridwidth = 1;
     c.weightx = 0.5;
     c.fill = GridBagConstraints.HORIZONTAL;
-    c.insets = new Insets(5, 0, 0, 20);
+    c.insets = new Insets(5, 0, 0, 0);
     add(selectedVarField, c);
 
     // save changes check box
@@ -254,7 +254,7 @@ public class SensorAdjustPanel extends JPanel {
     c.weightx = 0;
     c.fill = GridBagConstraints.NONE;
     c.anchor = GridBagConstraints.LINE_END;
-    c.insets = new Insets(5, 0, 0, 0);
+    c.insets = new Insets(5, 0, 0, 20);
     add(saveCheckBox, c);
 
     // buttons
@@ -264,7 +264,7 @@ public class SensorAdjustPanel extends JPanel {
     c.weightx = 0.1;
     c.fill = GridBagConstraints.NONE;
     c.anchor = GridBagConstraints.CENTER;
-    c.insets = new Insets(5, 5, 5, 5);
+    c.insets = new Insets(5, 0, 5, 0);
     add(setupButtonPanel(), c);
   }
 
@@ -303,7 +303,8 @@ public class SensorAdjustPanel extends JPanel {
 
     dataset = new XYSeriesCollection();
     dataset.addSeries(new XYSeries(""));
-    String title = "Conversion function (Node " + sensorNode.getID() + " "+ sensor.getId() + ")";
+    String title = "Conversion function (Node " + sensorNode.getID() + " "
+        + sensor.getId() + ")";
     chart = ChartFactory.createXYLineChart(title, // Title
         function.getxTag(), // x-axis Label
         function.getyTag(), // y-axis Label
@@ -312,7 +313,7 @@ public class SensorAdjustPanel extends JPanel {
         true, // Use tooltips
         false // Configure chart to generate URLs?
         );
-    chart.setTitle(new TextTitle(title,new Font("",Font.BOLD,14)));
+    chart.setTitle(new TextTitle(title, new Font("", Font.BOLD, 17)));
     XYPlot plot = chart.getXYPlot();
 
     ValueAxis va = plot.getDomainAxis();
@@ -361,7 +362,7 @@ public class SensorAdjustPanel extends JPanel {
           Double y = plot.getRangeCrosshairValue();
           try {
             doc.remove(0, doc.getLength());
-            String xValue = String.valueOf(x.intValue());
+            String xValue = String.valueOf(Math.round(x));
             String yValue = round(y, sensor.getRoundDigits());
             String a = "   f ( ";
             String b = " ) = ";
@@ -404,21 +405,21 @@ public class SensorAdjustPanel extends JPanel {
         Range rangeAxis = domainAxis.getRange();
         Double d = domainAxis.getLowerBound() + ((double) pos / 1000D)
             * rangeAxis.getLength();
-        
+
         int step = function.getStep();
         int value = (new Long(Math.round(d))).intValue();
         int mod = value % step;
-        if (mod != 0){
+        if (mod != 0) {
           int deltaLower = mod;
           int deltaUpper = step - mod;
-          if (deltaLower>deltaUpper)
-            value=value+deltaUpper;
-          else if (deltaLower<=deltaUpper){
-            value=value-deltaLower;
+          if (deltaLower > deltaUpper)
+            value = value + deltaUpper;
+          else if (deltaLower <= deltaUpper) {
+            value = value - deltaLower;
           }
         }
         plot.setDomainCrosshairValue(value);
-        plot.setRangeCrosshairValue(function.f((double)value));
+        plot.setRangeCrosshairValue(function.f((double) value));
       }
     });
   }
@@ -443,7 +444,7 @@ public class SensorAdjustPanel extends JPanel {
           return;
         int stp = (int) spinner.getValue();
         function.setStep(stp);
-        if (stp<function.getMaxX()-function.getMinX())
+        if (stp < function.getMaxX() - function.getMinX())
           updateChart();
       }
     });
@@ -451,9 +452,8 @@ public class SensorAdjustPanel extends JPanel {
 
   private void setupAutoRangeCheckbox() {
     autoRangeCheckBox = new JCheckBox("Auto Range");
-    autoRangeCheckBox.setToolTipText(TOOL_TIP_SAVE_CHECK);
     autoRangeCheckBox.setSelected(true);
-    autoRange=true;
+    autoRange = true;
     autoRangeCheckBox
         .setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
     autoRangeCheckBox.addItemListener(new ItemListener() {
@@ -473,7 +473,9 @@ public class SensorAdjustPanel extends JPanel {
       public void actionPerformed(ActionEvent e) {
         selectedVar = (String) varsComboBox.getSelectedItem();
         Double v = new Double(sensor.getValueOf(selectedVar));
+        selectedVarField.removePropertyChangeListener("value",valueChangeListener);
         selectedVarField.setValue(v);
+        selectedVarField.addPropertyChangeListener("value",valueChangeListener);
       }
     });
   }
@@ -481,27 +483,28 @@ public class SensorAdjustPanel extends JPanel {
   private void setupValueField() {
     NumberFormat format = NumberFormat.getNumberInstance();
     format.setMaximumFractionDigits(20);
+    valueChangeListener = new ValueChangeListener();
     selectedVarField = new JFormattedTextField(format);
-    selectedVarField.addPropertyChangeListener("value",
-        new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent e) {
-            if (!fcFinished())
-              return;
-            double newValue = ((Number) selectedVarField.getValue())
-                .doubleValue();
-            sensor.setVar(selectedVar, newValue);
-            sensor.setConstants();
-            if (saveChanges) {
-              updateConfig(selectedVar, newValue);
-              convPanel.updateChanges(sensor);
-            }
-            updateChart();
-          }
-        });
+    selectedVarField.addPropertyChangeListener("value", valueChangeListener);
     if (varsComboBox.getItemCount() > 0)
       varsComboBox.setSelectedIndex(0);
     else
       selectedVarField.setValue(Double.NaN);
+  }
+
+  private class ValueChangeListener implements PropertyChangeListener {
+    public void propertyChange(PropertyChangeEvent e) {
+      if (!fcFinished())
+        return;
+      double newValue = ((Number) selectedVarField.getValue()).doubleValue();
+      sensor.setVar(selectedVar, newValue);
+      sensor.setConstants();
+      if (saveChanges) {
+        updateConfig(selectedVar, newValue);
+        convPanel.updateChanges(sensor);
+      }
+      updateChart();
+    }
   }
 
   public void updateConfig(String var, double newVal) {
@@ -515,7 +518,6 @@ public class SensorAdjustPanel extends JPanel {
 
   private void setupSaveChangesCheckBox() {
     saveCheckBox = new JCheckBox("Save changes");
-    saveCheckBox.setToolTipText(TOOL_TIP_SAVE_CHECK);
     saveCheckBox.setSelected(false);
     saveChanges = false;
     saveCheckBox.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT);
@@ -528,7 +530,7 @@ public class SensorAdjustPanel extends JPanel {
 
   private JPanel setupButtonPanel() {
     JPanel p = new JPanel();
-    p.add(createButton("Show Formulas", TOOL_TIP_FORM_BT, sensorId,
+    p.add(createButton("Show Formulas", null, sensorId,
         new ButtonFormulaAction()));
     p.add(createButton("Reset All", TOOL_TIP_RESET_BT, sensorId,
         new ButtonResetAction()));
@@ -541,9 +543,9 @@ public class SensorAdjustPanel extends JPanel {
         return;
       sensor.configDefConstants();
       sensor.setConstants();
-      if (saveChanges){
+      if (saveChanges) {
         Object[] vars = sensor.getVarsNames();
-        for (int i = 0, n=vars.length; i < n; i++) {
+        for (int i = 0, n = vars.length; i < n; i++) {
           removeFromConfig((String) vars[i]);
         }
         convPanel.updateChanges(sensor);
@@ -609,7 +611,7 @@ public class SensorAdjustPanel extends JPanel {
     sensorNode.addSensorData(sensorData);
     XYPlot plot = chart.getXYPlot();
     plot.clearDomainMarkers();
-    double last=getLastADCValue();
+    double last = getLastADCValue();
     addValueMarker(last, plot);
     lastRawLabel.setText("Last Raw: " + String.valueOf(last));
   }
@@ -662,12 +664,14 @@ public class SensorAdjustPanel extends JPanel {
         if (newLower != lowerValue)
           function.setMinX(newLower);
         if (intvLen >= INTERVAL_WARNING_T) {
-          Object[] options = { "Proceed", "Do not proceed"};
-          int n = JOptionPane.showOptionDialog(pane,
-              "Your interval is too big. This could lead to application problems.\n"
-                  + "Make sure you have increased the function's step before proceeding",
-              "Warning!", JOptionPane.YES_NO_CANCEL_OPTION,
-              JOptionPane.WARNING_MESSAGE, null, options, options[1]);
+          Object[] options = { "Proceed", "Do not proceed" };
+          int n = JOptionPane
+              .showOptionDialog(
+                  pane,
+                  "The interval is too big. This could lead to application problems.\n"
+                      + "Make sure you have increased the function's step before proceeding",
+                  "Warning!", JOptionPane.YES_NO_CANCEL_OPTION,
+                  JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 
           if ("Do not proceed".equals(options[n])) {
             return;
