@@ -441,9 +441,10 @@ public class SensorAdjustPanel extends JPanel {
       public void stateChanged(ChangeEvent e) {
         if (!fcFinished())
           return;
-        int inc = (int) spinner.getValue();
-        function.setStep(inc);
-        updateChart();
+        int stp = (int) spinner.getValue();
+        function.setStep(stp);
+        if (stp<function.getMaxX()-function.getMinX())
+          updateChart();
       }
     });
   }
@@ -492,6 +493,7 @@ public class SensorAdjustPanel extends JPanel {
             sensor.setConstants();
             if (saveChanges) {
               updateConfig(selectedVar, newValue);
+              convPanel.updateChanges(sensor);
             }
             updateChart();
           }
@@ -509,7 +511,6 @@ public class SensorAdjustPanel extends JPanel {
     if (newValue.equals(value))
       return;
     config.put(key, newValue);
-    convPanel.updateChanges(sensor);
   }
 
   private void setupSaveChangesCheckBox() {
@@ -539,6 +540,7 @@ public class SensorAdjustPanel extends JPanel {
       if (!fcFinished())
         return;
       sensor.configDefConstants();
+      sensor.setConstants();
       if (saveChanges){
         Object[] vars = sensor.getVarsNames();
         for (int i = 0, n=vars.length; i < n; i++) {
@@ -650,13 +652,16 @@ public class SensorAdjustPanel extends JPanel {
       if (result == JOptionPane.OK_OPTION) {
         int newUpper = (int) ((Number) upperField.getValue()).doubleValue();
         int newLower = (int) ((Number) lowerField.getValue()).doubleValue();
-        if (newLower >= newUpper || newLower <= 0 || newUpper <= 0)
+        int intvLen = newUpper - newLower;
+        if (newLower >= newUpper || newLower < 0 || newUpper <= 0)
+          return;
+        if (function.getStep() > intvLen)
           return;
         if (newUpper != upperValue)
           function.setMaxX(newUpper);
         if (newLower != lowerValue)
           function.setMinX(newLower);
-        if (newUpper - newLower >= INTERVAL_WARNING_T) {
+        if (intvLen >= INTERVAL_WARNING_T) {
           Object[] options = { "Proceed", "Do not proceed"};
           int n = JOptionPane.showOptionDialog(pane,
               "Your interval is too big. This could lead to application problems.\n"

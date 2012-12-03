@@ -18,7 +18,7 @@ public class NTC103F397F extends Sensor {
   double RT;
   double T;
   double beta;
-  double K = 272.15;
+  double K = 273.15;
 
   public NTC103F397F(String sensorID, String nodeID, int aDCRes) {
     super(sensorID, nodeID);
