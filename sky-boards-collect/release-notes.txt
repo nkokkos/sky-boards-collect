@@ -1,19 +1,28 @@
 ==Release 1.6 b==
 
- * New UI makes much more easy to feed entire network sensor data from your network to cosm and/or open.sen.se. Also it has good resize behavior (unlike 1.5b cosm/sense UI).
+ * New UI makes much more easy to feed entire network sensor data from your 
+ network to cosm and/or open.sen.se. Also it has good resize behavior 
+ (unlike 1.5b cosm/sense UI).
 
-https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/2012-12-03-134024.png
 
- * Conversions tool has been improved quite a lot as well. Chart is resized along with the application's window. The slider controls the crosshair. The marker labelled "Last received" indicates the x possition of the last received ADC/raw value for the sensor. The label on top ( f(x)=y) shows the current crosshair possition, which also can be set with a click on the line that represents the function.
-
-https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/2012-12-03-231826.png
+ * Conversions tool has been improved quite a lot as well. Chart is resized 
+ along with the application's window. The slider controls the crosshair. 
+ The marker labelled "Last received" indicates the x possition of the last 
+ received ADC/raw value for the sensor. The label on top ( f(x)=y) shows 
+ the current crosshair possition, which also can be set with a click on the 
+ line that represents the function.
   
 
 ==Release 1.5 b==
 
-So far this extension application have been developed and tested using only three (real) motes. That number of nodes is not nearly enough to ensure everything is working ok. I have been running the program taking the input data from a Cooja simulated network with 25 nodes, which is a proper test environment. As a consequence, this release fixes new found bugs.
+So far this extension application have been developed and tested using only 
+three (real) motes. That number of nodes is not nearly enough to ensure 
+everything is working ok. I have been running the program taking the input 
+data from a Cooja simulated network with 25 nodes, which is a proper test 
+environment. As a consequence, this release fixes new found bugs.
 
- * Fixed a bug introduced with new node classes (AR1000, DS1000, ...) related to the way the nodes were created in {{{HandleLinks}}} method
+ * Fixed a bug introduced with new node classes (AR1000, DS1000, ...) 
+ related to the way the nodes were created in HandleLinks method
 
  * Fixed a bug that was affecting usability on Cosm/Sense config dialog
 
@@ -21,32 +30,42 @@ So far this extension application have been developed and tested using only thre
 
  * Tiny log in Cosm/Sense panel that shows HTTP response for last data push.
 
- * Changes in {{{TimeChartPanel.java}}} in order to adapt class to show time series in platform-heterogeneous networks, when different node types are selected.
+ * Changes in TimeChartPanel.java in order to adapt class to show time 
+ series in platform-heterogeneous networks, when different node types are 
+ selected.
  
- * Implementation of items grouping algorithm  ({{{updateSeries()}}} in {{{TimeChartPanel.java}}}). 
+ * Implementation of items grouping algorithm  (updateSeries() in 
+ TimeChartPanel.java). 
 
- * CO conversion expression had a default wrong constant value ({{{R0}}}) which now should be ok, according to data sheet.
+ * CO conversion expression had a default wrong constant value (R0) 
+ which now should be ok, according to data sheet.
 
- * Drivers {{{install.sh}}} files updated to contiki2.6 version
+ * Drivers install.sh files updated to contiki2.6 version
 
 
 ==Release 1.4 b==
 
- * This release fixes a bug (introduced in version 1.0b, not happening in contiki-collect-sky2.5) that caused charts to display zero values when they should not display anything
+ * This release fixes a bug (introduced in version 1.0b, not happening in 
+ contiki-collect-sky2.5) that caused charts to display zero values when 
+ they should not display anything
 
- * Added option in Adjust conversion expressions tool to show either ADC_VALUE or Vs in X-axis.
+ * Added option in Adjust conversion expressions tool to show either 
+ ADC_VALUE or Vs in X-axis.
 
  * Code quality improvements. 
 
 
 ==Release 1.3 b==
 
- * Fixed a problem with decimal: if Java locale is set to a country that uses "," as decimal mark, Cosm/Sense will treat decimal values as NaN (Not a Number). Program replaces now "," for "." before sending values.
+ * Fixed a problem with decimal: if Java locale is set to a country that 
+ uses "," as decimal mark, Cosm/Sense will treat decimal values as 
+ NaN (Not a Number). Program replaces now "," for "." before sending values.
 
 ==Release 1.2 b==
 
  * Updated Cosm Feeder due to Cosm API changes
- * Application will set now "Contiki collect-view" as User-Agent instead of using default "Java/1.xx"
+ * Application will set now "Contiki collect-view" as User-Agent instead 
+ of using default "Java/1.xx"
  * Added title in "view conversions expressions" frame
 
 ==Release 1.1 b==
