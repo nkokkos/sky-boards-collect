@@ -17,12 +17,17 @@ https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/sc3.png
 https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/sc4.png
 https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/sc5.png
 ----
- * *Adjust conversion expressions tool. Select a node and go to _Tools_ menu item to start setting constants that appear in conversion expressions. Function is updated in real time.*
+ * *Adjust conversion expressions tool (version 1.5b). Select a node and go to _Tools_ menu item to start setting constants that appear in conversion expressions. Function is updated in real time.*
 
 https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/screen6.png
 ----
- * *Send sensor data to Cosm and open.sen.se*
+ * *Send sensor data to Cosm and open.sen.se (version 1.5b)*
 
 https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/sc7.png
-https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/sc1.png
 ----
+
+ * *Version 1.6b*
+
+https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/2012-11-29_21-24-18.png
+
+https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/2012-12-03-134503.png
