@@ -1,4 +1,4 @@
-#summary Guide to add platforms to sky-boards-collect
+#summary Brief guide to add platforms to sky-boards-collect
 
 = Introduction =
 
