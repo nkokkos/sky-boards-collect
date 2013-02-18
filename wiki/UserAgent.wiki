@@ -1,7 +1,0 @@
-#summary Custom User-agent
-
-Edit this line in {{{PublisherCosm.java}}} & {{{PublisherSense.java}}}:
-
-{{{
-urlConn.setRequestProperty("User-Agent", "Contiki collect-view");
-}}}
