@@ -21,9 +21,7 @@ https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/sc5.png
 
 https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/2012-11-29_21-24-18.png
 ----
- * *Send sensor data to Cosm and open.sen.se (version 1.5b)*
+ * *Send sensor data to Cosm and open.sen.se*
 
 https://sky-boards-collect.googlecode.com/svn/wiki/screenshots/2012-12-03-134503.png
-
-
 
