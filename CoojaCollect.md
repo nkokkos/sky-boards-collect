@@ -1,0 +1,1 @@
+http://code.google.com/p/sky-boards-collect/source/browse/trunk/contiki/examples/sky-boards-collect/cooja-test/README.TXT
